@@ -1,4 +1,7 @@
 {
+  "env": {
+    "MAGIC_API_KEY": "cd61c855b1cee84192de185a19c79536d1025a77461cde2051fb1ac358f32992"
+  },
   "hooks": {
     "SessionStart": [
       {

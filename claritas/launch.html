@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CL4R1T4S + ECC</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      height: 100vh;
+      background: #080808;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(57,255,20,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(57,255,20,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .word {
+      font-size: 11px;
+      letter-spacing: 6px;
+      color: #2a2a2a;
+      margin-bottom: 48px;
+      text-transform: uppercase;
+    }
+
+    .btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 1.5px solid #39ff14;
+      background: transparent;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+      box-shadow:
+        0 0 20px rgba(57,255,20,0.08),
+        inset 0 0 20px rgba(57,255,20,0.03);
+    }
+
+    .btn:hover {
+      background: rgba(57,255,20,0.06);
+      box-shadow:
+        0 0 50px rgba(57,255,20,0.25),
+        0 0 100px rgba(57,255,20,0.08),
+        inset 0 0 30px rgba(57,255,20,0.06);
+      transform: scale(1.03);
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    /* Outer ring pulse */
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(57,255,20,0.15);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: -18px;
+      border-radius: 50%;
+      border: 1px solid rgba(57,255,20,0.06);
+      animation: pulse 3s ease-in-out infinite 0.8s;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(1.04); }
+    }
+
+    .label {
+      font-size: 13px;
+      letter-spacing: 5px;
+      color: #39ff14;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .sub {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(57,255,20,0.4);
+      text-transform: uppercase;
+    }
+
+    .repos {
+      margin-top: 40px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .repo-tag {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #2a2a2a;
+      border: 1px solid #1c1c1c;
+      padding: 4px 10px;
+      border-radius: 2px;
+      text-transform: uppercase;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .btn:hover ~ .repos .repo-tag {
+      color: rgba(57,255,20,0.3);
+      border-color: rgba(57,255,20,0.15);
+    }
+  </style>
+</head>
+<body>
+  <p class="word">AI Transparency</p>
+
+  <a class="btn" href="https://ptah-het.com/claritas/" target="_blank">
+    <span class="label">Launch</span>
+    <span class="sub">CL4R1T4S + ECC</span>
+  </a>
+
+  <div class="repos">
+    <span class="repo-tag">CL4R1T4S</span>
+    <span class="repo-tag">ECC</span>
+  </div>
+</body>
+</html>

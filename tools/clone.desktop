@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Site Clone Tool
+GenericName=Website Cloner
+Comment=Clone any site — downloads all assets, fonts, colors, API calls
+Exec=bash -c 'cd %k && cd .. && bash launch.sh'
+Path=/path/to/your/tools
+Icon=internet-web-browser
+Terminal=true
+Categories=Development;WebDevelopment;Network;
+Keywords=clone;scrape;website;design;assets;
+StartupNotify=true

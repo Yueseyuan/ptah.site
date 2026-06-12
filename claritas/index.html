@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CL4R1T4S — AI Systems Transparency</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #080808;
+      --panel:       #0f0f0f;
+      --panel-hover: #141414;
+      --border:      #1c1c1c;
+      --border-lit:  #2e2e2e;
+      --accent:      #39ff14;
+      --accent-glow: rgba(57,255,20,0.08);
+      --accent-mid:  rgba(57,255,20,0.18);
+      --text:        #d0d0d0;
+      --text-dim:    #5a5a5a;
+      --text-mid:    #8a8a8a;
+      --red:         #ff4444;
+      --hdr:         52px;
+      --sidebar:     260px;
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ── Header ── */
+    #hdr {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--hdr);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 20px; gap: 16px;
+      z-index: 200;
+    }
+
+    #logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px; font-weight: 500;
+      letter-spacing: 5px; color: var(--accent);
+      text-decoration: none; white-space: nowrap;
+      cursor: pointer;
+    }
+    #logo sub {
+      font-size: 9px; letter-spacing: 1px;
+      color: var(--text-dim); margin-left: 10px;
+      vertical-align: middle; font-weight: 300;
+    }
+
+    #search {
+      flex: 1; max-width: 380px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 7px 12px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; outline: none;
+    }
+    #search::placeholder { color: var(--text-dim); }
+    #search:focus { border-color: var(--accent); }
+
+    #hdr-right {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--text-dim);
+      display: flex; align-items: center; gap: 14px;
+    }
+    #hdr-right a { color: var(--text-mid); text-decoration: none; }
+    #hdr-right a:hover { color: var(--accent); }
+
+    /* ── Layout ── */
+    #layout {
+      display: flex;
+      height: calc(100vh - var(--hdr));
+      margin-top: var(--hdr);
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: var(--sidebar);
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      background: var(--bg);
+    }
+    #sidebar::-webkit-scrollbar { width: 3px; }
+    #sidebar::-webkit-scrollbar-thumb { background: var(--border-lit); }
+
+    .sb-header {
+      padding: 11px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; letter-spacing: 2.5px;
+      color: var(--text-dim); text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky; top: 0; z-index: 10;
+    }
+
+    .sb-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .sb-item:hover { background: var(--panel); }
+    .sb-item.active {
+      background: var(--accent-glow);
+      border-left: 2px solid var(--accent);
+      padding-left: 14px;
+    }
+    .sb-label { font-size: 13px; }
+    .sb-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: var(--text-dim);
+      background: var(--border); padding: 2px 6px; border-radius: 10px;
+    }
+    .sb-item.active .sb-count { background: var(--accent-mid); color: var(--accent); }
+
+    /* ── Main ── */
+    #main {
+      flex: 1; overflow-y: auto; padding: 28px 32px;
+    }
+    #main::-webkit-scrollbar { width: 5px; }
+    #main::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 3px; }
+
+    /* ── Views ── */
+    .view { display: none; }
+    .view.on { display: block; }
+
+    /* ── Home ── */
+    .home-headline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px; font-weight: 300;
+      color: var(--accent); letter-spacing: 7px;
+      margin-bottom: 12px;
+    }
+    .home-sub {
+      font-size: 13px; color: var(--text-mid);
+      line-height: 1.75; max-width: 580px;
+      margin-bottom: 6px;
+    }
+    .home-quote {
+      font-size: 11.5px; color: var(--text-dim);
+      font-style: italic; margin-bottom: 28px;
+      padding-left: 12px; border-left: 2px solid var(--border-lit);
+    }
+
+    .stats { display: flex; gap: 14px; margin-bottom: 28px; }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 14px 20px; border-radius: 3px;
+    }
+    .stat-n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px; color: var(--accent);
+    }
+    .stat-l { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px; border-radius: 3px; cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .card:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .card-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .card-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--text-dim);
+    }
+
+    /* ── Files view ── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--text-dim);
+      margin-bottom: 18px;
+    }
+    .breadcrumb a { color: var(--accent); cursor: pointer; text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb sep { color: var(--text-dim); }
+
+    .view-title {
+      font-size: 20px; font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .file-list { display: flex; flex-direction: column; gap: 5px; }
+    .file-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      cursor: pointer; border-radius: 3px;
+      transition: border-color 0.12s;
+    }
+    .file-row:hover { border-color: var(--accent); }
+    .ext-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-glow);
+      border: 1px solid rgba(57,255,20,0.2);
+      padding: 2px 5px; border-radius: 2px;
+      min-width: 26px; text-align: center;
+      letter-spacing: 0.5px;
+    }
+    .file-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    /* ── Reader ── */
+    .reader-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .actions { display: flex; gap: 7px; }
+    .btn {
+      padding: 5px 11px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      background: transparent;
+      border: 1px solid var(--border-lit);
+      color: var(--text-mid); cursor: pointer; border-radius: 3px;
+      transition: border-color 0.12s, color 0.12s;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .loading {
+      display: flex; align-items: center; gap: 10px;
+      padding: 50px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--text-dim);
+    }
+    .loading::before {
+      content: '';
+      width: 14px; height: 14px;
+      border: 2px solid var(--border-lit);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .err {
+      color: var(--red); font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; padding: 18px;
+      background: rgba(255,68,68,0.04);
+      border: 1px solid rgba(255,68,68,0.18);
+      border-radius: 3px;
+    }
+
+    /* Markdown */
+    .md {
+      font-size: 13px; line-height: 1.8;
+      max-width: 860px; color: var(--text);
+    }
+    .md h1 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px; font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px; margin: 24px 0 12px;
+    }
+    .md h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px; margin: 20px 0 8px;
+    }
+    .md h3 {
+      font-size: 13px; color: var(--text-mid);
+      margin: 16px 0 6px;
+    }
+    .md p { margin-bottom: 12px; }
+    .md code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      background: var(--panel);
+      border: 1px solid var(--border-lit);
+      padding: 1px 5px; border-radius: 3px;
+      color: #9cdcfe;
+    }
+    .md pre {
+      background: var(--panel);
+      border: 1px solid var(--border-lit);
+      padding: 16px; border-radius: 3px;
+      overflow-x: auto; margin: 12px 0;
+    }
+    .md pre code {
+      background: none; border: none; padding: 0;
+      font-size: 12px; color: var(--text);
+    }
+    .md ul, .md ol { padding-left: 22px; margin-bottom: 12px; }
+    .md li { margin-bottom: 4px; }
+    .md blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 14px; color: var(--text-mid);
+      margin: 12px 0; font-style: italic;
+    }
+    .md a { color: var(--accent); }
+    .md hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .md table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 12px; }
+    .md th, .md td { border: 1px solid var(--border-lit); padding: 7px 10px; text-align: left; }
+    .md th { background: var(--panel); color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .md img { max-width: 100%; border-radius: 3px; }
+
+    /* Plain text */
+    .plain {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; line-height: 1.75;
+      white-space: pre-wrap; word-break: break-word;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border-lit);
+      padding: 20px; border-radius: 3px;
+      max-width: 900px;
+    }
+
+    .empty {
+      text-align: center; padding: 70px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+<header id="hdr">
+  <span id="logo" onclick="showHome()">
+    CL4R1T4S<sub>AI TRANSPARENCY</sub>
+  </span>
+  <input id="search" type="search" placeholder="/ search systems…" oninput="onSearch(this.value)" />
+  <div id="hdr-right">
+    <a href="https://github.com/elder-plinius/CL4R1T4S" target="_blank" rel="noopener">★ elder-plinius/CL4R1T4S</a>
+  </div>
+</header>
+
+<div id="layout">
+  <nav id="sidebar">
+    <div class="sb-header">AI Systems</div>
+    <div id="sb-list"></div>
+  </nav>
+
+  <main id="main">
+    <!-- Home -->
+    <div id="view-home" class="view on">
+      <p class="home-headline">CL4R1T4S</p>
+      <p class="home-sub">AI systems transparency and observability for all. Extracted system prompts, guidelines, and tool definitions from major AI models and agents.</p>
+      <p class="home-quote">"In order to trust the output, one must understand the input."</p>
+      <div class="stats" id="stats"></div>
+      <div class="grid" id="home-grid"></div>
+    </div>
+
+    <!-- Files -->
+    <div id="view-files" class="view">
+      <div class="breadcrumb">
+        <a onclick="showHome()">home</a>
+        <sep>/</sep>
+        <span id="f-company"></span>
+      </div>
+      <div class="view-title" id="f-title"></div>
+      <div class="file-list" id="f-list"></div>
+    </div>
+
+    <!-- Reader -->
+    <div id="view-reader" class="view">
+      <div class="reader-bar">
+        <div class="breadcrumb">
+          <a onclick="showHome()">home</a>
+          <sep>/</sep>
+          <a id="r-co-link" onclick=""></a>
+          <sep>/</sep>
+          <span id="r-file"></span>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btn-raw">Raw ↗</button>
+          <button class="btn" id="btn-copy" onclick="copyContent()">Copy</button>
+        </div>
+      </div>
+      <div id="r-content"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const RAW = 'https://raw.githubusercontent.com/elder-plinius/CL4R1T4S/main/';
+
+const CATALOG = {
+  ANTHROPIC: { label: 'Anthropic', files: [
+    'CLAUDE-FABLE-5.md', 'Claude-4.1.txt', 'Claude-4.5-Opus.txt',
+    'Claude-Design-Sys-Prompt.txt', 'Claude-Opus-4.7.txt', 'Claude_4.txt',
+    'Claude_Code_03-04-24.md', 'Claude_Opus_4.6.txt',
+    'Claude_Sonnet-4.5_Sep-29-2025.txt', 'Claude_Sonnet_3.5.md',
+    'Claude_Sonnet_3.7_New.txt', 'UserStyle_Modes.md'
+  ]},
+  OPENAI: { label: 'OpenAI', files: [
+    'Atlas_10-21-25.txt', 'ChatGPT-4o_Sep-27-25.txt', 'ChatGPT5-08-07-2025.mkd',
+    'ChatGPT_4.1_05-15-2025.txt', 'ChatGPT_4o_04-25-2025.txt',
+    'ChatGPT_Personality_v2_Change.md', 'ChatGPT_o3_o4-mini_04-16-2025',
+    'ChatKit_Docs__Oct-6-25.txt', 'Codex.md', 'Codex_Sep-15-2025.md',
+    'GPT-4.5_02-27-25.md', 'GPT-4o_Image_Gen_Postfill.txt'
+  ]},
+  GOOGLE:     { label: 'Google / Gemini',   files: ['Gemini-2.5-Pro-04-18-2025.md', 'Gemini_Diffusion.md', 'Gemini_Gmail_Assistant.txt'] },
+  XAI:        { label: 'xAI / Grok',        files: ['GROK-4-NEW_Jul-13-2025', 'GROK-4.1_Nov-17-2025.txt', 'GROK-4.20.mkd', 'Grok-Code-Fast-1_Aug-26-2025.txt', 'Grok3.md', 'Grok3_updated_07-08-2025.md', 'Grok4-July-10-2025.md'] },
+  CURSOR:     { label: 'Cursor',             files: ['Cursor_2.0_Sys_Prompt.txt', 'Cursor_Prompt.md', 'Cursor_Tools.md'] },
+  DEVIN:      { label: 'Devin',              files: ['Devin2_09-08-2025.md', 'Devin_2.0.md', 'Devin_2.0_Commands.md'] },
+  WINDSURF:   { label: 'Windsurf',           files: ['Windsurf_Prompt.md', 'Windsurf_Tools.md'] },
+  REPLIT:     { label: 'Replit',             files: ['Replit_Agent.md', 'Replit_Functions.md', 'Replit_Initial_Code_Generation_Prompt.md'] },
+  CLINE:      { label: 'Cline',              files: ['Cline.md'] },
+  'VERCEL V0':{ label: 'Vercel v0',          files: ['Vercel_v0.txt'] },
+  LOVABLE:    { label: 'Lovable',            files: ['Lovable_2.0.txt'] },
+  SAMEDEV:    { label: 'Same.dev',           files: ['Same_Dev.txt'] },
+  BOLT:       { label: 'Bolt',               files: ['Bolt.txt'] },
+  META:       { label: 'Meta / Llama',       files: ['Llama4_WhatsApp.txt', 'Muse_Spark_Apr-08-26.txt'] },
+  MANUS:      { label: 'Manus',              files: ['Manus_Functions.txt', 'Manus_Prompt.txt'] },
+  PERPLEXITY: { label: 'Perplexity',         files: ['Perplexity_Deep_Research.txt'] },
+  MISTRAL:    { label: 'Mistral / Le Chat',  files: ['LeChat.md'] },
+  MOONSHOT:   { label: 'Moonshot / Kimi',    files: ['Kimi_2_July-11-2025.txt', 'Kimi_K2_Thinking.txt'] },
+  BRAVE:      { label: 'Brave / Leo',        files: ['LEO_Aug-31-2025'] },
+  HUME:       { label: 'Hume',               files: ['Hume_Voice_AI.md'] },
+  MULTION:    { label: 'MultiOn',            files: ['MultiOn.md'] },
+  MINIMAX:    { label: 'MiniMax',            files: ['MiniMax.txt'] },
+  DIA:        { label: 'Dia',                files: ['Dia_CodingSkill.txt', 'Dia_DraftSkill.txt'] },
+  FACTORY:    { label: 'Factory / Droid',    files: ['DROID.txt'] },
+  CLUELY:     { label: 'Cluely',             files: ['Cluely.mkd'] },
+};
+
+const companies = Object.keys(CATALOG);
+let activeCo = null;
+let rawContent = '';
+
+function totalFiles() {
+  return companies.reduce((n, k) => n + CATALOG[k].files.length, 0);
+}
+
+function rawUrl(co, file) {
+  return RAW + encodeURIComponent(co) + '/' + encodeURIComponent(file);
+}
+
+function extOf(f) {
+  const m = f.match(/\.([a-z]+)$/i);
+  return m ? m[1].toLowerCase() : '';
+}
+
+function isMd(f) {
+  const e = extOf(f);
+  return e === 'md' || e === 'mkd' || e === 'markdown';
+}
+
+function extLabel(f) {
+  const e = extOf(f).toUpperCase();
+  return e || 'TXT';
+}
+
+/* ── Views ── */
+function setView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.getElementById('view-' + id).classList.add('on');
+}
+
+/* ── Sidebar ── */
+function renderSidebar(q = '') {
+  const lo = q.toLowerCase();
+  const ul = document.getElementById('sb-list');
+  ul.innerHTML = '';
+  companies.forEach(k => {
+    const c = CATALOG[k];
+    if (lo && !c.label.toLowerCase().includes(lo)) return;
+    const d = document.createElement('div');
+    d.className = 'sb-item' + (activeCo === k ? ' active' : '');
+    d.onclick = () => showFiles(k);
+    d.innerHTML = `<span class="sb-label">${c.label}</span><span class="sb-count">${c.files.length}</span>`;
+    ul.appendChild(d);
+  });
+}
+
+/* ── Home ── */
+function renderHome(q = '') {
+  const lo = q.toLowerCase();
+  const stats = document.getElementById('stats');
+  stats.innerHTML = `
+    <div class="stat"><div class="stat-n">${companies.length}</div><div class="stat-l">AI systems</div></div>
+    <div class="stat"><div class="stat-n">${totalFiles()}</div><div class="stat-l">prompt files</div></div>
+  `;
+  const grid = document.getElementById('home-grid');
+  grid.innerHTML = '';
+  companies.forEach(k => {
+    const c = CATALOG[k];
+    if (lo && !c.label.toLowerCase().includes(lo) &&
+        !c.files.some(f => f.toLowerCase().includes(lo))) return;
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.onclick = () => showFiles(k);
+    d.innerHTML = `<div class="card-name">${c.label}</div><div class="card-count">${c.files.length} file${c.files.length !== 1 ? 's' : ''}</div>`;
+    grid.appendChild(d);
+  });
+  if (!grid.children.length) {
+    grid.innerHTML = `<div class="empty">No results for "${q}"</div>`;
+  }
+}
+
+function showHome() {
+  activeCo = null;
+  renderSidebar();
+  renderHome();
+  setView('home');
+}
+
+/* ── Files ── */
+function showFiles(co) {
+  activeCo = co;
+  const c = CATALOG[co];
+  document.getElementById('f-company').textContent = c.label;
+  document.getElementById('f-title').textContent = c.label;
+
+  const list = document.getElementById('f-list');
+  list.innerHTML = '';
+  c.files.forEach(file => {
+    const d = document.createElement('div');
+    d.className = 'file-row';
+    d.onclick = () => loadFile(co, file);
+    d.innerHTML = `<span class="ext-badge">${extLabel(file)}</span><span class="file-name">${file}</span>`;
+    list.appendChild(d);
+  });
+
+  renderSidebar();
+  setView('files');
+}
+
+/* ── Reader ── */
+async function loadFile(co, file) {
+  const c = CATALOG[co];
+  const url = rawUrl(co, file);
+
+  document.getElementById('r-co-link').textContent = c.label;
+  document.getElementById('r-co-link').setAttribute('onclick', `showFiles(${JSON.stringify(co)})`);
+  document.getElementById('r-file').textContent = file;
+  document.getElementById('btn-raw').onclick = () => window.open(url, '_blank');
+
+  const box = document.getElementById('r-content');
+  box.innerHTML = '<div class="loading">Fetching…</div>';
+  renderSidebar();
+  setView('reader');
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    rawContent = await res.text();
+
+    if (isMd(file)) {
+      box.innerHTML = `<div class="md">${marked.parse(rawContent)}</div>`;
+    } else {
+      const esc = rawContent
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      box.innerHTML = `<pre class="plain">${esc}</pre>`;
+    }
+  } catch (e) {
+    box.innerHTML = `<div class="err">Failed to load: ${e.message}</div>`;
+  }
+}
+
+function copyContent() {
+  if (!rawContent) return;
+  navigator.clipboard.writeText(rawContent).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = 'Copy', 1600);
+  });
+}
+
+/* ── Search ── */
+function onSearch(q) {
+  renderSidebar(q);
+  if (document.getElementById('view-home').classList.contains('on')) {
+    renderHome(q);
+  }
+}
+
+/* ── Init ── */
+renderSidebar();
+renderHome();
+</script>
+</body>
+</html>

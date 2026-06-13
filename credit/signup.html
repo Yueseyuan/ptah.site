@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up Free | Cruel & Associates Credit Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="form-page">
+  <div class="form-card">
+    <div class="form-logo">
+      <a href="index.html">
+        <div class="form-logo-main">Cruel & Associates</div>
+        <div class="form-logo-sub">Credit Monitor</div>
+      </a>
+    </div>
+    <h2 class="form-title">Get Your Free Score</h2>
+    <p class="form-subtitle">No credit card needed. Results in 60 seconds.</p>
+
+    <form id="signup-form" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="first-name">First Name</label>
+          <input type="text" id="first-name" placeholder="Marcus" required>
+        </div>
+        <div class="form-group">
+          <label for="last-name">Last Name</label>
+          <input type="text" id="last-name" placeholder="Johnson" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="you@email.com" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Create Password</label>
+        <input type="password" id="password" placeholder="At least 8 characters" required minlength="8">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" required>
+        </div>
+        <div class="form-group">
+          <label for="ssn-last4">Last 4 of SSN</label>
+          <input type="text" id="ssn-last4" placeholder="••••" maxlength="4" pattern="\d{4}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="address">Street Address</label>
+        <input type="text" id="address" placeholder="123 Main Street" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city">City</label>
+          <input type="text" id="city" placeholder="Atlanta" required>
+        </div>
+        <div class="form-group">
+          <label for="zip">ZIP Code</label>
+          <input type="text" id="zip" placeholder="30301" maxlength="5" required>
+        </div>
+      </div>
+
+      <div class="form-checkbox">
+        <input type="checkbox" id="agree" required>
+        <label for="agree">
+          I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          I understand this is a soft inquiry that won't affect my credit score.
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg form-submit" id="submit-btn">
+        Get My Free Score →
+      </button>
+    </form>
+
+    <div class="form-footer">
+      Already have an account? <a href="login.html">Log in</a>
+    </div>
+
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:4px;">🔒 256-bit SSL</span>
+      <span style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:4px;">🛡 FCRA Compliant</span>
+      <span style="font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:4px;">⚡ Soft Inquiry Only</span>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  if (Auth.isLoggedIn()) window.location.href = 'dashboard.html';
+
+  document.getElementById('signup-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = 'Verifying identity…';
+    btn.disabled = true;
+
+    // Simulate API call
+    setTimeout(() => {
+      const data = {
+        firstName: document.getElementById('first-name').value,
+        lastName:  document.getElementById('last-name').value,
+        email:     document.getElementById('email').value,
+        password:  document.getElementById('password').value,
+      };
+      /* TODO: replace with real API call
+         POST /api/auth/signup with identity verification */
+      Auth.signup(data);
+      window.location.href = 'dashboard.html';
+    }, 2000);
+  });
+
+  // SSN input — numbers only
+  document.getElementById('ssn-last4').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+  });
+</script>
+</body>
+</html>

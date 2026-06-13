@@ -76,6 +76,11 @@
       transition: background 0.15s, color 0.15s;
     }
     .nav-cta:hover { background: var(--gold); color: var(--bg); }
+    .nav-ctas { display: flex; gap: 10px; align-items: center; }
+    .nav-cta-ghost {
+      background: transparent; border-color: rgba(201,168,76,0.4); color: var(--text-2);
+    }
+    .nav-cta-ghost:hover { background: transparent; border-color: var(--gold); color: var(--gold); }
 
     /* ── Hero ── */
     #hero {
@@ -130,6 +135,13 @@
       transition: border-color 0.15s, color 0.15s;
     }
     .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-outline {
+      padding: 14px 32px; background: transparent;
+      border: 1px solid var(--gold); color: var(--gold);
+      font-size: 14px; font-weight: 600; letter-spacing: 0.3px; border-radius: 3px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-outline:hover { background: var(--gold); color: var(--bg); }
 
     .hero-stats {
       display: flex; gap: 48px; margin-top: 72px;
@@ -370,7 +382,7 @@
     /* ── Responsive ── */
     @media (max-width: 900px) {
       nav { padding: 0 24px; }
-      .nav-links, .nav-cta { display: none; }
+      .nav-links, .nav-ctas { display: none; }
       section { padding: 72px 24px; }
       #hero { padding: 120px 24px 72px; }
       .hero-stats { gap: 28px; flex-wrap: wrap; }
@@ -400,7 +412,10 @@
     <li><a href="#approach">Approach</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
-  <a href="#contact" class="nav-cta">Become a Client</a>
+  <div class="nav-ctas">
+    <a href="credit/login.html" class="nav-cta nav-cta-ghost">Client Portal</a>
+    <a href="#contact" class="nav-cta">Get Started</a>
+  </div>
 </nav>
 
 <!-- ── Hero ── -->
@@ -414,8 +429,9 @@
     PTAH Consultants bridges strategic advisory and technology execution — turning complex challenges into measurable outcomes for ambitious organizations.
   </p>
   <div class="hero-actions">
-    <a href="#contact" class="btn-gold">Start a Conversation</a>
-    <a href="#products" class="btn-ghost">See Our Products →</a>
+    <a href="#contact" class="btn-gold">Get Started</a>
+    <a href="credit/login.html" class="btn-ghost">Client Portal</a>
+    <a href="#contact" class="btn-outline">Schedule Consultation</a>
   </div>
   <div class="hero-stats">
     <div class="stat-item">

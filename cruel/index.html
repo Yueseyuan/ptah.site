@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cruel & Associates | Administrative, Financial & Reentry Solutions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0d2244;
+      --navy2:   #162d55;
+      --navy3:   #1e3a6a;
+      --gold:    #c49a1a;
+      --gold2:   #dbb93a;
+      --gold3:   #f0d060;
+      --green:   #16a34a;
+      --blue:    #2563eb;
+      --red:     #dc2626;
+      --bg:      #f8f9fc;
+      --white:   #ffffff;
+      --text:    #1a2535;
+      --text-2:  #4a5568;
+      --text-3:  #718096;
+      --border:  #e2e8f0;
+      --shadow:  0 4px 24px rgba(0,0,0,0.07);
+      --shadow-lg: 0 8px 48px rgba(0,0,0,0.13);
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', sans-serif; color: var(--text); overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 70px; padding: 0 48px;
+      display: flex; align-items: center; gap: 40px;
+      background: rgba(13,34,68,0.97); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(196,154,26,0.2);
+    }
+    .nav-logo { display: flex; flex-direction: column; }
+    .nav-logo-main { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .nav-logo-sub  { font-size: 9px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); }
+    .nav-links { list-style: none; display: flex; gap: 32px; margin-left: auto; margin-right: 16px; }
+    .nav-links a { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.7); transition: color 0.15s; }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-ctas { display: flex; gap: 10px; }
+    .btn-nav-ghost {
+      padding: 8px 18px; border: 1px solid rgba(196,154,26,0.35);
+      color: rgba(255,255,255,0.65); font-size: 13px; font-weight: 500; border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .btn-nav-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-nav-primary {
+      padding: 8px 20px; background: var(--gold); color: var(--navy);
+      font-size: 13px; font-weight: 700; border-radius: 4px; transition: background 0.15s;
+    }
+    .btn-nav-primary:hover { background: var(--gold2); }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(140deg, #081629 0%, var(--navy) 50%, #0f2d5c 100%);
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 120px 48px 80px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute; top: -20%; right: -10%; width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(196,154,26,0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(196,154,26,0.08); border: 1px solid rgba(196,154,26,0.3);
+      padding: 6px 18px; border-radius: 24px;
+      font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 28px; width: fit-content;
+    }
+    .hero h1 {
+      font-size: clamp(38px, 6.5vw, 78px); font-weight: 900;
+      line-height: 1.04; letter-spacing: -1.5px; max-width: 820px; color: #fff;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--gold), var(--gold3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub {
+      font-size: 18px; color: rgba(255,255,255,0.6); line-height: 1.8;
+      max-width: 600px; margin-top: 24px; font-weight: 300;
+    }
+    .hero-actions { display: flex; gap: 14px; margin-top: 40px; flex-wrap: wrap; }
+    .btn-primary {
+      padding: 15px 36px; background: var(--gold); color: var(--navy);
+      font-weight: 700; font-size: 15px; border-radius: 4px; border: none; cursor: pointer;
+      transition: background 0.15s, transform 0.1s; display: inline-block;
+    }
+    .btn-primary:hover { background: var(--gold2); transform: translateY(-1px); }
+    .btn-ghost {
+      padding: 15px 36px; background: transparent;
+      border: 1.5px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.8);
+      font-size: 15px; font-weight: 500; border-radius: 4px; display: inline-block;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.6); color: #fff; }
+    .hero-stats {
+      display: flex; gap: 48px; margin-top: 64px;
+      padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap;
+    }
+    .stat-num { font-size: 30px; font-weight: 900; color: var(--gold); }
+    .stat-label { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+
+    /* ── Disclaimer ── */
+    .disclaimer-banner {
+      background: #fffbeb; border-bottom: 2px solid #f59e0b;
+      padding: 16px 48px; display: flex; align-items: flex-start; gap: 14px;
+    }
+    .disclaimer-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .disclaimer-text { font-size: 12.5px; line-height: 1.65; color: #78350f; }
+    .disclaimer-text strong { color: #92400e; }
+
+    /* ── Trust Bar ── */
+    .trust-bar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 18px 48px; }
+    .trust-inner { display: flex; gap: 36px; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .trust-item { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; color: var(--text-2); }
+
+    /* ── Sections ── */
+    section { padding: 96px 48px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section-tag { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+    .section-h2 { font-size: clamp(28px, 4vw, 46px); font-weight: 800; line-height: 1.12; letter-spacing: -0.5px; }
+    .section-sub { font-size: 17px; color: var(--text-2); line-height: 1.75; max-width: 600px; margin-top: 14px; font-weight: 300; }
+
+    /* ── About ── */
+    #about { background: var(--white); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .about-values { display: flex; flex-direction: column; gap: 24px; margin-top: 40px; }
+    .about-value { display: flex; gap: 16px; align-items: flex-start; }
+    .about-val-icon {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--navy), var(--navy2));
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .about-val-content h4 { font-size: 15px; font-weight: 700; color: var(--text); }
+    .about-val-content p { font-size: 14px; color: var(--text-2); line-height: 1.65; margin-top: 4px; }
+    .about-box {
+      background: linear-gradient(135deg, var(--navy), var(--navy2));
+      border-radius: 16px; padding: 40px; border: 1px solid rgba(196,154,26,0.2);
+    }
+    .about-box h3 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 14px; }
+    .about-box p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.75; }
+    .about-box .note { margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.4); }
+
+    /* ── Services ── */
+    #services { background: var(--bg); }
+    .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+    .svc-card {
+      background: var(--white); border-radius: 12px; padding: 32px;
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; position: relative; overflow: hidden;
+    }
+    .svc-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--navy), var(--gold)); opacity: 0; transition: opacity 0.2s;
+    }
+    .svc-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: rgba(196,154,26,0.3); }
+    .svc-card:hover::before { opacity: 1; }
+    .svc-icon {
+      width: 52px; height: 52px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--navy), var(--navy2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 18px;
+    }
+    .svc-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; padding: 3px 9px; border-radius: 4px; margin-bottom: 14px;
+      background: rgba(22,163,74,0.1); color: var(--green);
+    }
+    .svc-badge.ref { background: rgba(37,99,235,0.1); color: var(--blue); }
+    .svc-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .svc-card p  { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 16px; }
+    .svc-list { list-style: none; display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+    .svc-list li { font-size: 13px; color: var(--text-2); display: flex; align-items: flex-start; gap: 8px; }
+    .svc-list li::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .svc-link { font-size: 13px; font-weight: 600; color: var(--navy); display: inline-flex; align-items: center; gap: 4px; transition: color 0.15s, gap 0.15s; }
+    .svc-link:hover { color: var(--gold); gap: 8px; }
+
+    /* ── Journey ── */
+    #journey { background: linear-gradient(135deg, var(--navy) 0%, #0a1c3d 100%); }
+    .journey-head { text-align: center; margin-bottom: 56px; }
+    .journey-head .section-h2 { color: #fff; }
+    .journey-head .section-sub { color: rgba(255,255,255,0.55); margin: 14px auto 0; text-align: center; }
+    .journey-track { display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap; gap: 0; }
+    .journey-step {
+      flex: 1; min-width: 140px; max-width: 190px;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 24px 12px; position: relative;
+    }
+    .journey-step:not(:last-child)::after {
+      content: '→'; position: absolute; right: -8px; top: 32px;
+      font-size: 18px; color: rgba(196,154,26,0.45);
+    }
+    .journey-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(196,154,26,0.12); border: 2px solid rgba(196,154,26,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 900; color: var(--gold); margin-bottom: 16px;
+    }
+    .journey-step h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .journey-step p  { font-size: 12px; color: rgba(255,255,255,0.45); line-height: 1.55; }
+
+    /* ── Pricing ── */
+    #pricing { background: var(--white); }
+    .pricing-head { text-align: center; margin-bottom: 56px; }
+    .pricing-head .section-sub { margin: 14px auto 0; text-align: center; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 980px; margin: 0 auto; }
+    .price-card {
+      border: 1px solid var(--border); border-radius: 12px; padding: 36px 28px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .price-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .price-card.featured { background: var(--navy); border-color: var(--navy); color: #fff; box-shadow: var(--shadow-lg); }
+    .price-cat { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-3); margin-bottom: 18px; }
+    .price-card.featured .price-cat { color: rgba(255,255,255,0.45); }
+    .price-range { font-size: 30px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+    .price-card.featured .price-range { color: var(--gold); }
+    .price-desc { font-size: 13px; color: var(--text-2); margin-bottom: 24px; line-height: 1.65; }
+    .price-card.featured .price-desc { color: rgba(255,255,255,0.55); }
+    .price-items { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .price-items li { font-size: 13px; color: var(--text-2); display: flex; gap: 8px; }
+    .price-items li::before { content: '·'; color: var(--gold); font-size: 20px; line-height: 1; flex-shrink: 0; }
+    .price-card.featured .price-items li { color: rgba(255,255,255,0.65); }
+    .btn-price {
+      display: block; width: 100%; padding: 13px; text-align: center;
+      font-weight: 700; font-size: 14px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-price-gold { background: var(--gold); color: var(--navy); border: none; }
+    .btn-price-gold:hover { background: var(--gold2); }
+    .btn-price-outline { background: transparent; border: 1.5px solid var(--navy); color: var(--navy); }
+    .btn-price-outline:hover { background: var(--navy); color: #fff; }
+    .price-card.featured .btn-price-outline { border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.75); }
+    .price-card.featured .btn-price-outline:hover { background: rgba(255,255,255,0.08); border-color: #fff; color: #fff; }
+
+    /* ── Book ── */
+    #book { background: var(--bg); }
+    .book-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+    .book-options { display: flex; flex-direction: column; gap: 14px; margin-top: 32px; }
+    .book-option {
+      background: var(--white); border: 1px solid var(--border); border-radius: 10px;
+      padding: 20px 24px; display: flex; gap: 16px; align-items: center;
+      cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .book-option:hover { border-color: var(--gold); box-shadow: var(--shadow); }
+    .book-opt-icon { font-size: 26px; flex-shrink: 0; }
+    .book-opt-label { font-size: 15px; font-weight: 700; color: var(--text); }
+    .book-opt-sub   { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+    .book-box {
+      background: var(--white); border-radius: 12px; border: 1px solid var(--border);
+      padding: 48px 40px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 380px;
+    }
+    .book-box-icon { font-size: 52px; margin-bottom: 18px; }
+    .book-box h3 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+    .book-box p  { font-size: 14px; color: var(--text-2); margin-bottom: 28px; line-height: 1.65; }
+
+    /* ── Contact ── */
+    #contact { background: var(--white); }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; }
+    .contact-infos { display: flex; flex-direction: column; gap: 24px; margin-top: 36px; }
+    .c-item { display: flex; gap: 16px; align-items: flex-start; }
+    .c-item-icon {
+      width: 44px; height: 44px; border-radius: 8px;
+      background: var(--bg); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .c-item-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+    .c-item-val { font-size: 15px; font-weight: 500; color: var(--text); }
+    .contact-form { display: flex; flex-direction: column; gap: 16px; }
+    .fg { display: flex; flex-direction: column; gap: 6px; }
+    .fg label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .fg input, .fg select, .fg textarea {
+      padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 6px;
+      font-size: 14px; font-family: inherit; color: var(--text); outline: none;
+      transition: border-color 0.15s; background: var(--white);
+    }
+    .fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--navy); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .btn-submit {
+      padding: 14px; background: var(--navy); color: #fff; font-size: 15px; font-weight: 700;
+      border: none; border-radius: 6px; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-submit:hover { background: var(--navy2); }
+
+    /* ── Footer ── */
+    footer { background: var(--navy); color: rgba(255,255,255,0.55); padding: 64px 48px 32px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+    .footer-brand-name { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+    .footer-brand-sub  { font-size: 9px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 14px; }
+    .footer-desc { font-size: 13px; line-height: 1.75; }
+    .footer-col h5 { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col a { font-size: 13px; color: rgba(255,255,255,0.55); transition: color 0.15s; }
+    .footer-col a:hover { color: var(--gold); }
+    .footer-disclaimer {
+      margin-bottom: 32px; padding: 18px 22px;
+      background: rgba(255,255,255,0.04); border-radius: 6px; border-left: 3px solid rgba(196,154,26,0.5);
+      font-size: 11.5px; line-height: 1.75; color: rgba(255,255,255,0.38);
+    }
+    .footer-disclaimer strong { color: rgba(255,255,255,0.5); }
+    .footer-bottom {
+      padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.07);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 10px; font-size: 12px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--navy); border: 1px solid var(--gold); color: #fff;
+      padding: 14px 20px; border-radius: 6px; font-size: 13px;
+      box-shadow: var(--shadow-lg); animation: toast-in 0.3s ease; max-width: 320px;
+    }
+    @keyframes toast-in { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Reveal ── */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .d1 { transition-delay: 0.1s; }
+    .d2 { transition-delay: 0.2s; }
+    .d3 { transition-delay: 0.3s; }
+
+    /* ── Mobile ── */
+    @media (max-width: 900px) {
+      nav { padding: 0 20px; }
+      .nav-links, .nav-ctas { display: none; }
+      section { padding: 64px 20px; }
+      .hero, .disclaimer-banner, .trust-bar { padding-left: 20px; padding-right: 20px; }
+      .about-grid, .book-grid, .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+      .services-grid, .pricing-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .journey-step:not(:last-child)::after { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-main">Cruel &amp; Associates</div>
+    <div class="nav-logo-sub">Administrative &amp; Reentry Solutions</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-ctas">
+    <a href="tel:8649901301" class="btn-nav-ghost">☎ (864) 990-1301</a>
+    <a href="#book" class="btn-nav-primary">Book Appointment</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-eyebrow">Administrative · Financial · Reentry Solutions</div>
+  <h1>Restoring Opportunity.<br><em>Rebuilding Futures.</em></h1>
+  <p class="hero-sub">
+    Cruel &amp; Associates provides professional administrative support, credit restoration, criminal record relief assistance, and business consulting — helping individuals and organizations move forward with clarity and confidence.
+  </p>
+  <div class="hero-actions">
+    <a href="#book" class="btn-primary">Book a Free Consultation</a>
+    <a href="#services" class="btn-ghost">Explore Our Services</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="stat-num">6</div>
+      <div class="stat-label">Service Divisions</div>
+    </div>
+    <div>
+      <div class="stat-num">Free</div>
+      <div class="stat-label">Initial Consultation</div>
+    </div>
+    <div>
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Confidential</div>
+    </div>
+    <div>
+      <div class="stat-num">Mobile</div>
+      <div class="stat-label">Notary Services</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Legal Disclaimer ── -->
+<div class="disclaimer-banner">
+  <div class="disclaimer-icon">⚖️</div>
+  <div class="disclaimer-text">
+    <strong>Important Legal Disclosure:</strong> Cruel &amp; Associates is not a law firm and does not provide legal advice or legal representation. We are not attorneys. All services provided are administrative and educational in nature only. Any legal services are provided exclusively by licensed attorneys in our referral network. This disclosure is required by law and is provided to protect your rights as a client.
+  </div>
+</div>
+
+<!-- ── Trust Bar ── -->
+<div class="trust-bar">
+  <div class="trust-inner">
+    <div class="trust-item">🔒 100% Confidential</div>
+    <div class="trust-item">📋 Licensed Notary</div>
+    <div class="trust-item">🛡 FCRA Compliant</div>
+    <div class="trust-item">🤝 Attorney Referral Network</div>
+    <div class="trust-item">⚡ Free Initial Consultation</div>
+    <div class="trust-item">📍 Mobile Services Available</div>
+  </div>
+</div>
+
+<!-- ── About ── -->
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <div class="section-tag reveal">Who We Are</div>
+        <h2 class="section-h2 reveal">Built to Break Down Barriers</h2>
+        <p class="section-sub reveal">
+          We help individuals and businesses overcome barriers, restore opportunities, build financial stability, and achieve long-term success — through administrative support, education, and professional services.
+        </p>
+        <div class="about-values">
+          <div class="about-value reveal d1">
+            <div class="about-val-icon">🎯</div>
+            <div class="about-val-content">
+              <h4>Purpose-Driven</h4>
+              <p>Every service we offer is designed to create a real pathway — from your current situation to where you want to be.</p>
+            </div>
+          </div>
+          <div class="about-value reveal d2">
+            <div class="about-val-icon">🔐</div>
+            <div class="about-val-content">
+              <h4>Confidential &amp; Compliant</h4>
+              <p>Your information is handled with strict confidentiality. We operate fully within all applicable laws and regulatory frameworks.</p>
+            </div>
+          </div>
+          <div class="about-value reveal d3">
+            <div class="about-val-icon">🤝</div>
+            <div class="about-val-content">
+              <h4>Connected to Real Help</h4>
+              <p>Where administrative services end, our licensed attorney referral network begins. You'll never be left without a clear next step.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal d2">
+        <div class="about-box">
+          <h3>Your Path Forward</h3>
+          <p>We believe everyone deserves a second chance and the tools to build a better future. Whether you're starting from the bottom or breaking through the next barrier — we meet you where you are.</p>
+          <p class="note">Not sure where to start? Our free consultation identifies the right services for your specific situation and connects you to the right professionals.</p>
+          <div style="margin-top:28px;">
+            <a href="#book" class="btn-primary" style="font-size:14px;padding:12px 28px;">Schedule Free Consultation →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Services ── -->
+<section id="services">
+  <div class="container">
+    <div class="section-tag reveal">What We Do</div>
+    <h2 class="section-h2 reveal">Six Divisions. One Mission.</h2>
+    <p class="section-sub reveal">Comprehensive administrative and consulting services covering the full spectrum of your needs — from notary to reentry to business formation.</p>
+    <div class="services-grid">
+
+      <div class="svc-card reveal">
+        <div class="svc-icon">📋</div>
+        <span class="svc-badge">Licensed Service</span>
+        <h3>Mobile Notary &amp; Loan Signing</h3>
+        <p>Professional mobile notary and certified loan signing services throughout South Carolina — we come to you.</p>
+        <ul class="svc-list">
+          <li>General &amp; affidavit notarizations ($5/act per SC law)</li>
+          <li>Power of attorney notarization</li>
+          <li>Refinance &amp; HELOC loan signings</li>
+          <li>Purchase &amp; reverse mortgage signings</li>
+          <li>Hospital, nursing home &amp; jail visits</li>
+          <li>Emergency &amp; after-hours available</li>
+        </ul>
+        <a href="#book" class="svc-link">Book a Notary →</a>
+      </div>
+
+      <div class="svc-card reveal d1">
+        <div class="svc-icon">💳</div>
+        <span class="svc-badge">Financial Service</span>
+        <h3>Credit Restoration &amp; Financial Recovery</h3>
+        <p>Understand, investigate, and strategically improve your credit profile with expert coaching and education.</p>
+        <ul class="svc-list">
+          <li>Credit report review &amp; analysis</li>
+          <li>Credit investigation &amp; dispute support</li>
+          <li>Identity theft assistance</li>
+          <li>Financial literacy coaching</li>
+          <li>Budget planning</li>
+          <li>Credit improvement strategies</li>
+        </ul>
+        <a href="#book" class="svc-link">Get Credit Help →</a>
+      </div>
+
+      <div class="svc-card reveal d2">
+        <div class="svc-icon">⚖️</div>
+        <span class="svc-badge ref">Admin + Attorney Referral</span>
+        <h3>Criminal Record Relief &amp; Reentry</h3>
+        <p>Administrative record retrieval, reentry support, and referrals to licensed attorneys for expungements and pardons.</p>
+        <ul class="svc-list">
+          <li>Criminal &amp; court record retrieval</li>
+          <li>File assembly &amp; digital organization</li>
+          <li>Resume prep &amp; employment coaching</li>
+          <li>Housing &amp; workforce referrals</li>
+          <li>Pardon packet assembly</li>
+          <li>Attorney referral network access</li>
+        </ul>
+        <a href="#book" class="svc-link">Start Reentry Process →</a>
+      </div>
+
+      <div class="svc-card reveal d1">
+        <div class="svc-icon">📄</div>
+        <span class="svc-badge">Administrative</span>
+        <h3>Document Preparation</h3>
+        <p>Professional preparation and assembly of administrative documents, forms, and packets — accurate and organized.</p>
+        <ul class="svc-list">
+          <li>Affidavits &amp; authorization forms</li>
+          <li>Business documents</li>
+          <li>Administrative packets</li>
+          <li>Record request preparation</li>
+          <li>Client intake forms</li>
+        </ul>
+        <a href="#book" class="svc-link">Prepare Documents →</a>
+      </div>
+
+      <div class="svc-card reveal d2">
+        <div class="svc-icon">🔍</div>
+        <span class="svc-badge">Research Service</span>
+        <h3>Judgment &amp; Asset Recovery</h3>
+        <p>Research and locate unclaimed property, surplus funds, and asset information to help recover what may be owed to you.</p>
+        <ul class="svc-list">
+          <li>Judgment &amp; asset research</li>
+          <li>Unclaimed property research</li>
+          <li>Surplus funds research</li>
+          <li>Lien research</li>
+        </ul>
+        <a href="#book" class="svc-link">Start Research →</a>
+      </div>
+
+      <div class="svc-card reveal d3">
+        <div class="svc-icon">💼</div>
+        <span class="svc-badge">Consulting</span>
+        <h3>Business Consulting</h3>
+        <p>From business formation to systems setup — administrative consulting and support to launch and grow your business.</p>
+        <ul class="svc-list">
+          <li>Business formation support</li>
+          <li>Administrative consulting</li>
+          <li>Process &amp; systems design</li>
+          <li>Business systems setup</li>
+          <li>Compliance assistance</li>
+        </ul>
+        <a href="#book" class="svc-link">Grow Your Business →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Client Journey ── -->
+<section id="journey">
+  <div class="container">
+    <div class="journey-head reveal">
+      <div class="section-tag" style="display:flex;justify-content:center;">The Path Forward</div>
+      <h2 class="section-h2">From Barriers to Ownership</h2>
+      <p class="section-sub">Our integrated approach walks you through every phase — from your current situation to long-term stability and ownership.</p>
+    </div>
+    <div class="journey-track">
+      <div class="journey-step reveal">
+        <div class="journey-num">1</div>
+        <h4>Criminal Record Relief</h4>
+        <p>Record retrieval, reentry support &amp; attorney referrals</p>
+      </div>
+      <div class="journey-step reveal d1">
+        <div class="journey-num">2</div>
+        <h4>Employment</h4>
+        <p>Resume prep, coaching &amp; workforce connections</p>
+      </div>
+      <div class="journey-step reveal d2">
+        <div class="journey-num">3</div>
+        <h4>Credit Restoration</h4>
+        <p>Report review, disputes &amp; education</p>
+      </div>
+      <div class="journey-step reveal d2">
+        <div class="journey-num">4</div>
+        <h4>Financial Literacy</h4>
+        <p>Budgeting, planning &amp; financial coaching</p>
+      </div>
+      <div class="journey-step reveal d3">
+        <div class="journey-num">5</div>
+        <h4>Asset Building</h4>
+        <p>Unclaimed property &amp; surplus funds research</p>
+      </div>
+      <div class="journey-step reveal d3">
+        <div class="journey-num">6</div>
+        <h4>Business Ownership</h4>
+        <p>Formation, systems &amp; consulting for growth</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pricing ── -->
+<section id="pricing">
+  <div class="container">
+    <div class="pricing-head">
+      <div class="section-tag reveal">Transparent Pricing</div>
+      <h2 class="section-h2 reveal">Clear, Fair, Affordable</h2>
+      <p class="section-sub reveal">No hidden fees. All pricing is discussed and agreed upon in writing before any service begins. Payment plans available.</p>
+    </div>
+    <!-- Notary & Signing Pricing -->
+    <div style="margin-bottom:48px;">
+      <h3 class="reveal" style="font-size:18px;font-weight:700;margin-bottom:6px;">Mobile Notary &amp; Loan Signing — South Carolina</h3>
+      <p class="reveal" style="font-size:13px;color:var(--text-3);margin-bottom:24px;">Per SC Code § 26-1-120, notarial act fees are capped at $5 per act. Signing agent service fees below are separate from notarial act fees.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;" class="reveal">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">General Notarization</div>
+          <div style="font-size:24px;font-weight:900;color:var(--navy);">$5<span style="font-size:13px;font-weight:400;color:var(--text-3);">/act</span></div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:4px;">SC statutory maximum · Per notarial act</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Refinance / HELOC Signing</div>
+          <div style="font-size:24px;font-weight:900;color:var(--navy);">$100 – $125</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:4px;">Service fee · Notarial acts billed separately</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Purchase Transaction</div>
+          <div style="font-size:24px;font-weight:900;color:var(--navy);">$125 – $175</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:4px;">Service fee · Buyer, seller, or both sides</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Reverse Mortgage</div>
+          <div style="font-size:24px;font-weight:900;color:var(--navy);">$150 – $200</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:4px;">Service fee · High-volume document package</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">E-Sign / Hybrid Signing</div>
+          <div style="font-size:24px;font-weight:900;color:var(--navy);">$50 – $75</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:4px;">Reduced package · Electronic documents</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Travel &amp; After-Hours</div>
+          <div style="font-size:24px;font-weight:900;color:var(--navy);">+$25 – $75</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:4px;">Added to service fee · Distance &amp; time based</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Services Pricing Cards -->
+    <div class="pricing-grid">
+
+      <div class="price-card reveal">
+        <div class="price-cat">Record Relief &amp; Document Services</div>
+        <div class="price-range">$50 – $500</div>
+        <div class="price-desc">Administrative record retrieval, document preparation, and packet assembly.</div>
+        <ul class="price-items">
+          <li>Criminal / court record retrieval: $50–$150</li>
+          <li>Disposition retrieval: $50–$100</li>
+          <li>Background review packet: $75–$200</li>
+          <li>Document preparation: $100–$300</li>
+          <li>Pardon / expungement packet assembly: $200–$500</li>
+          <li>Identity verification assistance: $75–$150</li>
+        </ul>
+        <a href="#book" class="btn-price btn-price-outline">Book Service</a>
+      </div>
+
+      <div class="price-card featured reveal d1">
+        <div class="price-cat">Credit &amp; Reentry Services</div>
+        <div class="price-range">$75 – $499+</div>
+        <div class="price-desc">Our most comprehensive packages — credit restoration, reentry coaching, and employment support.</div>
+        <ul class="price-items">
+          <li>Credit snapshot review: $99</li>
+          <li>Credit investigation package: $299–$499</li>
+          <li>Premium credit consulting: $499+</li>
+          <li>Resume &amp; reentry package: $75–$250</li>
+          <li>Reentry coaching (per session): $100–$300</li>
+          <li>Housing &amp; workforce referral support: $75–$150</li>
+        </ul>
+        <a href="#book" class="btn-price btn-price-gold">Book Free Consultation</a>
+      </div>
+
+      <div class="price-card reveal d2">
+        <div class="price-cat">Business &amp; Asset Services</div>
+        <div class="price-range">$75 – $500+</div>
+        <div class="price-desc">Business formation, administrative consulting, and asset/surplus research services.</div>
+        <ul class="price-items">
+          <li>Unclaimed / surplus funds research: $75–$200</li>
+          <li>Lien &amp; judgment research: $75–$150</li>
+          <li>Business consulting: $150–$500/session</li>
+          <li>Business formation support: flat-rate packages</li>
+          <li>Process &amp; systems design: custom quote</li>
+          <li>Compliance assistance: $150–$300</li>
+        </ul>
+        <a href="#book" class="btn-price btn-price-outline">Get a Quote</a>
+      </div>
+
+    </div>
+    <p style="text-align:center;font-size:13px;color:var(--text-3);margin-top:32px;">
+      Free initial consultation for all new clients · Payment plans available · All fees agreed in writing before services begin
+    </p>
+  </div>
+</section>
+
+<!-- ── Book ── -->
+<section id="book">
+  <div class="container">
+    <div class="book-grid">
+      <div>
+        <div class="section-tag reveal">Schedule</div>
+        <h2 class="section-h2 reveal">Book Your Appointment</h2>
+        <p class="section-sub reveal">Choose the appointment type that fits your needs. All initial consultations are free and completely confidential.</p>
+        <div class="book-options">
+          <div class="book-option reveal d1" onclick="showToast('Redirecting to scheduling calendar…')">
+            <div class="book-opt-icon">📞</div>
+            <div>
+              <div class="book-opt-label">Free Phone Consultation</div>
+              <div class="book-opt-sub">30 min · No obligation · Mon–Sat</div>
+            </div>
+          </div>
+          <div class="book-option reveal d2" onclick="showToast('Redirecting to scheduling calendar…')">
+            <div class="book-opt-icon">🏠</div>
+            <div>
+              <div class="book-opt-label">In-Person / Mobile Visit</div>
+              <div class="book-opt-sub">Notary services, document review · Travel fees may apply</div>
+            </div>
+          </div>
+          <div class="book-option reveal d3" onclick="showToast('Redirecting to scheduling calendar…')">
+            <div class="book-opt-icon">💻</div>
+            <div>
+              <div class="book-opt-label">Virtual Consultation</div>
+              <div class="book-opt-sub">Zoom or phone · Credit, reentry &amp; business services</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal d2">
+        <div class="book-box">
+          <div class="book-box-icon">📅</div>
+          <h3>Schedule Online</h3>
+          <p>Select a time that works for you. Booking is instant — no back-and-forth needed.</p>
+          <!-- Replace button below with Calendly embed:
+               <div class="calendly-inline-widget" data-url="https://calendly.com/YOUR-LINK" style="min-width:320px;height:630px;"></div>
+               <script src="https://assets.calendly.com/assets/external/widget.js"></script> -->
+          <a href="#contact" class="btn-primary" style="font-size:14px;padding:13px 32px;">Contact Us to Schedule →</a>
+          <p style="font-size:12px;color:var(--text-3);margin-top:18px;">
+            Or call directly: <a href="tel:8649901301" style="color:var(--navy);font-weight:600;">(864) 990-1301</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Contact ── -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <div>
+        <div class="section-tag reveal">Get In Touch</div>
+        <h2 class="section-h2 reveal">We're Here to Help</h2>
+        <p class="section-sub reveal">Have questions before booking? Reach out directly — we respond to all inquiries within one business day.</p>
+        <div class="contact-infos">
+          <div class="c-item reveal d1">
+            <div class="c-item-icon">☎</div>
+            <div>
+              <div class="c-item-label">Phone</div>
+              <div class="c-item-val"><a href="tel:8649901301" style="color:inherit;">(864) 990-1301</a></div>
+            </div>
+          </div>
+          <div class="c-item reveal d2">
+            <div class="c-item-icon">✉</div>
+            <div>
+              <div class="c-item-label">Email</div>
+              <div class="c-item-val"><a href="mailto:yueseyuan.cruel@ptahhet.org" style="color:inherit;">yueseyuan.cruel@ptahhet.org</a></div>
+            </div>
+          </div>
+          <div class="c-item reveal d3">
+            <div class="c-item-icon">🕐</div>
+            <div>
+              <div class="c-item-label">Hours</div>
+              <div class="c-item-val">Monday – Saturday, 9am – 6pm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal d1">
+        <form class="contact-form" id="contact-form">
+          <div class="form-row">
+            <div class="fg">
+              <label for="c-first">First Name</label>
+              <input type="text" id="c-first" placeholder="Marcus" required>
+            </div>
+            <div class="fg">
+              <label for="c-last">Last Name</label>
+              <input type="text" id="c-last" placeholder="Johnson" required>
+            </div>
+          </div>
+          <div class="fg">
+            <label for="c-email">Email Address</label>
+            <input type="email" id="c-email" placeholder="you@email.com" required>
+          </div>
+          <div class="fg">
+            <label for="c-phone">Phone Number</label>
+            <input type="tel" id="c-phone" placeholder="(555) 000-0000">
+          </div>
+          <div class="fg">
+            <label for="c-service">Service of Interest</label>
+            <select id="c-service">
+              <option value="">Select a service…</option>
+              <option>Mobile Notary &amp; Signing</option>
+              <option>Credit Restoration &amp; Financial Recovery</option>
+              <option>Criminal Record Relief &amp; Reentry</option>
+              <option>Document Preparation</option>
+              <option>Judgment &amp; Asset Recovery</option>
+              <option>Business Consulting</option>
+              <option>Not sure — need guidance</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label for="c-msg">Message</label>
+            <textarea id="c-msg" rows="4" placeholder="Tell us a little about your situation and how we can help…"></textarea>
+          </div>
+          <button type="submit" class="btn-submit">Send Message →</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand-name">Cruel &amp; Associates</div>
+      <div class="footer-brand-sub">Administrative &amp; Reentry Solutions</div>
+      <p class="footer-desc">Helping individuals and businesses overcome barriers, restore opportunities, build financial stability, and achieve long-term success through professional administrative services.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Services</h5>
+      <ul>
+        <li><a href="#services">Mobile Notary</a></li>
+        <li><a href="#services">Credit Restoration</a></li>
+        <li><a href="#services">Record Relief &amp; Reentry</a></li>
+        <li><a href="#services">Document Preparation</a></li>
+        <li><a href="#services">Asset Recovery</a></li>
+        <li><a href="#services">Business Consulting</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Company</h5>
+      <ul>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#book">Book Appointment</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Legal</h5>
+      <ul>
+        <li><a href="#">Non-Attorney Disclosure</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Service Agreement</a></li>
+        <li><a href="#">Credit Services Disclosure</a></li>
+        <li><a href="#">FCRA Notice</a></li>
+        <li><a href="#">Notary Agreement</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-disclaimer">
+    <strong>Non-Attorney Disclosure:</strong> Cruel &amp; Associates is not a law firm and does not provide legal advice or legal representation. We are not attorneys. Any legal services are provided exclusively by licensed attorneys in our referral network. Information provided by Cruel &amp; Associates is educational and administrative in nature only. Services related to criminal records are administrative assistance only and do not constitute legal representation or legal advice.
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Cruel &amp; Associates. All rights reserved.</span>
+    <span>Administrative &amp; Reentry Solutions · Non-Attorney Document Services</span>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+  // Contact form
+  document.getElementById('contact-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showToast('Message sent! We\'ll respond within one business day.');
+    this.reset();
+    /* TODO: wire to Formspree, EmailJS, or backend endpoint */
+  });
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  }
+</script>
+</body>
+</html>

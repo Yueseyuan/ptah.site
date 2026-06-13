@@ -5,10 +5,94 @@
 //            HAR archive, mock server, framework detection, JS bundles.
 //            Requires Playwright (npx playwright install chromium).
 
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const fs   = require('fs');
 const path = require('path');
 const { URL } = require('url');
+const os   = require('os');
+
+const IS_WINDOWS = os.platform() === 'win32';
+
+function hasCommand(cmd) {
+  const r = spawnSync(IS_WINDOWS ? 'where' : 'which', [cmd], { stdio: 'pipe' });
+  return r.status === 0;
+}
+
+// Pure Node.js recursive site downloader — used when wget is not available
+async function nodeCrawl(startUrl, destDir, maxPages = 200) {
+  const base    = new URL(startUrl);
+  const visited = new Set();
+  const queue   = [startUrl];
+  let   count   = 0;
+
+  const ASSET_EXTS = /\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|json|xml|txt)(\?.*)?$/i;
+
+  async function fetchSave(url) {
+    if (visited.has(url)) return '';
+    visited.add(url);
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SiteCloneTool/1.0)' },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!res.ok) return '';
+      const buf = Buffer.from(await res.arrayBuffer());
+
+      // build local path
+      const u        = new URL(url);
+      let   relPath  = u.pathname.replace(/^\//, '') || 'index.html';
+      if (!path.extname(relPath) || relPath.endsWith('/'))
+        relPath = relPath.replace(/\/?$/, '/index.html');
+      const localPath = path.join(destDir, relPath.split('/').join(path.sep));
+      fs.mkdirSync(path.dirname(localPath), { recursive: true });
+      fs.writeFileSync(localPath, buf);
+      return buf.toString('utf8');
+    } catch { return ''; }
+  }
+
+  while (queue.length && count < maxPages) {
+    const url = queue.shift();
+    if (visited.has(url)) continue;
+    count++;
+    process.stdout.write(`\r  Fetched ${count} pages…`);
+
+    const body = await fetchSave(url);
+    if (!body) continue;
+
+    // extract links from HTML
+    const linkRe = /(?:href|src|action)=["']([^"'#?]+)/g;
+    let m;
+    while ((m = linkRe.exec(body))) {
+      try {
+        const abs = new URL(m[1], url).href;
+        if (!abs.startsWith(base.origin)) continue;
+        if (visited.has(abs)) continue;
+        if (ASSET_EXTS.test(abs)) {
+          // assets: fetch immediately, don't recurse
+          visited.add(abs);
+          fetchSave(abs);
+        } else {
+          queue.push(abs);
+        }
+      } catch {}
+    }
+
+    // extract asset URLs from CSS
+    const cssRe = /url\(["']?([^"')]+)["']?\)/g;
+    while ((m = cssRe.exec(body))) {
+      try {
+        const abs = new URL(m[1], url).href;
+        if (abs.startsWith(base.origin) && !visited.has(abs)) {
+          visited.add(abs);
+          fetchSave(abs);
+        }
+      } catch {}
+    }
+  }
+  process.stdout.write('\n');
+  return count;
+}
 
 const RESET  = '\x1b[0m';
 const BOLD   = '\x1b[1m';
@@ -280,15 +364,21 @@ async function cloneSite(targetUrl, opts) {
 
   // ── 1: download all static files ────────────────────────────────────
   log('1/5', 'Downloading all static files…');
-  try {
-    execSync(
-      `wget --mirror --convert-links --adjust-extension --page-requisites ` +
-      `--no-parent --quiet -P "${filesDir}" "${targetUrl}"`,
-      { stdio: 'inherit', timeout: 120_000 }
-    );
-    ok('Files downloaded.');
-  } catch {
-    warn('wget finished (some external resource errors are normal).');
+  if (hasCommand('wget')) {
+    try {
+      execSync(
+        `wget --mirror --convert-links --adjust-extension --page-requisites ` +
+        `--no-parent --quiet -P "${filesDir}" "${targetUrl}"`,
+        { stdio: 'inherit', timeout: 120_000 }
+      );
+      ok('Files downloaded (wget).');
+    } catch {
+      warn('wget finished (some external resource errors are normal).');
+    }
+  } else {
+    warn('wget not found — using built-in Node.js crawler (no extra install needed).');
+    const n = await nodeCrawl(targetUrl, filesDir);
+    ok(`Files downloaded via Node.js crawler (${n} pages).`);
   }
 
   const cssFiles  = findFiles(filesDir, '.css');

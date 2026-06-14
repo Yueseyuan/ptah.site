@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     SMTP_USER: Optional[str] = None
     SMTP_PASS: Optional[str] = None
 
+    DEV_NO_AUTH: bool = True
+
     COMPANY_NAME: str = "Cruel & Associates"
     COMPANY_PHONE: str = "(864) 990-1301"
     COMPANY_EMAIL: str = "yueseyuan.cruel@cruelandassociates.site"

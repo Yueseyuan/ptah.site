@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { getDashboardStats } from '@/lib/api';
 
@@ -17,18 +16,15 @@ interface Stats {
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('ca_token');
-    if (!token) { router.push('/login'); return; }
     getDashboardStats()
       .then(setStats)
-      .catch(() => router.push('/login'))
+      .catch(() => setStats(null))
       .finally(() => setLoading(false));
-  }, [router]);
+  }, []);
 
   if (loading) return (
     <div className="main-layout">

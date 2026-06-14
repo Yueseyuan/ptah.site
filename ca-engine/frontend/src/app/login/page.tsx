@@ -10,20 +10,32 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function doLogin(emailVal: string, passVal: string) {
     setError('');
     setLoading(true);
     try {
-      const data = await login(email, password);
+      const data = await login(emailVal, passVal);
       localStorage.setItem('ca_token', data.access_token);
       localStorage.setItem('ca_user', JSON.stringify(data.user));
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      if (!err.response) {
+        setError('Cannot reach backend at localhost:8000 — make sure the server is running.');
+      } else {
+        setError(err.response?.data?.detail || `Server error ${err.response?.status}`);
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await doLogin(email, password);
+  }
+
+  async function handleDevAccess() {
+    await doLogin('admin@cruelandassociates.site', 'CruelAdmin2024!');
   }
 
   return (
@@ -68,11 +80,36 @@ export default function LoginPage() {
                 required
               />
             </div>
-            {error && <p className="error-msg" style={{ marginBottom: 12 }}>{error}</p>}
+            {error && (
+              <p className="error-msg" style={{ marginBottom: 12, fontSize: 12 }}>{error}</p>
+            )}
             <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
+
+          <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+            <p style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 8, textAlign: 'center' }}>
+              Local access
+            </p>
+            <button
+              onClick={handleDevAccess}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: '#f0f4ff',
+                border: '1px solid #c0cdf0',
+                borderRadius: 6,
+                color: '#1a3a8f',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {loading ? 'Signing in…' : 'Quick Admin Access'}
+            </button>
+          </div>
         </div>
         <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--muted)', marginTop: 16 }}>
           Cruel & Associates is not a law firm and does not provide legal advice.

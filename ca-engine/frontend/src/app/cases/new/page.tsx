@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { createCase, listClients } from '@/lib/api';
@@ -62,7 +62,7 @@ const INTAKE_FIELDS: Record<string, { key: string; label: string; type?: string;
 
 interface Client { id: number; first_name: string; last_name: string; }
 
-export default function NewCasePage() {
+function NewCaseForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get('client_id');
@@ -205,5 +205,13 @@ export default function NewCasePage() {
         </form>
       </main>
     </div>
+  );
+}
+
+export default function NewCasePage() {
+  return (
+    <Suspense fallback={<div className="main-layout"><div style={{ padding: 40 }}><div className="spinner" /></div></div>}>
+      <NewCaseForm />
+    </Suspense>
   );
 }

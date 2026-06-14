@@ -21,13 +21,22 @@ async def lifespan(app: FastAPI):
     # Ensure document output directory exists
     Path("generated_docs").mkdir(exist_ok=True)
 
-    # Start automation scheduler
-    from app.services.automation import start_scheduler, stop_scheduler
-    start_scheduler()
+    # Start automation scheduler (skip if unavailable)
+    try:
+        from app.services.automation import start_scheduler, stop_scheduler
+        start_scheduler()
+        scheduler_started = True
+    except Exception as e:
+        logger.warning("Scheduler not started: %s", e)
+        scheduler_started = False
 
     yield
 
-    stop_scheduler()
+    if scheduler_started:
+        try:
+            stop_scheduler()
+        except Exception:
+            pass
     logger.info("CA Engine shutdown complete")
 
 

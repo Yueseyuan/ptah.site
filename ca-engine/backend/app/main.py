@@ -15,11 +15,33 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create all DB tables on startup
+    import app.models  # noqa: ensure all models are registered
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables initialized")
 
     # Ensure document output directory exists
     Path("generated_docs").mkdir(exist_ok=True)
+
+    # Auto-create admin user when DEV_NO_AUTH is enabled and DB is empty
+    if settings.DEV_NO_AUTH:
+        try:
+            from app.database import SessionLocal
+            from app.models import User
+            from app.auth import hash_password
+            db = SessionLocal()
+            if not db.query(User).filter(User.role == "admin").first():
+                db.add(User(
+                    email="admin@cruelandassociates.site",
+                    hashed_password=hash_password("CruelAdmin2024!"),
+                    full_name="System Admin",
+                    role="admin",
+                    is_active=True,
+                ))
+                db.commit()
+                logger.info("Dev admin user created automatically")
+            db.close()
+        except Exception as e:
+            logger.warning("Could not auto-create admin user: %s", e)
 
     # Start automation scheduler (skip if unavailable)
     try:

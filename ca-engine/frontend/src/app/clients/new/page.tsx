@@ -27,10 +27,12 @@ export default function NewClientPage() {
     }
     setLoading(true);
     try {
-      const client = await createClient(form);
+      // Strip empty strings so optional fields are omitted (avoids email validation errors)
+      const payload = Object.fromEntries(Object.entries(form).filter(([, v]) => v !== ''));
+      const client = await createClient(payload);
       router.push(`/clients/${client.id}`);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create client.');
+      setError(err.response?.data?.detail || err.message || 'Failed to create client.');
     } finally {
       setLoading(false);
     }

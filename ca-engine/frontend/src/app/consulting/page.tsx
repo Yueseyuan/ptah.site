@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Sidebar from '@/components/Sidebar';
 import { listConsultingEngagements, createConsultingEngagement, listClients } from '@/lib/api';
 
 interface Engagement {
@@ -12,11 +13,10 @@ interface Engagement {
   business_type: string;
   total_fee: number;
   session_datetime: string | null;
-  notes: string;
   created_at: string;
 }
 
-interface Client { id: number; full_name: string; }
+interface Client { id: number; first_name: string; last_name: string; }
 
 const TYPES = [
   { value: 'hourly', label: 'Hourly — $150/hr' },
@@ -66,128 +66,131 @@ export default function ConsultingPage() {
       setShowForm(false);
       await load();
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { detail?: string } }; message?: string };
-      setErr(err.response?.data?.detail || err.message || 'Failed to create engagement.');
+      const err = e as { response?: { data?: { detail?: unknown } }; message?: string };
+      const detail = err.response?.data?.detail;
+      setErr(typeof detail === 'string' ? detail : detail ? JSON.stringify(detail) : err.message || 'Failed to create engagement.');
     } finally {
       setSaving(false);
     }
   }
 
-  const totalRevenue = engagements.reduce((s, e) => s + (e.total_fee ?? 0), 0);
+  const clientName = (id: number) => {
+    const c = clients.find(c => c.id === id);
+    return c ? `${c.first_name} ${c.last_name}` : `#${id}`;
+  };
+
+  const totalBilled = engagements.reduce((s, e) => s + (e.total_fee ?? 0), 0);
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ margin: 0 }}>Division 6 — Business Consulting</h1>
-          <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: 13 }}>
-            LLC/Corp startup guidance, SOPs, business plans, strategy. $150/hr or $500 package.
-          </p>
-        </div>
-        <button className="btn-primary" onClick={() => setShowForm(s => !s)}>
-          {showForm ? 'Cancel' : '+ New Engagement'}
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
-        <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>{engagements.length}</div>
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>Total Engagements</div>
-        </div>
-        <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>
-            {engagements.filter(e => e.status === 'active' || e.status === 'scheduled').length}
+    <div className="main-layout">
+      <Sidebar />
+      <main className="main-content">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1>Division 6 — Business Consulting</h1>
+            <p>LLC/Corp startup, SOPs, business plans, strategy. $150/hr or $500 package.</p>
           </div>
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>Active</div>
+          <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>
+            {showForm ? 'Cancel' : '+ New Engagement'}
+          </button>
         </div>
-        <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>${totalRevenue.toFixed(2)}</div>
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>Total Billed</div>
-        </div>
-      </div>
 
-      {showForm && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ marginTop: 0 }}>Schedule Consulting Engagement</h3>
-          {err && <div className="alert-error">{err}</div>}
-          <form onSubmit={submit}>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Client *</label>
-                <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))} required>
-                  <option value="">Select client…</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
-                </select>
+        <div className="stat-grid" style={{ marginBottom: 24 }}>
+          <div className="stat-card">
+            <div className="label">Total Engagements</div>
+            <div className="value">{engagements.length}</div>
+          </div>
+          <div className="stat-card">
+            <div className="label">Active</div>
+            <div className="value">{engagements.filter(e => ['active', 'scheduled'].includes(e.status)).length}</div>
+          </div>
+          <div className="stat-card">
+            <div className="label">Total Billed</div>
+            <div className="value">${totalBilled.toFixed(2)}</div>
+          </div>
+        </div>
+
+        {showForm && (
+          <div className="card" style={{ marginBottom: 24 }}>
+            <h3 style={{ color: 'var(--navy)', marginBottom: 16 }}>Schedule Consulting Engagement</h3>
+            {err && <div className="alert-error">{err}</div>}
+            <form onSubmit={submit}>
+              <div className="grid-2">
+                <div className="form-group">
+                  <label>Client *</label>
+                  <select value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))} required>
+                    <option value="">Select client…</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Engagement Type *</label>
+                  <select value={form.engagement_type} onChange={e => setForm(f => ({ ...f, engagement_type: e.target.value }))}>
+                    {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Business Stage</label>
+                  <select value={form.business_stage} onChange={e => setForm(f => ({ ...f, business_stage: e.target.value }))}>
+                    {STAGES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Business Type</label>
+                  <input value={form.business_type} placeholder="LLC, Corp, Sole Prop…"
+                    onChange={e => setForm(f => ({ ...f, business_type: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label>Session Date/Time</label>
+                  <input type="datetime-local" value={form.session_datetime}
+                    onChange={e => setForm(f => ({ ...f, session_datetime: e.target.value }))} />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Notes / Goals</label>
+                  <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} />
+                </div>
               </div>
-              <div className="form-group">
-                <label>Engagement Type *</label>
-                <select value={form.engagement_type} onChange={e => setForm(f => ({ ...f, engagement_type: e.target.value }))}>
-                  {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Business Stage</label>
-                <select value={form.business_stage} onChange={e => setForm(f => ({ ...f, business_stage: e.target.value }))}>
-                  {STAGES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Business Type</label>
-                <input value={form.business_type} placeholder="LLC, Corp, Sole Prop…"
-                  onChange={e => setForm(f => ({ ...f, business_type: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Session Date/Time</label>
-                <input type="datetime-local" value={form.session_datetime}
-                  onChange={e => setForm(f => ({ ...f, session_datetime: e.target.value }))} />
-              </div>
-              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>Notes / Goals</label>
-                <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} />
-              </div>
-            </div>
-            <div style={{ marginTop: 16 }}>
-              <button type="submit" className="btn-primary" disabled={saving}>
+              <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? 'Scheduling…' : 'Schedule Engagement'}
               </button>
-            </div>
-          </form>
-        </div>
-      )}
+            </form>
+          </div>
+        )}
 
-      <div className="card">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Engagement #</th>
-              <th>Client</th>
-              <th>Type</th>
-              <th>Stage</th>
-              <th>Status</th>
-              <th>Fee</th>
-              <th>Session</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {engagements.length === 0 && (
-              <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--muted)' }}>No engagements yet.</td></tr>
-            )}
-            {engagements.map(e => (
-              <tr key={e.id}>
-                <td><code>{e.engagement_number}</code></td>
-                <td>{clients.find(c => c.id === e.client_id)?.full_name ?? `#${e.client_id}`}</td>
-                <td>{e.engagement_type}</td>
-                <td>{e.business_stage}</td>
-                <td><span className={`badge badge-${e.status}`}>{e.status}</span></td>
-                <td>${e.total_fee}</td>
-                <td>{e.session_datetime ? new Date(e.session_datetime).toLocaleString() : '—'}</td>
-                <td>{new Date(e.created_at).toLocaleDateString()}</td>
+        <div className="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Engagement #</th>
+                <th>Client</th>
+                <th>Type</th>
+                <th>Stage</th>
+                <th>Status</th>
+                <th>Fee</th>
+                <th>Session</th>
+                <th>Created</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {engagements.length === 0 && (
+                <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--muted)', padding: 32 }}>No engagements yet.</td></tr>
+              )}
+              {engagements.map(e => (
+                <tr key={e.id}>
+                  <td><code>{e.engagement_number}</code></td>
+                  <td>{clientName(e.client_id)}</td>
+                  <td>{e.engagement_type}</td>
+                  <td>{e.business_stage}</td>
+                  <td><span className={`badge badge-${e.status}`}>{e.status}</span></td>
+                  <td>${e.total_fee}</td>
+                  <td>{e.session_datetime ? new Date(e.session_datetime).toLocaleString() : '—'}</td>
+                  <td>{new Date(e.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
     </div>
   );
 }

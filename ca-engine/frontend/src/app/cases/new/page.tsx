@@ -101,8 +101,14 @@ function NewCaseForm() {
         assigned_to: form.assigned_to,
       });
       router.push(`/cases/${caseData.id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create case.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } }; message?: string };
+      const detail = e.response?.data?.detail;
+      setError(
+        typeof detail === 'string' ? detail
+        : detail ? JSON.stringify(detail)
+        : e.message || 'Network error — check backend is running on port 8001.'
+      );
     } finally {
       setLoading(false);
     }

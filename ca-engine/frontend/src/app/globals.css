@@ -152,6 +152,13 @@ tbody tr:hover { background: #f9fafb; }
 
 .error-msg { color: var(--danger); font-size: 13px; margin-top: 4px; }
 .success-msg { color: var(--success); font-size: 13px; margin-top: 4px; }
+.alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 12px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.badge-scheduled { background: #dbeafe; color: #1e40af; }
+.badge-completed { background: #d1fae5; color: #065f46; }
+.badge-intake { background: #fef3c7; color: #92400e; }
+.badge-in_progress { background: #ede9fe; color: #5b21b6; }
+.badge-active { background: #d1fae5; color: #065f46; }
 
 .spinner {
   width: 32px;

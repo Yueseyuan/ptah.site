@@ -13,8 +13,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 interface Case {
-  id: number; title: string; division: string; status: string;
-  client_id: number; client_name?: string; created_at: string;
+  id: number; division: string; status: string;
+  client_id: number; created_at: string;
 }
 
 export default function CasesPage() {
@@ -69,8 +69,8 @@ export default function CasesPage() {
               <tbody>
                 {visible.map((c) => (
                   <tr key={c.id}>
-                    <td style={{ fontWeight: 600 }}><Link href={`/cases/${c.id}`}>{c.title}</Link></td>
-                    <td><Link href={`/clients/${c.client_id}`}>{c.client_name || `Client #${c.client_id}`}</Link></td>
+                    <td style={{ fontWeight: 600 }}><Link href={`/cases/${c.id}`}>Case #{c.id} — {DIVISION_LABELS[c.division] || c.division}</Link></td>
+                    <td><Link href={`/clients/${c.client_id}`}>Client #{c.client_id}</Link></td>
                     <td>{DIVISION_LABELS[c.division] || c.division}</td>
                     <td>
                       <span style={{

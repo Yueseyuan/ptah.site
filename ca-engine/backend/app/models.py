@@ -36,8 +36,6 @@ class Case(Base):
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"))
     division = Column(String)  # notary, credit, reentry, document_prep, asset_recovery, business
-    title = Column(String)
-    description = Column(Text)
     status = Column(String, default="active")
     intake_data = Column(Text)  # JSON blob of all intake fields
     ai_analysis = Column(Text)  # AI-generated analysis

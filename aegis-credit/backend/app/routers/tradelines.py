@@ -8,6 +8,21 @@ from app.models import Tradeline
 router = APIRouter(prefix="/api/tradelines", tags=["tradelines"])
 
 
+class TradelineCreate(BaseModel):
+    case_id: int
+    report_id: int
+    bureau: str
+    creditor_name: str
+    account_number_last4: Optional[str] = None
+    account_type: str = "other"
+    open_date: Optional[str] = None
+    close_date: Optional[str] = None
+    balance: Optional[float] = None
+    credit_limit: Optional[float] = None
+    payment_status: str = "unknown"
+    derogatory: bool = False
+
+
 class TradelineUpdate(BaseModel):
     creditor_name: Optional[str] = None
     account_type: Optional[str] = None
@@ -37,6 +52,24 @@ def _out(t: Tradeline) -> dict:
         "dispute_status": t.dispute_status,
         "created_at": t.created_at.isoformat() if t.created_at else None,
     }
+
+
+@router.post("/manual", status_code=201)
+def create_tradeline_manual(data: TradelineCreate, db: Session = Depends(get_db)):
+    t = Tradeline(**data.model_dump())
+    db.add(t)
+    db.commit()
+    db.refresh(t)
+    return _out(t)
+
+
+@router.delete("/{tradeline_id}", status_code=204)
+def delete_tradeline(tradeline_id: int, db: Session = Depends(get_db)):
+    t = db.query(Tradeline).filter(Tradeline.id == tradeline_id).first()
+    if not t:
+        raise HTTPException(404, "Tradeline not found")
+    db.delete(t)
+    db.commit()
 
 
 @router.get("/case/{case_id}")

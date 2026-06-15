@@ -7,7 +7,7 @@ import { listReports, uploadReport, reparseReport, deleteReport } from '@/lib/ap
 
 interface Report { id: number; bureau: string; parse_status: string; report_date: string; has_text: boolean; created_at: string; parse_error?: string; }
 
-const BUREAUS = ['experian', 'equifax', 'transunion', 'innovis'];
+const BUREAUS = ['experian', 'equifax', 'transunion', 'innovis', 'all'];
 
 export default function ReportsPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,11 +28,17 @@ export default function ReportsPage() {
     setUploading(true); setError(''); setSuccess('');
     const fd = new FormData();
     fd.append('case_id', String(caseId));
-    fd.append('bureau', bureau);
+    fd.append('bureau', bureau === 'all' ? 'experian' : bureau);
     fd.append('file', fileRef.current.files[0]);
     try {
-      await uploadReport(fd);
-      setSuccess('Report uploaded and parsed.');
+      const result = await uploadReport(fd);
+      if (result.parse_status === 'parsed') {
+        setSuccess('Report uploaded and text extracted. If no tradelines appear, set ANTHROPIC_API_KEY in the backend .env file and reparse.');
+      } else if (result.parse_status === 'failed') {
+        setError(`Parse failed: ${result.parse_error || 'Unknown error'}`);
+      } else {
+        setSuccess('Report uploaded.');
+      }
       if (fileRef.current) fileRef.current.value = '';
       load();
     } catch (err: unknown) {
@@ -45,7 +51,7 @@ export default function ReportsPage() {
   async function reparse(reportId: number) {
     try {
       await reparseReport(reportId);
-      setSuccess('Reparse complete.');
+      setSuccess('Reparse triggered. Check Tradelines tab for results.');
       load();
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -63,17 +69,27 @@ export default function ReportsPage() {
     <div className="main-layout">
       <Sidebar />
       <main className="main-content">
-        <div className="page-header"><h1>Credit Reports</h1><p>Upload and manage bureau credit reports</p></div>
+        <div className="page-header"><h1>Credit Reports</h1><p>Upload bureau credit report PDFs</p></div>
         <CaseNav caseId={caseId} />
+
+        <div className="alert-warning" style={{ marginBottom: 16 }}>
+          <b>AI Parsing Required:</b> Tradeline extraction uses the Claude AI API.
+          To enable: create a file at <code>aegis-credit/backend/.env</code> containing{' '}
+          <code>ANTHROPIC_API_KEY=your_key_here</code>, then restart the backend and click <b>Reparse</b>.
+          Get a key at <b>console.anthropic.com</b>.
+        </div>
 
         <div className="card" style={{ marginBottom: 16 }}>
           <h3>Upload New Report</h3>
-          <div className="disclosure-banner">PDF files only. Text is extracted and tradelines are parsed via AI. No data is shared outside this system.</div>
           <div className="grid-2">
             <div className="form-group">
               <label>Bureau</label>
               <select value={bureau} onChange={e => setBureau(e.target.value)}>
-                {BUREAUS.map(b => <option key={b} value={b}>{b.charAt(0).toUpperCase() + b.slice(1)}</option>)}
+                <option value="experian">Experian</option>
+                <option value="equifax">Equifax</option>
+                <option value="transunion">TransUnion</option>
+                <option value="innovis">Innovis</option>
+                <option value="all">All Bureaus (combined report)</option>
               </select>
             </div>
             <div className="form-group">
@@ -94,15 +110,28 @@ export default function ReportsPage() {
             <p className="empty">No reports uploaded yet.</p>
           ) : (
             <table>
-              <thead><tr><th>Bureau</th><th>Status</th><th>Has Text</th><th>Uploaded</th><th>Error</th><th></th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Bureau</th>
+                  <th>Status</th>
+                  <th>Text Extracted</th>
+                  <th>Uploaded</th>
+                  <th>Error</th>
+                  <th></th>
+                </tr>
+              </thead>
               <tbody>
                 {reports.map(r => (
                   <tr key={r.id}>
                     <td style={{ fontWeight: 600, textTransform: 'capitalize' }}>{r.bureau}</td>
-                    <td><span className={`badge badge-${r.parse_status === 'parsed' ? 'success' : r.parse_status === 'failed' ? 'high' : 'pending'}`}>{r.parse_status}</span></td>
-                    <td>{r.has_text ? '✓' : '—'}</td>
+                    <td>
+                      <span className={`badge badge-${r.parse_status === 'parsed' ? 'success' : r.parse_status === 'failed' ? 'high' : 'pending'}`}>
+                        {r.parse_status}
+                      </span>
+                    </td>
+                    <td>{r.has_text ? <span style={{ color: 'var(--success)' }}>✓ Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                     <td style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.created_at).toLocaleString()}</td>
-                    <td style={{ color: 'var(--danger)', fontSize: 11 }}>{r.parse_error ? r.parse_error.slice(0, 60) : ''}</td>
+                    <td style={{ color: 'var(--danger)', fontSize: 11, maxWidth: 200 }}>{r.parse_error?.slice(0, 80) || ''}</td>
                     <td style={{ display: 'flex', gap: 6 }}>
                       <button className="btn btn-outline btn-sm" onClick={() => reparse(r.id)}>Reparse</button>
                       <button className="btn btn-danger btn-sm" onClick={() => del(r.id)}>Delete</button>
@@ -112,6 +141,14 @@ export default function ReportsPage() {
               </tbody>
             </table>
           )}
+        </div>
+
+        <div className="card">
+          <h3>No AI Key? Add Tradelines Manually</h3>
+          <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 12 }}>
+            Go to the <b>Tradelines</b> tab — you can view what was parsed. If empty, you can add tradelines manually from the Tradelines page after setting up your API key and reparsing.
+          </p>
+          <a href={`/cases/${caseId}/tradelines`} className="btn btn-outline btn-sm">Go to Tradelines</a>
         </div>
       </main>
     </div>

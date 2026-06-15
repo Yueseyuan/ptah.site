@@ -1,0 +1,146 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import Sidebar from '@/components/Sidebar';
+import CaseNav from '@/components/CaseNav';
+import { listDisputeRounds, createDisputeRound, updateDisputeRound, createDisputeItem, updateDisputeItem } from '@/lib/api';
+
+interface DisputeItem { id: number; creditor_name: string; account_number_last4: string; dispute_reason: string; fcra_basis: string; status: string; resolution: string; }
+interface Round { id: number; round_number: number; bureau: string; sent_date: string; response_due_date: string; response_received_date: string; status: string; notes: string; items: DisputeItem[]; }
+
+const BUREAUS = ['experian', 'equifax', 'transunion', 'innovis'];
+const STATUSES = ['preparing', 'sent', 'response_received', 'escalated', 'closed'];
+
+export default function DisputesPage() {
+  const { id } = useParams<{ id: string }>();
+  const caseId = parseInt(id);
+  const [rounds, setRounds] = useState<Round[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showRoundForm, setShowRoundForm] = useState(false);
+  const [roundForm, setRoundForm] = useState({ bureau: 'experian', round_number: 1, sent_date: '', response_due_date: '', notes: '' });
+  const [addItemRoundId, setAddItemRoundId] = useState<number | null>(null);
+  const [itemForm, setItemForm] = useState({ creditor_name: '', account_number_last4: '', dispute_reason: '', fcra_basis: '' });
+
+  function load() { listDisputeRounds(caseId).then(setRounds).finally(() => setLoading(false)); }
+  useEffect(() => { load(); }, [caseId]);
+
+  async function addRound(e: React.FormEvent) {
+    e.preventDefault();
+    await createDisputeRound({ ...roundForm, case_id: caseId, round_number: parseInt(String(roundForm.round_number)) });
+    setShowRoundForm(false);
+    load();
+  }
+
+  async function changeRoundStatus(roundId: number, status: string) {
+    await updateDisputeRound(roundId, { status });
+    load();
+  }
+
+  async function addItem(e: React.FormEvent) {
+    e.preventDefault();
+    if (!addItemRoundId) return;
+    await createDisputeItem({ ...itemForm, round_id: addItemRoundId });
+    setAddItemRoundId(null);
+    setItemForm({ creditor_name: '', account_number_last4: '', dispute_reason: '', fcra_basis: '' });
+    load();
+  }
+
+  async function changeItemStatus(itemId: number, status: string) {
+    await updateDisputeItem(itemId, { status });
+    load();
+  }
+
+  return (
+    <div className="main-layout">
+      <Sidebar />
+      <main className="main-content">
+        <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div><h1>Dispute Tracker</h1><p>Manage dispute rounds and track responses by bureau</p></div>
+          <button className="btn btn-primary" onClick={() => setShowRoundForm(s => !s)}>{showRoundForm ? 'Cancel' : '+ New Round'}</button>
+        </div>
+        <CaseNav caseId={caseId} />
+
+        {showRoundForm && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3>New Dispute Round</h3>
+            <form onSubmit={addRound}>
+              <div className="grid-2">
+                <div className="form-group"><label>Bureau *</label><select value={roundForm.bureau} onChange={e => setRoundForm(f => ({ ...f, bureau: e.target.value }))}>
+                  {BUREAUS.map(b => <option key={b} value={b}>{b}</option>)}
+                </select></div>
+                <div className="form-group"><label>Round #</label><input type="number" min={1} value={roundForm.round_number} onChange={e => setRoundForm(f => ({ ...f, round_number: parseInt(e.target.value) }))} /></div>
+                <div className="form-group"><label>Sent Date</label><input type="date" value={roundForm.sent_date} onChange={e => setRoundForm(f => ({ ...f, sent_date: e.target.value }))} /></div>
+                <div className="form-group"><label>Response Due</label><input type="date" value={roundForm.response_due_date} onChange={e => setRoundForm(f => ({ ...f, response_due_date: e.target.value }))} /></div>
+                <div className="form-group" style={{ gridColumn: '1/-1' }}><label>Notes</label><textarea rows={2} value={roundForm.notes} onChange={e => setRoundForm(f => ({ ...f, notes: e.target.value }))} /></div>
+              </div>
+              <button type="submit" className="btn btn-primary btn-sm">Create Round</button>
+            </form>
+          </div>
+        )}
+
+        {loading ? <div className="spinner" /> : rounds.length === 0 ? (
+          <div className="card"><p className="empty">No dispute rounds yet.</p></div>
+        ) : (
+          rounds.map(round => (
+            <div key={round.id} className="card" style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ marginBottom: 0 }}>Round {round.round_number} — {round.bureau.toUpperCase()}</h3>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select value={round.status} onChange={e => changeRoundStatus(round.id, e.target.value)}
+                    style={{ fontSize: 12, padding: '4px 8px', borderRadius: 4, border: '1px solid var(--border)' }}>
+                    {STATUSES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                  </select>
+                  <button className="btn btn-outline btn-sm" onClick={() => setAddItemRoundId(addItemRoundId === round.id ? null : round.id)}>+ Item</button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 24, fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
+                {round.sent_date && <span>Sent: {round.sent_date}</span>}
+                {round.response_due_date && <span>Due: {round.response_due_date}</span>}
+                {round.response_received_date && <span style={{ color: 'var(--success)' }}>Received: {round.response_received_date}</span>}
+              </div>
+
+              {addItemRoundId === round.id && (
+                <form onSubmit={addItem} style={{ marginBottom: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius)' }}>
+                  <div className="grid-2">
+                    <div className="form-group"><label>Creditor *</label><input required value={itemForm.creditor_name} onChange={e => setItemForm(f => ({ ...f, creditor_name: e.target.value }))} /></div>
+                    <div className="form-group"><label>Account Last 4</label><input maxLength={4} value={itemForm.account_number_last4} onChange={e => setItemForm(f => ({ ...f, account_number_last4: e.target.value.replace(/\D/g, '').slice(0, 4) }))} /></div>
+                    <div className="form-group"><label>Dispute Reason *</label><input required value={itemForm.dispute_reason} onChange={e => setItemForm(f => ({ ...f, dispute_reason: e.target.value }))} placeholder="e.g., Not my account, Incorrect balance" /></div>
+                    <div className="form-group"><label>FCRA Basis</label><input value={itemForm.fcra_basis} onChange={e => setItemForm(f => ({ ...f, fcra_basis: e.target.value }))} placeholder="e.g., FCRA §611" /></div>
+                  </div>
+                  <button type="submit" className="btn btn-primary btn-sm">Add Item</button>
+                </form>
+              )}
+
+              {round.items?.length > 0 && (
+                <table>
+                  <thead><tr><th>Creditor</th><th>Account</th><th>Reason</th><th>FCRA Basis</th><th>Status</th><th>Resolution</th></tr></thead>
+                  <tbody>
+                    {round.items.map(item => (
+                      <tr key={item.id}>
+                        <td>{item.creditor_name}</td>
+                        <td><code>xxxx-{item.account_number_last4}</code></td>
+                        <td style={{ fontSize: 12 }}>{item.dispute_reason}</td>
+                        <td><code style={{ fontSize: 11 }}>{item.fcra_basis || '—'}</code></td>
+                        <td>
+                          <select value={item.status} onChange={e => changeItemStatus(item.id, e.target.value)}
+                            style={{ fontSize: 11, padding: '2px 6px', borderRadius: 3, border: '1px solid var(--border)' }}>
+                            <option value="pending">Pending</option>
+                            <option value="deleted">Deleted</option>
+                            <option value="updated">Updated</option>
+                            <option value="verified">Verified</option>
+                            <option value="no_response">No Response</option>
+                          </select>
+                        </td>
+                        <td style={{ fontSize: 12, color: 'var(--muted)' }}>{item.resolution || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          ))
+        )}
+      </main>
+    </div>
+  );
+}

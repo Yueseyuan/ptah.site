@@ -1,0 +1,97 @@
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+});
+
+// Clients
+export const listClients = () => api.get('/api/clients/').then(r => r.data);
+export const getClient = (id: number) => api.get(`/api/clients/${id}`).then(r => r.data);
+export const createClient = (data: Record<string, unknown>) => api.post('/api/clients/', data).then(r => r.data);
+export const updateClient = (id: number, data: Record<string, unknown>) => api.put(`/api/clients/${id}`, data).then(r => r.data);
+
+// Cases
+export const listCases = () => api.get('/api/cases/').then(r => r.data);
+export const getCase = (id: number) => api.get(`/api/cases/${id}`).then(r => r.data);
+export const getCaseSummary = (id: number) => api.get(`/api/cases/${id}/summary`).then(r => r.data);
+export const createCase = (data: Record<string, unknown>) => api.post('/api/cases/', data).then(r => r.data);
+export const updateCase = (id: number, data: Record<string, unknown>) => api.patch(`/api/cases/${id}`, data).then(r => r.data);
+
+// Reports
+export const listReports = (caseId: number) => api.get(`/api/reports/case/${caseId}`).then(r => r.data);
+export const uploadReport = (formData: FormData) => api.post('/api/reports/upload', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+}).then(r => r.data);
+export const reparseReport = (reportId: number) => api.post(`/api/reports/${reportId}/reparse`).then(r => r.data);
+export const deleteReport = (reportId: number) => api.delete(`/api/reports/${reportId}`);
+
+// Tradelines
+export const listTradelines = (caseId: number, bureau?: string) =>
+  api.get(`/api/tradelines/case/${caseId}`, { params: bureau ? { bureau } : {} }).then(r => r.data);
+export const updateTradeline = (id: number, data: Record<string, unknown>) =>
+  api.patch(`/api/tradelines/${id}`, data).then(r => r.data);
+
+// Comparison
+export const listComparisons = (caseId: number) => api.get(`/api/comparison/case/${caseId}`).then(r => r.data);
+export const runComparison = (caseId: number) => api.post(`/api/comparison/case/${caseId}/run`).then(r => r.data);
+
+// Findings
+export const listFindings = (caseId: number) => api.get(`/api/findings/case/${caseId}`).then(r => r.data);
+export const generateFindings = (caseId: number) => api.post(`/api/findings/case/${caseId}/generate`).then(r => r.data);
+export const updateFinding = (id: number, data: Record<string, unknown>) =>
+  api.patch(`/api/findings/${id}`, data).then(r => r.data);
+
+// Evidence
+export const listEvidence = (caseId: number) => api.get(`/api/evidence/case/${caseId}`).then(r => r.data);
+export const uploadEvidence = (caseId: number, formData: FormData) =>
+  api.post(`/api/evidence/case/${caseId}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(r => r.data);
+export const createEvidence = (data: Record<string, unknown>) => api.post('/api/evidence/', data).then(r => r.data);
+export const deleteEvidence = (id: number) => api.delete(`/api/evidence/${id}`);
+
+// Court Records
+export const listCourtRecordsByCase = (caseId: number) => api.get(`/api/court-records/case/${caseId}`).then(r => r.data);
+export const listCourtRecordsByClient = (clientId: number) => api.get(`/api/court-records/client/${clientId}`).then(r => r.data);
+export const createCourtRecord = (data: Record<string, unknown>) => api.post('/api/court-records/', data).then(r => r.data);
+export const deleteCourtRecord = (id: number) => api.delete(`/api/court-records/${id}`);
+
+// Timeline
+export const listTimeline = (caseId: number) => api.get(`/api/timeline/case/${caseId}`).then(r => r.data);
+export const createTimelineEvent = (data: Record<string, unknown>) => api.post('/api/timeline/', data).then(r => r.data);
+export const buildTimeline = (caseId: number) => api.post(`/api/timeline/case/${caseId}/build`).then(r => r.data);
+export const deleteTimelineEvent = (id: number) => api.delete(`/api/timeline/${id}`);
+
+// Strategy
+export const listStrategy = (caseId: number) => api.get(`/api/strategy/case/${caseId}`).then(r => r.data);
+export const generateStrategy = (caseId: number) => api.post(`/api/strategy/case/${caseId}/generate`).then(r => r.data);
+export const createStrategyItem = (data: Record<string, unknown>) => api.post('/api/strategy/', data).then(r => r.data);
+export const updateStrategyItem = (id: number, data: Record<string, unknown>) =>
+  api.patch(`/api/strategy/${id}`, data).then(r => r.data);
+
+// Report Generator
+export const listGeneratedReports = (caseId: number) => api.get(`/api/report-generator/case/${caseId}`).then(r => r.data);
+export const generateReport = (caseId: number, reportType = 'summary') =>
+  api.post(`/api/report-generator/case/${caseId}/generate`, null, { params: { report_type: reportType } }).then(r => r.data);
+
+// Disputes
+export const listDisputeRounds = (caseId: number) => api.get(`/api/disputes/case/${caseId}`).then(r => r.data);
+export const createDisputeRound = (data: Record<string, unknown>) => api.post('/api/disputes/rounds/', data).then(r => r.data);
+export const updateDisputeRound = (id: number, data: Record<string, unknown>) =>
+  api.patch(`/api/disputes/rounds/${id}`, data).then(r => r.data);
+export const createDisputeItem = (data: Record<string, unknown>) => api.post('/api/disputes/items/', data).then(r => r.data);
+export const updateDisputeItem = (id: number, data: Record<string, unknown>) =>
+  api.patch(`/api/disputes/items/${id}`, data).then(r => r.data);
+
+// Outcomes
+export const listOutcomes = (caseId: number) => api.get(`/api/outcomes/case/${caseId}`).then(r => r.data);
+export const createOutcome = (data: Record<string, unknown>) => api.post('/api/outcomes/', data).then(r => r.data);
+export const updateOutcome = (id: number, data: Record<string, unknown>) =>
+  api.patch(`/api/outcomes/${id}`, data).then(r => r.data);
+export const deleteOutcome = (id: number) => api.delete(`/api/outcomes/${id}`);
+
+// Learning
+export const listLearning = (filters?: { bureau?: string; outcome?: string }) =>
+  api.get('/api/learning/', { params: filters }).then(r => r.data);
+export const createLearningEntry = (data: Record<string, unknown>) => api.post('/api/learning/', data).then(r => r.data);
+export const deleteLearningEntry = (id: number) => api.delete(`/api/learning/${id}`);

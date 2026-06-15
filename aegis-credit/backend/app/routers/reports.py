@@ -1,0 +1,135 @@
+import os
+import shutil
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import CreditReport, Tradeline
+from app.services.pdf_service import extract_text_from_pdf, detect_bureau_from_text
+from app.services.ai_service import extract_tradelines_from_text
+from app.config import settings
+
+router = APIRouter(prefix="/api/reports", tags=["reports"])
+
+BUREAUS = ["experian", "equifax", "transunion", "innovis"]
+
+
+def _out(r: CreditReport) -> dict:
+    return {
+        "id": r.id,
+        "case_id": r.case_id,
+        "bureau": r.bureau,
+        "file_path": r.file_path,
+        "parse_status": r.parse_status,
+        "report_date": r.report_date,
+        "parse_error": r.parse_error,
+        "created_at": r.created_at.isoformat() if r.created_at else None,
+        "has_text": bool(r.raw_text),
+    }
+
+
+@router.get("/case/{case_id}")
+def list_reports(case_id: int, db: Session = Depends(get_db)):
+    return [_out(r) for r in db.query(CreditReport).filter(CreditReport.case_id == case_id).all()]
+
+
+@router.post("/upload")
+async def upload_report(
+    case_id: int = Form(...),
+    bureau: str = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    if bureau not in BUREAUS:
+        raise HTTPException(400, f"Bureau must be one of: {BUREAUS}")
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    safe_name = f"case_{case_id}_{bureau}_{file.filename}"
+    file_path = os.path.join(settings.UPLOAD_DIR, safe_name)
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    report = CreditReport(case_id=case_id, bureau=bureau, file_path=file_path, parse_status="pending")
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    try:
+        raw_text = extract_text_from_pdf(file_path)
+        if not bureau or bureau == "unknown":
+            bureau = detect_bureau_from_text(raw_text)
+            report.bureau = bureau
+        report.raw_text = raw_text
+        report.parse_status = "parsed"
+        db.commit()
+        tradelines_data = extract_tradelines_from_text(raw_text)
+        for td in tradelines_data:
+            tl = Tradeline(
+                case_id=case_id,
+                report_id=report.id,
+                bureau=bureau,
+                creditor_name=td.get("creditor_name", ""),
+                account_number_last4=td.get("account_number_last4", ""),
+                account_type=td.get("account_type", "other"),
+                open_date=td.get("open_date", ""),
+                close_date=td.get("close_date", ""),
+                balance=td.get("balance"),
+                credit_limit=td.get("credit_limit"),
+                payment_status=td.get("payment_status", "unknown"),
+                payment_history=td.get("payment_history", ""),
+                derogatory=td.get("derogatory", False),
+            )
+            db.add(tl)
+        db.commit()
+        db.refresh(report)
+    except Exception as e:
+        report.parse_status = "failed"
+        report.parse_error = str(e)
+        db.commit()
+    return _out(report)
+
+
+@router.post("/{report_id}/reparse")
+def reparse_report(report_id: int, db: Session = Depends(get_db)):
+    report = db.query(CreditReport).filter(CreditReport.id == report_id).first()
+    if not report:
+        raise HTTPException(404, "Report not found")
+    if not report.raw_text:
+        try:
+            report.raw_text = extract_text_from_pdf(report.file_path)
+        except Exception as e:
+            raise HTTPException(500, f"Cannot extract text: {e}")
+    try:
+        tradelines_data = extract_tradelines_from_text(report.raw_text)
+        db.query(Tradeline).filter(Tradeline.report_id == report_id).delete()
+        for td in tradelines_data:
+            tl = Tradeline(
+                case_id=report.case_id,
+                report_id=report.id,
+                bureau=report.bureau,
+                creditor_name=td.get("creditor_name", ""),
+                account_number_last4=td.get("account_number_last4", ""),
+                account_type=td.get("account_type", "other"),
+                open_date=td.get("open_date", ""),
+                close_date=td.get("close_date", ""),
+                balance=td.get("balance"),
+                credit_limit=td.get("credit_limit"),
+                payment_status=td.get("payment_status", "unknown"),
+                payment_history=td.get("payment_history", ""),
+                derogatory=td.get("derogatory", False),
+            )
+            db.add(tl)
+        report.parse_status = "parsed"
+        db.commit()
+    except Exception as e:
+        report.parse_status = "failed"
+        report.parse_error = str(e)
+        db.commit()
+        raise HTTPException(500, str(e))
+    return _out(report)
+
+
+@router.delete("/{report_id}", status_code=204)
+def delete_report(report_id: int, db: Session = Depends(get_db)):
+    report = db.query(CreditReport).filter(CreditReport.id == report_id).first()
+    if not report:
+        raise HTTPException(404, "Report not found")
+    db.query(Tradeline).filter(Tradeline.report_id == report_id).delete()
+    db.delete(report)
+    db.commit()

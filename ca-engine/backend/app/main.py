@@ -99,6 +99,12 @@ from app.routers.appointments import router as appointments_router
 from app.routers.invoices import router as invoices_router
 from app.routers.notary import router as notary_router
 from app.routers.admin import router as admin_router
+from app.routers.division1_notary_jobs import router as div1_router
+from app.routers.division2_credit import router as div2_router
+from app.routers.division3_relief import router as div3_router
+from app.routers.division4_docprep import router as div4_router
+from app.routers.division5_recovery import router as div5_router
+from app.routers.division6_consulting import router as div6_router
 
 app.include_router(auth_router)
 app.include_router(clients_router)
@@ -108,6 +114,12 @@ app.include_router(appointments_router)
 app.include_router(invoices_router)
 app.include_router(notary_router)
 app.include_router(admin_router)
+app.include_router(div1_router)
+app.include_router(div2_router)
+app.include_router(div3_router)
+app.include_router(div4_router)
+app.include_router(div5_router)
+app.include_router(div6_router)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

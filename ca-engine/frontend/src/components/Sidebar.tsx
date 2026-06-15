@@ -13,6 +13,15 @@ const NAV = [
   { href: '/admin', label: 'Admin', icon: '⚙️' },
 ];
 
+const DIVISIONS = [
+  { href: '/notary-jobs', label: 'D1 Notary Jobs', icon: '🖊️' },
+  { href: '/credit', label: 'D2 Credit Restore', icon: '📈' },
+  { href: '/relief', label: 'D3 Criminal Relief', icon: '⚖️' },
+  { href: '/docprep', label: 'D4 Doc Prep', icon: '🗂️' },
+  { href: '/recovery', label: 'D5 Asset Recovery', icon: '🔍' },
+  { href: '/consulting', label: 'D6 Consulting', icon: '💼' },
+];
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -31,6 +40,19 @@ export default function Sidebar() {
       </div>
       <nav style={{ marginTop: 8 }}>
         {NAV.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={pathname.startsWith(item.href) ? 'active' : ''}
+          >
+            <span>{item.icon}</span>
+            {item.label}
+          </Link>
+        ))}
+        <div style={{ padding: '8px 20px 4px', fontSize: 10, fontWeight: 700, letterSpacing: 1, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
+          Divisions
+        </div>
+        {DIVISIONS.map((item) => (
           <Link
             key={item.href}
             href={item.href}

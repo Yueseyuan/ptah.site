@@ -148,6 +148,151 @@ export async function createInvoice(payload: Record<string, unknown>) {
   return data;
 }
 
+// ── Division 1 — Notary Jobs ──────────────────────────────────────────────────
+
+export async function listNotaryJobs(params?: Record<string, unknown>) {
+  const { data } = await api.get('/api/notary-jobs', { params });
+  return data;
+}
+
+export async function createNotaryJob(payload: Record<string, unknown>) {
+  const { data } = await api.post('/api/notary-jobs', payload);
+  return data;
+}
+
+export async function getNotaryJob(id: number) {
+  const { data } = await api.get(`/api/notary-jobs/${id}`);
+  return data;
+}
+
+export async function updateNotaryJobStatus(id: number, status: string) {
+  const { data } = await api.patch(`/api/notary-jobs/${id}/status`, { status });
+  return data;
+}
+
+// ── Division 2 — Credit Restoration ──────────────────────────────────────────
+
+export async function listCreditCases(params?: Record<string, unknown>) {
+  const { data } = await api.get('/api/credit/cases', { params });
+  return data;
+}
+
+export async function createCreditCase(payload: Record<string, unknown>) {
+  const { data } = await api.post('/api/credit/cases', payload);
+  return data;
+}
+
+export async function getCreditCase(id: number) {
+  const { data } = await api.get(`/api/credit/cases/${id}`);
+  return data;
+}
+
+export async function addDisputeItem(caseId: number, payload: Record<string, unknown>) {
+  const { data } = await api.post(`/api/credit/cases/${caseId}/disputes`, payload);
+  return data;
+}
+
+export async function updateDisputeItem(itemId: number, payload: Record<string, unknown>) {
+  const { data } = await api.patch(`/api/credit/disputes/${itemId}`, payload);
+  return data;
+}
+
+// ── Division 3 — Criminal Relief ─────────────────────────────────────────────
+
+export async function listReliefCases(params?: Record<string, unknown>) {
+  const { data } = await api.get('/api/relief/cases', { params });
+  return data;
+}
+
+export async function createReliefCase(payload: Record<string, unknown>) {
+  const { data } = await api.post('/api/relief/cases', payload);
+  return data;
+}
+
+export async function getReliefCase(id: number) {
+  const { data } = await api.get(`/api/relief/cases/${id}`);
+  return data;
+}
+
+export async function addCriminalRecord(caseId: number, payload: Record<string, unknown>) {
+  const { data } = await api.post(`/api/relief/cases/${caseId}/records`, payload);
+  return data;
+}
+
+// ── Division 4 — Document Prep ────────────────────────────────────────────────
+
+export async function listDocPrepOrders(params?: Record<string, unknown>) {
+  const { data } = await api.get('/api/docprep/orders', { params });
+  return data;
+}
+
+export async function createDocPrepOrder(payload: Record<string, unknown>) {
+  const { data } = await api.post('/api/docprep/orders', payload);
+  return data;
+}
+
+export async function getDocPrepOrder(id: number) {
+  const { data } = await api.get(`/api/docprep/orders/${id}`);
+  return data;
+}
+
+export async function createHKPInstrument(orderId: number, payload: Record<string, unknown>) {
+  const { data } = await api.post(`/api/docprep/orders/${orderId}/hkp`, payload);
+  return data;
+}
+
+// ── Division 5 — Asset Recovery ───────────────────────────────────────────────
+
+export async function listRecoveryCases(params?: Record<string, unknown>) {
+  const { data } = await api.get('/api/recovery/cases', { params });
+  return data;
+}
+
+export async function createRecoveryCase(payload: Record<string, unknown>) {
+  const { data } = await api.post('/api/recovery/cases', payload);
+  return data;
+}
+
+export async function getRecoveryCase(id: number) {
+  const { data } = await api.get(`/api/recovery/cases/${id}`);
+  return data;
+}
+
+export async function addRecoveryAsset(caseId: number, payload: Record<string, unknown>) {
+  const { data } = await api.post(`/api/recovery/cases/${caseId}/assets`, payload);
+  return data;
+}
+
+export async function recordRecoveredFunds(caseId: number, assetId: number, recoveredAmount: number) {
+  const { data } = await api.post(`/api/recovery/cases/${caseId}/record-funds`, {
+    asset_id: assetId,
+    recovered_amount: recoveredAmount,
+  });
+  return data;
+}
+
+// ── Division 6 — Business Consulting ─────────────────────────────────────────
+
+export async function listConsultingEngagements(params?: Record<string, unknown>) {
+  const { data } = await api.get('/api/consulting/engagements', { params });
+  return data;
+}
+
+export async function createConsultingEngagement(payload: Record<string, unknown>) {
+  const { data } = await api.post('/api/consulting/engagements', payload);
+  return data;
+}
+
+export async function getConsultingEngagement(id: number) {
+  const { data } = await api.get(`/api/consulting/engagements/${id}`);
+  return data;
+}
+
+export async function updateConsultingSessionNotes(id: number, payload: Record<string, unknown>) {
+  const { data } = await api.patch(`/api/consulting/engagements/${id}/notes`, payload);
+  return data;
+}
+
 export async function recordPayment(invoiceId: number, amount: number, notes?: string) {
   const { data } = await api.post(`/api/invoices/${invoiceId}/payment`, { amount, notes });
   return data;

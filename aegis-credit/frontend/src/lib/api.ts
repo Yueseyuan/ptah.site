@@ -114,3 +114,19 @@ export const listLearning = (filters?: { bureau?: string; outcome?: string }) =>
   api.get('/api/learning/', { params: filters }).then(r => r.data);
 export const createLearningEntry = (data: Record<string, unknown>) => api.post('/api/learning/', data).then(r => r.data);
 export const deleteLearningEntry = (id: number) => api.delete(`/api/learning/${id}`);
+
+// Metro 2
+export const runMetro2Analysis = (caseId: number) => api.post(`/api/metro2/case/${caseId}/analyze`).then(r => r.data);
+export const listMetro2Findings = (caseId: number) => api.get(`/api/metro2/case/${caseId}`).then(r => r.data);
+
+// Auth
+export const loginUser = (username: string, password: string) =>
+  api.post('/api/auth/login', new URLSearchParams({ username, password })).then(r => r.data);
+export const getMe = () => api.get('/api/auth/me').then(r => r.data);
+export const registerUser = (data: Record<string, unknown>) => api.post('/api/auth/register', data).then(r => r.data);
+
+// Audit
+export const listAuditLogs = (caseId?: number) =>
+  caseId
+    ? api.get(`/api/audit/case/${caseId}`).then(r => r.data)
+    : api.get('/api/audit/').then(r => r.data);

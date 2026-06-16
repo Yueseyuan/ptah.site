@@ -6,7 +6,15 @@ import CaseNav from '@/components/CaseNav';
 import { listTradelines, updateTradeline } from '@/lib/api';
 import axios from 'axios';
 
-interface Tradeline { id: number; bureau: string; creditor_name: string; account_number_last4: string; account_type: string; open_date: string; balance: number | null; credit_limit: number | null; payment_status: string; derogatory: boolean; dispute_status: string; }
+interface Tradeline {
+  id: number; bureau: string; creditor_name: string; account_number_last4: string;
+  account_type: string; open_date: string; balance: number | null; credit_limit: number | null;
+  payment_status: string; derogatory: boolean; dispute_status: string;
+  high_balance?: number | null; past_due_amount?: number | null;
+  scheduled_payment_amount?: number | null; payment_rating?: string;
+  compliance_condition_code?: string; consumer_information_indicator?: string;
+  dofd?: string; date_reported?: string; remarks?: string;
+}
 
 const BUREAUS = ['experian', 'equifax', 'transunion', 'innovis'];
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -15,6 +23,38 @@ const blankForm = {
   bureau: 'experian', creditor_name: '', account_number_last4: '', account_type: 'credit_card',
   open_date: '', balance: '', credit_limit: '', payment_status: 'current', derogatory: false,
 };
+
+function fmt(v: number | null | undefined): string {
+  if (v == null) return '—';
+  return `$${v.toLocaleString()}`;
+}
+
+function Metro2Detail({ t }: { t: Tradeline }) {
+  const fields: [string, string][] = [
+    ['DOFD', t.dofd || '—'],
+    ['Date Reported', t.date_reported || '—'],
+    ['High Balance', fmt(t.high_balance)],
+    ['Past Due', fmt(t.past_due_amount)],
+    ['Scheduled Payment', fmt(t.scheduled_payment_amount)],
+    ['Payment Rating', t.payment_rating || '—'],
+    ['Compliance Code', t.compliance_condition_code || '—'],
+    ['Consumer Indicator', t.consumer_information_indicator || '—'],
+    ['Remarks', t.remarks || '—'],
+  ];
+  return (
+    <tr>
+      <td colSpan={8} style={{ background: 'var(--surface)', padding: '8px 16px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 24px', fontSize: 12 }}>
+          {fields.map(([label, val]) => (
+            <span key={label}>
+              <strong style={{ color: 'var(--muted)' }}>{label}:</strong> {val}
+            </span>
+          ))}
+        </div>
+      </td>
+    </tr>
+  );
+}
 
 export default function TradelinesPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,12 +67,21 @@ export default function TradelinesPage() {
   const [form, setForm] = useState({ ...blankForm });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   function load() {
     listTradelines(caseId, bureauFilter || undefined).then(setTradelines).finally(() => setLoading(false));
     axios.get(`${API}/api/reports/case/${caseId}`).then(r => setReports(r.data)).catch(() => {});
   }
   useEffect(() => { load(); }, [caseId, bureauFilter]);
+
+  function toggleExpand(id: number) {
+    setExpandedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   async function addTradeline(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setError('');
@@ -171,30 +220,37 @@ export default function TradelinesPage() {
               <h3 style={{ textTransform: 'capitalize', marginBottom: 12 }}>{bureau} ({tls.length} accounts)</h3>
               <table>
                 <thead>
-                  <tr><th>Creditor</th><th>Account</th><th>Type</th><th>Status</th><th>Balance</th><th>Limit</th><th>Open Date</th><th>Dispute</th></tr>
+                  <tr><th>Creditor</th><th>Account</th><th>Type</th><th>Status</th><th>Balance</th><th>Limit</th><th>Open Date</th><th>Metro 2</th></tr>
                 </thead>
                 <tbody>
                   {tls.map(t => (
-                    <tr key={t.id}>
-                      <td style={{ fontWeight: t.derogatory ? 600 : 400, color: t.derogatory ? 'var(--danger)' : 'inherit' }}>
-                        {t.derogatory && '⚠ '}{t.creditor_name}
-                      </td>
-                      <td><code>xxxx-{t.account_number_last4 || '????'}</code></td>
-                      <td>{t.account_type}</td>
-                      <td>
-                        <span className={`badge badge-${t.payment_status === 'current' ? 'success' : t.derogatory ? 'high' : 'pending'}`}>
-                          {t.payment_status}
-                        </span>
-                      </td>
-                      <td>{t.balance != null ? `$${t.balance.toLocaleString()}` : '—'}</td>
-                      <td>{t.credit_limit != null ? `$${t.credit_limit.toLocaleString()}` : '—'}</td>
-                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{t.open_date || '—'}</td>
-                      <td>
-                        <span className={`badge badge-${t.dispute_status === 'none' ? 'pending' : t.dispute_status === 'resolved' ? 'success' : 'medium'}`}>
-                          {t.dispute_status}
-                        </span>
-                      </td>
-                    </tr>
+                    <>
+                      <tr key={t.id}>
+                        <td style={{ fontWeight: t.derogatory ? 600 : 400, color: t.derogatory ? 'var(--danger)' : 'inherit' }}>
+                          {t.derogatory && '⚠ '}{t.creditor_name}
+                        </td>
+                        <td><code>xxxx-{t.account_number_last4 || '????'}</code></td>
+                        <td>{t.account_type}</td>
+                        <td>
+                          <span className={`badge badge-${t.payment_status === 'current' ? 'success' : t.derogatory ? 'high' : 'pending'}`}>
+                            {t.payment_status}
+                          </span>
+                        </td>
+                        <td>{t.balance != null ? `$${t.balance.toLocaleString()}` : '—'}</td>
+                        <td>{t.credit_limit != null ? `$${t.credit_limit.toLocaleString()}` : '—'}</td>
+                        <td style={{ fontSize: 12, color: 'var(--muted)' }}>{t.open_date || '—'}</td>
+                        <td>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            style={{ fontSize: 11, padding: '2px 8px' }}
+                            onClick={() => toggleExpand(t.id)}
+                          >
+                            {expandedIds.has(t.id) ? 'Hide' : 'Metro 2'}
+                          </button>
+                        </td>
+                      </tr>
+                      {expandedIds.has(t.id) && <Metro2Detail key={`m2-${t.id}`} t={t} />}
+                    </>
                   ))}
                 </tbody>
               </table>

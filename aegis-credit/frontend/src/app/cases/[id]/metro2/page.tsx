@@ -7,6 +7,7 @@ import { runMetro2Analysis, listMetro2Findings } from '@/lib/api';
 
 interface Metro2Finding {
   id: number;
+  case_id: number;
   tradeline_id: number | null;
   rule_code: string;
   rule_name: string;
@@ -16,14 +17,13 @@ interface Metro2Finding {
   created_at: string;
 }
 
-const SEV_COLOR: Record<string, string> = {
-  high: 'var(--danger)',
-  medium: 'var(--warning)',
-  low: 'var(--info)',
-  info: 'var(--muted)',
+const SEVERITY_ORDER = ['high', 'medium', 'low', 'info'];
+const SEVERITY_BADGE: Record<string, string> = {
+  high: 'badge-high',
+  medium: 'badge-medium',
+  low: 'badge-low',
+  info: 'badge-pending',
 };
-
-const SEV_ORDER = ['high', 'medium', 'low', 'info'];
 
 export default function Metro2Page() {
   const { id } = useParams<{ id: string }>();
@@ -31,33 +31,41 @@ export default function Metro2Page() {
   const [findings, setFindings] = useState<Metro2Finding[]>([]);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
-  const [summary, setSummary] = useState<Record<string, number> | null>(null);
+  const [summary, setSummary] = useState<{ tradelines_analyzed: number; findings_generated: number; severity_summary: Record<string, number> } | null>(null);
   const [error, setError] = useState('');
 
   function load() {
-    listMetro2Findings(caseId).then(setFindings).finally(() => setLoading(false));
+    listMetro2Findings(caseId)
+      .then(setFindings)
+      .catch(() => setFindings([]))
+      .finally(() => setLoading(false));
   }
+
   useEffect(() => { load(); }, [caseId]);
 
   async function runAnalysis() {
     setRunning(true); setError('');
     try {
-      const r = await runMetro2Analysis(caseId);
-      setSummary(r.severity_summary);
-      load();
+      const result = await runMetro2Analysis(caseId);
+      setSummary({
+        tradelines_analyzed: result.tradelines_analyzed,
+        findings_generated: result.findings_generated,
+        severity_summary: result.severity_summary,
+      });
+      setFindings(result.items || []);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: unknown } }; message?: string };
       const d = e.response?.data?.detail;
-      setError(typeof d === 'string' ? d : e.message || 'Analysis failed.');
+      setError(typeof d === 'string' ? d : e?.message || 'Analysis failed.');
     } finally { setRunning(false); }
   }
 
   const grouped: Record<string, Metro2Finding[]> = {};
-  findings.forEach(f => {
-    const sev = f.severity || 'info';
-    if (!grouped[sev]) grouped[sev] = [];
-    grouped[sev].push(f);
-  });
+  for (const sev of SEVERITY_ORDER) grouped[sev] = [];
+  for (const f of findings) {
+    const key = SEVERITY_ORDER.includes(f.severity) ? f.severity : 'info';
+    grouped[key].push(f);
+  }
 
   return (
     <div className="main-layout">
@@ -66,62 +74,66 @@ export default function Metro2Page() {
         <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1>Metro 2 Analysis</h1>
-            <p>Automated rules engine — DOFD expiry, balance consistency, stale reporting</p>
+            <p>Automated rules engine checking Metro 2 spec compliance and FCRA reporting windows</p>
           </div>
           <button className="btn btn-primary" onClick={runAnalysis} disabled={running}>
-            {running ? 'Analyzing…' : '⚡ Run Metro 2 Analysis'}
+            {running ? 'Analyzing…' : 'Run Metro 2 Analysis'}
           </button>
         </div>
         <CaseNav caseId={caseId} />
 
-        <div className="disclosure-banner">
-          Metro 2 findings are preliminary — they flag potential rule violations for investigator review.
-          No finding constitutes a confirmed FCRA violation or guarantee of any outcome.
-        </div>
-
-        {error && <div className="alert-error" style={{ marginBottom: 12 }}>{error}</div>}
+        {error && <div className="alert-error" style={{ marginBottom: 16 }}>{error}</div>}
 
         {summary && (
-          <div className="card" style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
-            {SEV_ORDER.map(sev => (
-              <div key={sev} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 28, fontWeight: 700, color: SEV_COLOR[sev] }}>{summary[sev] ?? 0}</div>
-                <div style={{ fontSize: 12, textTransform: 'uppercase', color: 'var(--muted)' }}>{sev}</div>
-              </div>
-            ))}
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3>Analysis Summary</h3>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginTop: 8 }}>
+              <div><strong>{summary.tradelines_analyzed}</strong> tradelines analyzed</div>
+              <div><strong>{summary.findings_generated}</strong> findings generated</div>
+              {Object.entries(summary.severity_summary).map(([sev, count]) => (
+                count > 0 ? (
+                  <div key={sev}>
+                    <span className={`badge ${SEVERITY_BADGE[sev] || 'badge-pending'}`}>{sev}</span> {count}
+                  </div>
+                ) : null
+              ))}
+            </div>
           </div>
         )}
 
         {loading ? <div className="spinner" /> : findings.length === 0 ? (
           <div className="card">
-            <p className="empty">No Metro 2 findings yet. Click "Run Metro 2 Analysis" to analyze tradelines.</p>
-            <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--muted)', marginTop: 8 }}>
-              Metro 2 analysis checks DOFD 7-year reporting windows, balance inconsistencies,
-              missing delinquency dates, and stale reporting — no AI API key required.
-            </p>
+            <p className="empty">No Metro 2 findings yet. Click &ldquo;Run Metro 2 Analysis&rdquo; to check your tradelines.</p>
           </div>
         ) : (
-          SEV_ORDER.filter(sev => grouped[sev]?.length).map(sev => (
-            <div key={sev} style={{ marginBottom: 16 }}>
-              <h3 style={{ color: SEV_COLOR[sev], textTransform: 'capitalize', marginBottom: 8 }}>
-                {sev} ({grouped[sev].length})
-              </h3>
-              {grouped[sev].map(f => (
-                <div key={f.id} className="card" style={{ marginBottom: 8, borderLeft: `4px solid ${SEV_COLOR[f.severity]}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <strong style={{ color: 'var(--navy)' }}>{f.rule_name}</strong>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {f.fcra_section && <code style={{ fontSize: 11 }}>{f.fcra_section}</code>}
-                      <span className={`badge badge-${f.severity === 'high' ? 'high' : f.severity === 'medium' ? 'medium' : 'pending'}`}>
-                        {f.rule_code}
-                      </span>
+          SEVERITY_ORDER.map(sev => {
+            const items = grouped[sev];
+            if (!items.length) return null;
+            return (
+              <div key={sev} style={{ marginBottom: 20 }}>
+                <h3 style={{ textTransform: 'capitalize', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className={`badge ${SEVERITY_BADGE[sev] || 'badge-pending'}`}>{sev}</span>
+                  {items.length} finding{items.length !== 1 ? 's' : ''}
+                </h3>
+                {items.map(f => (
+                  <div key={f.id} className="card" style={{ marginBottom: 10, borderLeft: `4px solid ${sev === 'high' ? 'var(--danger)' : sev === 'medium' ? 'var(--warning)' : 'var(--muted)'}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                      <strong>{f.rule_name}</strong>
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 12 }}>
+                        <span className={`badge ${SEVERITY_BADGE[f.severity] || 'badge-pending'}`}>{f.severity}</span>
+                        {f.fcra_section && <span style={{ fontSize: 11, color: 'var(--muted)' }}>{f.fcra_section}</span>}
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{f.description}</p>
+                    <div style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
+                      Rule: <code>{f.rule_code}</code>
+                      {f.tradeline_id && <> · Tradeline #{f.tradeline_id}</>}
                     </div>
                   </div>
-                  <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{f.description}</p>
-                </div>
-              ))}
-            </div>
-          ))
+                ))}
+              </div>
+            );
+          })
         )}
       </main>
     </div>

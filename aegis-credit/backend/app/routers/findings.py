@@ -62,7 +62,10 @@ def generate_case_findings(case_id: int, db: Session = Depends(get_db)):
         "details": c.details,
     } for c in comparisons]
 
-    findings_data = generate_findings(tradelines_data, comparisons_data)
+    try:
+        findings_data = generate_findings(tradelines_data, comparisons_data)
+    except RuntimeError as e:
+        raise HTTPException(502, str(e))
     db.query(Finding).filter(Finding.case_id == case_id).delete()
     new_findings = []
     for fd in findings_data:

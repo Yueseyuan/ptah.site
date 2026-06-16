@@ -1,7 +1,9 @@
 import json
-from typing import Optional
+import re
 import anthropic
 from app.config import settings
+
+AI_MODEL = "claude-sonnet-4-6"
 
 COMPLIANCE_DISCLAIMER = (
     "IMPORTANT: These are preliminary findings for investigator review only. "
@@ -80,81 +82,82 @@ def _client() -> anthropic.Anthropic:
     return anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 
+def _extract_json(content: str) -> str:
+    """Pull a JSON array/object out of a Claude response, tolerating markdown code fences."""
+    content = content.strip()
+    match = re.search(r"```(?:json)?\s*(.*?)```", content, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return content
+
+
+def _parse_json_response(content: str) -> list[dict]:
+    cleaned = _extract_json(content)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"AI returned malformed JSON ({e}). Raw response: {cleaned[:300]}") from e
+
+
+def _require_api_key() -> None:
+    if not settings.ANTHROPIC_API_KEY:
+        raise RuntimeError("ANTHROPIC_API_KEY is not configured in backend/.env.")
+
+
 def extract_tradelines_from_text(raw_text: str) -> list[dict]:
     """Use Claude to extract structured tradeline data from raw credit report text."""
-    if not settings.ANTHROPIC_API_KEY:
-        return []
+    _require_api_key()
+    client = _client()
     try:
-        client = _client()
         message = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=AI_MODEL,
             max_tokens=4096,
             messages=[{"role": "user", "content": TRADELINE_EXTRACTION_PROMPT + raw_text[:15000]}],
         )
-        content = message.content[0].text.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        return json.loads(content)
-    except Exception as e:
-        print(f"AI tradeline extraction error: {e}")
-        return []
+    except anthropic.APIError as e:
+        raise RuntimeError(f"Anthropic API call failed: {e}") from e
+    return _parse_json_response(message.content[0].text)
 
 
 def generate_findings(tradelines_data: list[dict], comparisons_data: list[dict]) -> list[dict]:
     """Use Claude to generate investigation findings from tradeline and comparison data."""
-    if not settings.ANTHROPIC_API_KEY:
-        return []
+    _require_api_key()
+    client = _client()
+    prompt = FINDINGS_PROMPT.format(
+        tradelines=json.dumps(tradelines_data, indent=2)[:8000],
+        comparisons=json.dumps(comparisons_data, indent=2)[:4000],
+    )
     try:
-        client = _client()
-        prompt = FINDINGS_PROMPT.format(
-            tradelines=json.dumps(tradelines_data, indent=2)[:8000],
-            comparisons=json.dumps(comparisons_data, indent=2)[:4000],
-        )
         message = client.messages.create(
-            model="claude-sonnet-4-6",
+            model=AI_MODEL,
             max_tokens=4096,
             messages=[{"role": "user", "content": prompt}],
         )
-        content = message.content[0].text.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        findings = json.loads(content)
-        for f in findings:
-            f["requires_human_review"] = True
-        return findings
-    except Exception as e:
-        print(f"AI findings generation error: {e}")
-        return []
+    except anthropic.APIError as e:
+        raise RuntimeError(f"Anthropic API call failed: {e}") from e
+    findings = _parse_json_response(message.content[0].text)
+    for f in findings:
+        f["requires_human_review"] = True
+    return findings
 
 
 def generate_strategy(findings_data: list[dict], client_goal: str) -> list[dict]:
     """Use Claude to generate a credit restoration strategy."""
-    if not settings.ANTHROPIC_API_KEY:
-        return []
+    _require_api_key()
+    ai_client = _client()
+    prompt = STRATEGY_PROMPT.format(
+        findings=json.dumps(findings_data, indent=2)[:8000],
+        goal=client_goal or "Improve credit score and remove inaccurate negative items",
+    )
     try:
-        ai_client = _client()
-        prompt = STRATEGY_PROMPT.format(
-            findings=json.dumps(findings_data, indent=2)[:8000],
-            goal=client_goal or "Improve credit score and remove inaccurate negative items",
-        )
         message = ai_client.messages.create(
-            model="claude-sonnet-4-6",
+            model=AI_MODEL,
             max_tokens=3000,
             messages=[{"role": "user", "content": prompt}],
         )
-        content = message.content[0].text.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        return json.loads(content)
-    except Exception as e:
-        print(f"AI strategy generation error: {e}")
-        return []
+    except anthropic.APIError as e:
+        raise RuntimeError(f"Anthropic API call failed: {e}") from e
+    return _parse_json_response(message.content[0].text)
 
 
 def run_cross_bureau_comparison(tradelines_by_bureau: dict) -> list[dict]:

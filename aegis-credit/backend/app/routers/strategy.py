@@ -64,7 +64,10 @@ def generate_case_strategy(case_id: int, db: Session = Depends(get_db)):
         "fcra_section": f.fcra_section,
     } for f in findings]
 
-    strategy_data = generate_strategy(findings_data, case.goal or "")
+    try:
+        strategy_data = generate_strategy(findings_data, case.goal or "")
+    except RuntimeError as e:
+        raise HTTPException(502, str(e))
     db.query(StrategyItem).filter(StrategyItem.case_id == case_id, StrategyItem.ai_generated == True).delete()
 
     new_items = []

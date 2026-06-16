@@ -65,7 +65,7 @@ async def upload_report(
     db.refresh(report)
     try:
         raw_text = extract_text_from_pdf(file_path)
-        if not bureau or bureau == "unknown":
+        if bureau not in UPLOAD_BUREAUS or bureau == "unknown":
             bureau = detect_bureau_from_text(raw_text)
             report.bureau = bureau
         report.raw_text = raw_text

@@ -22,6 +22,14 @@ This text may be a single-bureau report, or a combined/tri-merge report containi
 appears under more than one bureau, return ONE entry per bureau it appears under (do not merge them), since
 each bureau's data for an account can differ.
 
+Tri-merge reports commonly print one account block per creditor with THREE columns of values (e.g.
+"Transunion® Experian® Equifax®") side by side for fields like Account #, Balance Owed, Account Status,
+Payment Status, etc. A column filled with "--" for every field for that account means that bureau does NOT
+report this account at all — do not create a tradeline entry for that bureau/account combination. Only emit
+an entry for a bureau column that has actual data (account number, balance, dates, or status other than "--").
+For example, if a block shows Account # as "-- -- 300002***" across Transunion/Experian/Equifax, only Equifax
+has this account — emit exactly one tradeline (bureau=equifax), not three.
+
 The report usually contains an "Account summary" section near the top with per-bureau counts like "Open accounts",
 "Closed accounts", "Delinquent", "Derogatory", and "Collections". Use these counts as a completeness check — your
 extracted tradelines should account for all of them. If a bureau's summary says e.g. 4 derogatory and 2 collections
@@ -39,7 +47,10 @@ Return a JSON array. Each object must have:
   bureau this specific entry's data came from; if the report is single-bureau and the bureau is unambiguous
   but not explicitly labeled per-account, use that report's bureau)
 - creditor_name: string
-- account_number_last4: string (last 4 digits only, or "????" if not available)
+- account_number_last4: string (last 4 visible digits of the account number. Some reports mask the END of the
+  account number with asterisks and only show the START unmasked, e.g. "300002***********" — in that case use
+  the visible leading digits instead, since there is no true "last 4" to extract. Use "????" only if no digits
+  are visible at all)
 - account_type: string (e.g., "credit_card", "auto_loan", "mortgage", "student_loan", "collection", "other")
 - open_date: string (YYYY-MM-DD format if available, else empty string)
 - close_date: string (YYYY-MM-DD or empty)

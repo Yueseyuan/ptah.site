@@ -11,12 +11,27 @@ COMPLIANCE_DISCLAIMER = (
     "All findings require human review before any action is taken."
 )
 
-TRADELINE_EXTRACTION_PROMPT = """You are a credit report analyst. Extract all tradelines (accounts) from this credit report text.
+TRADELINE_EXTRACTION_PROMPT = """You are a credit report analyst. Extract EVERY tradeline (account) from this credit report text —
+not just the first section. Consumer credit reports typically list accounts in several separate sections such as
+"Credit cards", "Loans", "Closed accounts", "Collections", "Charge-offs", or "Negative accounts" — you MUST scan
+the entire document end-to-end and extract accounts from ALL of these sections, not only the first/positive one.
 
 This text may be a single-bureau report, or a combined/tri-merge report containing data from multiple bureaus
 (Experian, Equifax, TransUnion, Innovis) side by side or interleaved for the same accounts. If the same account
 appears under more than one bureau, return ONE entry per bureau it appears under (do not merge them), since
 each bureau's data for an account can differ.
+
+The report usually contains an "Account summary" section near the top with per-bureau counts like "Open accounts",
+"Closed accounts", "Delinquent", "Derogatory", and "Collections". Use these counts as a completeness check — your
+extracted tradelines should account for all of them. If a bureau's summary says e.g. 4 derogatory and 2 collections
+accounts, make sure your output includes tradelines reflecting that, not just the clean/current ones.
+
+To determine payment_status and derogatory for each account, look for report fields such as "Account Status"
+(Open/Closed), "Current Payment Status", "Current Rating", "Highest Adverse Rating", "Most Recent Adverse", and
+"Times 30/60/90 Days Late". Do NOT default to "current" — only use "current" when the report explicitly indicates
+the account is open and in good standing with no adverse rating. If any field mentions collection, charge-off,
+late payment, repossession, foreclosure, or bankruptcy for an account, set derogatory=true and choose the most
+specific matching payment_status.
 
 Return a JSON array. Each object must have:
 - bureau: string, one of "experian", "equifax", "transunion", "innovis" (your best identification of which
@@ -30,11 +45,13 @@ Return a JSON array. Each object must have:
 - balance: number or null
 - credit_limit: number or null
 - payment_status: string (e.g., "current", "30_days_late", "60_days_late", "90_days_late", "charge_off", "collection", "paid", "closed")
-- payment_history: string (summary of payment history)
-- derogatory: boolean
+- payment_history: string (ONE short sentence summary, under 100 characters — do not transcribe month-by-month grids)
+- derogatory: boolean (true if the account shows any adverse/negative status — collection, charge-off, late
+  payment, repossession, foreclosure, bankruptcy, or closed-for-default)
 
-Return ONLY the JSON array with no other text. If you genuinely find no account/tradeline data in the text,
-return an empty array [] rather than guessing.
+Return ONLY the JSON array with no other text. If you genuinely find no account/tradeline data anywhere in the
+text, return an empty array [] rather than guessing — but do not stop after the first section if more accounts
+follow later in the document.
 
 Credit report text:
 """
@@ -120,7 +137,7 @@ def extract_tradelines_from_text(raw_text: str) -> list[dict]:
     try:
         message = client.messages.create(
             model=AI_MODEL,
-            max_tokens=8192,
+            max_tokens=16000,
             messages=[{"role": "user", "content": TRADELINE_EXTRACTION_PROMPT + raw_text[:60000]}],
         )
     except anthropic.APIError as e:

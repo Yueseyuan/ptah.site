@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from app.database import get_db
-from app.models import DisputeRound, DisputeItem
+from app.models import DisputeRound, DisputeItem, Tradeline
 
 router = APIRouter(prefix="/api/disputes", tags=["disputes"])
 
@@ -122,3 +122,73 @@ def update_item(item_id: int, data: ItemUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(item)
     return _item_out(item)
+
+
+_DISPUTE_REASON: dict[str, str] = {
+    "charge_off": "Account incorrectly reported as charge-off — please verify and correct",
+    "collection": "Collection account disputed — please validate debt and reporting accuracy",
+    "90_days_late": "90-day late payment disputed — payment history inaccurate",
+    "60_days_late": "60-day late payment disputed — payment history inaccurate",
+    "30_days_late": "30-day late payment disputed — payment history inaccurate",
+}
+
+_FCRA_BASIS: dict[str, str] = {
+    "charge_off": "FCRA §623 — inaccurate information",
+    "collection": "FCRA §623 / §809(b) — debt validation",
+    "90_days_late": "FCRA §623 — inaccurate payment history",
+    "60_days_late": "FCRA §623 — inaccurate payment history",
+    "30_days_late": "FCRA §623 — inaccurate payment history",
+}
+
+
+@router.post("/case/{case_id}/auto-generate")
+def auto_generate_disputes(case_id: int, db: Session = Depends(get_db)):
+    """Create dispute rounds + items from derogatory tradelines, one round per bureau."""
+    derogatory = (
+        db.query(Tradeline)
+        .filter(Tradeline.case_id == case_id, Tradeline.derogatory == True)
+        .all()
+    )
+    if not derogatory:
+        raise HTTPException(400, "No derogatory tradelines found for this case.")
+
+    by_bureau: dict[str, list[Tradeline]] = {}
+    for tl in derogatory:
+        bureau = tl.bureau or "unknown"
+        by_bureau.setdefault(bureau, []).append(tl)
+
+    created_rounds = 0
+    created_items = 0
+    for bureau, tradelines in by_bureau.items():
+        existing_round = (
+            db.query(DisputeRound)
+            .filter(DisputeRound.case_id == case_id, DisputeRound.bureau == bureau, DisputeRound.round_number == 1)
+            .first()
+        )
+        if not existing_round:
+            existing_round = DisputeRound(case_id=case_id, bureau=bureau, round_number=1)
+            db.add(existing_round)
+            db.flush()
+            created_rounds += 1
+
+        existing_tradeline_ids = {
+            i.tradeline_id for i in db.query(DisputeItem).filter(DisputeItem.round_id == existing_round.id).all()
+            if i.tradeline_id is not None
+        }
+        for tl in tradelines:
+            if tl.id in existing_tradeline_ids:
+                continue
+            status = tl.payment_status or ""
+            item = DisputeItem(
+                round_id=existing_round.id,
+                tradeline_id=tl.id,
+                creditor_name=tl.creditor_name,
+                account_number_last4=tl.account_number_last4,
+                dispute_reason=_DISPUTE_REASON.get(status, "Inaccurate or unverifiable information — please investigate and correct"),
+                fcra_basis=_FCRA_BASIS.get(status, "FCRA §623 — furnisher duty to report accurately"),
+            )
+            db.add(item)
+            created_items += 1
+
+    db.commit()
+    return {"rounds_created": created_rounds, "items_created": created_items}

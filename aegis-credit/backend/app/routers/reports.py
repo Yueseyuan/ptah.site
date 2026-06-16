@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models import CreditReport, Tradeline
 from app.services.pdf_service import extract_text_from_pdf, detect_bureau_from_text
 from app.services.ai_service import extract_tradelines_from_text
+from app.services.audit_service import log_action
 from app.config import settings
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
@@ -87,10 +88,21 @@ async def upload_report(
                 payment_status=td.get("payment_status", "unknown"),
                 payment_history=td.get("payment_history", ""),
                 derogatory=td.get("derogatory", False),
+                high_balance=td.get("high_balance"),
+                past_due_amount=td.get("past_due_amount"),
+                scheduled_payment_amount=td.get("scheduled_payment_amount"),
+                payment_rating=td.get("payment_rating", ""),
+                compliance_condition_code=td.get("compliance_condition_code", ""),
+                consumer_information_indicator=td.get("consumer_information_indicator", ""),
+                dofd=td.get("dofd", ""),
+                date_reported=td.get("date_reported", ""),
+                remarks=td.get("remarks", ""),
+                raw_source_text=td.get("raw_source_text", ""),
             )
             db.add(tl)
         db.commit()
         db.refresh(report)
+        log_action(db, "UPLOAD", "credit_report", report.id, detail=f"Bureau: {bureau}")
     except Exception as e:
         report.parse_status = "failed"
         report.parse_error = str(e)
@@ -134,6 +146,16 @@ def reparse_report(report_id: int, db: Session = Depends(get_db)):
                 payment_status=td.get("payment_status", "unknown"),
                 payment_history=td.get("payment_history", ""),
                 derogatory=td.get("derogatory", False),
+                high_balance=td.get("high_balance"),
+                past_due_amount=td.get("past_due_amount"),
+                scheduled_payment_amount=td.get("scheduled_payment_amount"),
+                payment_rating=td.get("payment_rating", ""),
+                compliance_condition_code=td.get("compliance_condition_code", ""),
+                consumer_information_indicator=td.get("consumer_information_indicator", ""),
+                dofd=td.get("dofd", ""),
+                date_reported=td.get("date_reported", ""),
+                remarks=td.get("remarks", ""),
+                raw_source_text=td.get("raw_source_text", ""),
             )
             db.add(tl)
         report.parse_status = "parsed"

@@ -60,6 +60,15 @@ Return a JSON array. Each object must have:
 - payment_history: string (ONE short sentence summary, under 100 characters — do not transcribe month-by-month grids)
 - derogatory: boolean (true if the account shows any adverse/negative status — collection, charge-off, late
   payment, repossession, foreclosure, bankruptcy, or closed-for-default)
+- high_balance: number or null (highest balance this account has ever reached, labeled "High Balance" or "High Credit")
+- past_due_amount: number or null
+- scheduled_payment_amount: number or null (regular monthly payment amount)
+- payment_rating: string (Metro 2 payment rating if visible: "0"=too new, "1"=current, "2"=30 days, "3"=60 days, "4"=90 days, "5"=120 days, "6"=150 days, "7"=collection, "8"=charge-off, "9"=repo; leave empty string if not shown)
+- compliance_condition_code: string (XF, XH, XJ, XR, XO or X1-X9 if visible; empty string otherwise)
+- consumer_information_indicator: string (bankruptcy indicator code if visible A-J; empty string otherwise)
+- dofd: string (Date of First Delinquency in YYYY-MM-DD format if shown; empty string otherwise — this is the date the account first became delinquent and was never brought current, distinct from open_date or close_date)
+- date_reported: string (YYYY-MM-DD — the date this bureau last updated the account in their records)
+- remarks: string (any creditor remarks or special comments verbatim, empty string if none)
 
 Return ONLY the JSON array with no other text. If you genuinely find no account/tradeline data anywhere in the
 text, return an empty array [] rather than guessing — but do not stop after the first section if more accounts
@@ -185,7 +194,7 @@ def extract_tradelines_from_text(raw_text: str) -> list[dict]:
     message = _create_message(
         client,
         model=AI_MODEL,
-        max_tokens=8192,
+        max_tokens=16000,
         messages=[{"role": "user", "content": TRADELINE_EXTRACTION_PROMPT + raw_text[:60000]}],
     )
     return _parse_json_response(message.content[0].text)

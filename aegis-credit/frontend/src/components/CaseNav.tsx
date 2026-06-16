@@ -11,6 +11,7 @@ const TABS = [
   { href: '/evidence', label: 'Evidence' },
   { href: '/court-records', label: 'Court Records' },
   { href: '/timeline', label: 'Timeline' },
+  { href: '/metro2', label: 'Metro 2' },
   { href: '/strategy', label: 'Strategy' },
   { href: '/disputes', label: 'Disputes' },
   { href: '/outcomes', label: 'Outcomes' },

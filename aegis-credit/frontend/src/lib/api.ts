@@ -86,6 +86,22 @@ export const createDisputeItem = (data: Record<string, unknown>) => api.post('/a
 export const updateDisputeItem = (id: number, data: Record<string, unknown>) =>
   api.patch(`/api/disputes/items/${id}`, data).then(r => r.data);
 
+// Metro 2
+export const runMetro2Analysis = (caseId: number) => api.post(`/api/metro2/case/${caseId}/analyze`).then(r => r.data);
+export const listMetro2Findings = (caseId: number) => api.get(`/api/metro2/case/${caseId}`).then(r => r.data);
+
+// Auth
+export const loginUser = (username: string, password: string) =>
+  api.post('/api/auth/login', new URLSearchParams({ username, password })).then(r => r.data);
+export const getMe = () => api.get('/api/auth/me').then(r => r.data);
+export const registerUser = (data: Record<string, unknown>) => api.post('/api/auth/register', data).then(r => r.data);
+export const listUsers = () => api.get('/api/auth/users').then(r => r.data);
+export const updateUser = (id: number, data: Record<string, unknown>) => api.patch(`/api/auth/users/${id}`, data).then(r => r.data);
+
+// Audit
+export const listCaseAudit = (caseId: number) => api.get(`/api/audit/case/${caseId}`).then(r => r.data);
+export const listAllAudit = () => api.get('/api/audit/').then(r => r.data);
+
 // Outcomes
 export const listOutcomes = (caseId: number) => api.get(`/api/outcomes/case/${caseId}`).then(r => r.data);
 export const createOutcome = (data: Record<string, unknown>) => api.post('/api/outcomes/', data).then(r => r.data);

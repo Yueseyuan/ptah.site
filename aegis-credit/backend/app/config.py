@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     UPLOAD_DIR: str = "uploads"
     REPORTS_DIR: str = "generated_reports"
+    JWT_SECRET_KEY: str = "change-me-in-production-set-via-env-var"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 480
 
     class Config:
         env_file = ".env"

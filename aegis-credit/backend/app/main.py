@@ -1,9 +1,9 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import engine, Base
 from app.config import settings
 
-import app.models  # ensure all models are registered before create_all
+import app.models  # ensure all models are registered
 
 from app.routers.clients import router as clients_router
 from app.routers.cases import router as cases_router
@@ -19,8 +19,29 @@ from app.routers.report_generator import router as report_generator_router
 from app.routers.disputes import router as disputes_router
 from app.routers.outcomes import router as outcomes_router
 from app.routers.learning import router as learning_router
+from app.routers.metro2 import router as metro2_router
+from app.routers.auth import router as auth_router
+from app.routers.audit import router as audit_router
 
-Base.metadata.create_all(bind=engine)
+
+def run_migrations():
+    """Run alembic upgrade head on startup."""
+    try:
+        from alembic.config import Config
+        from alembic import command
+        # Resolve alembic.ini relative to this file's package root (backend/)
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        alembic_cfg = Config(os.path.join(base_dir, "alembic.ini"))
+        alembic_cfg.set_main_option("script_location", os.path.join(base_dir, "alembic"))
+        command.upgrade(alembic_cfg, "head")
+    except Exception as e:
+        # Fallback: use SQLAlchemy create_all so the app still starts
+        print(f"[WARNING] Alembic migration failed ({e}), falling back to create_all")
+        from app.database import engine, Base
+        Base.metadata.create_all(bind=engine)
+
+
+run_migrations()
 
 app = FastAPI(title=settings.APP_NAME, version="1.0.0")
 
@@ -46,6 +67,9 @@ app.include_router(report_generator_router)
 app.include_router(disputes_router)
 app.include_router(outcomes_router)
 app.include_router(learning_router)
+app.include_router(metro2_router)
+app.include_router(auth_router)
+app.include_router(audit_router)
 
 
 @app.get("/api/health")

@@ -49,13 +49,19 @@ export default function ReportsPage() {
   }
 
   async function reparse(reportId: number) {
+    setError(''); setSuccess('');
     try {
-      await reparseReport(reportId);
-      setSuccess('Reparse triggered. Check Tradelines tab for results.');
+      const result = await reparseReport(reportId);
+      if (result.parse_status === 'failed') {
+        setError(`Reparse failed: ${result.parse_error || 'Unknown error'}`);
+      } else {
+        setSuccess('Reparse complete. Check Tradelines tab for results.');
+      }
       load();
     } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || 'Reparse failed.');
+      const e = err as { response?: { data?: { detail?: unknown } }; message?: string };
+      const d = e.response?.data?.detail;
+      setError(typeof d === 'string' ? d : e.message || 'Reparse failed.');
     }
   }
 

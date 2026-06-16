@@ -2,13 +2,90 @@ import os
 import json
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import AegisCase, AegisClient, GeneratedReport, Finding, StrategyItem, Tradeline, Outcome
+from app.models import AegisCase, AegisClient, GeneratedReport, Finding, StrategyItem, Tradeline, Outcome, DisputeRound
 from app.config import settings
 
 router = APIRouter(prefix="/api/report-generator", tags=["report_generator"])
+
+_BUREAU_ADDRESS = {
+    "experian":   "Experian\nP.O. Box 4500\nAllen, TX 75013",
+    "equifax":    "Equifax Information Services LLC\nP.O. Box 740256\nAtlanta, GA 30374",
+    "transunion": "TransUnion LLC\nConsumer Dispute Center\nP.O. Box 2000\nChester, PA 19016",
+    "innovis":    "Innovis Consumer Assistance\nPO Box 530000\nColumbus, OH 43218",
+}
+
+
+def _make_dispute_letter(round_: DisputeRound, client: AegisClient, today: str) -> str:
+    bureau_addr = _BUREAU_ADDRESS.get(round_.bureau.lower(), round_.bureau.upper())
+    client_addr_parts = [f"{client.first_name} {client.last_name}"]
+    if client.address:
+        client_addr_parts.append(client.address)
+    if client.city or client.state or client.zip_code:
+        client_addr_parts.append(f"{client.city or ''}, {client.state or ''} {client.zip_code or ''}".strip(", "))
+    client_addr = "\n".join(client_addr_parts)
+
+    lines = [
+        client_addr,
+        "",
+        today,
+        "",
+        bureau_addr,
+        "",
+        f"RE: Formal Dispute of Inaccurate Credit Information — Round {round_.round_number}",
+        f"    Pursuant to FCRA §§ 611, 623",
+        "",
+        f"To Whom It May Concern:",
+        "",
+        "I am writing to formally dispute the following inaccurate and/or unverifiable",
+        "information appearing on my credit report. Under the Fair Credit Reporting Act",
+        "(FCRA) § 611, I request that you investigate and correct or delete each item",
+        "listed below within 30 days of receipt of this letter.",
+        "",
+        "─" * 65,
+        "DISPUTED ACCOUNTS",
+        "─" * 65,
+    ]
+
+    for i, item in enumerate(round_.items, 1):
+        acct = f"xxxx-{item.account_number_last4}" if item.account_number_last4 else "(account number not available)"
+        lines += [
+            "",
+            f"Item {i}: {item.creditor_name}",
+            f"  Account: {acct}",
+            f"  Dispute Reason: {item.dispute_reason}",
+            f"  FCRA Basis: {item.fcra_basis or 'FCRA § 623 — duty to report accurately'}",
+        ]
+
+    lines += [
+        "",
+        "─" * 65,
+        "",
+        "Please investigate each item above and:",
+        "  1. Correct any inaccurate information, OR",
+        "  2. Delete any information that cannot be verified.",
+        "",
+        "Under FCRA § 611(a)(1), you must complete your investigation within 30 days",
+        "(or 45 days if I provide additional information during the investigation period).",
+        "Please send written notice of the results of your investigation to the address",
+        "above, including a copy of my updated credit report if any changes are made.",
+        "",
+        "If you need additional documentation to process this dispute, please contact me",
+        "at the address above. I reserve all rights and remedies available under the FCRA.",
+        "",
+        "Sincerely,",
+        "",
+        "",
+        f"{client.first_name} {client.last_name}",
+        "",
+        "─" * 65,
+        "COMPLIANCE NOTICE: This letter is for dispute purposes only. It does not",
+        "constitute legal advice. Consult a qualified attorney for legal guidance.",
+        "─" * 65,
+    ]
+    return "\n".join(lines)
 
 
 def _make_text_report(case: AegisCase, client: AegisClient, findings: list, tradelines: list, strategy: list) -> str:
@@ -120,3 +197,27 @@ def download_report(report_id: int, db: Session = Depends(get_db)):
     if not os.path.exists(r.file_path):
         raise HTTPException(404, "Report file not found on disk")
     return FileResponse(r.file_path, filename=os.path.basename(r.file_path))
+
+
+@router.get("/dispute-letter/{round_id}")
+def download_dispute_letter(round_id: int, db: Session = Depends(get_db)):
+    """Generate and download a dispute letter for a specific round."""
+    round_ = db.query(DisputeRound).filter(DisputeRound.id == round_id).first()
+    if not round_:
+        raise HTTPException(404, "Dispute round not found")
+    if not round_.items:
+        raise HTTPException(400, "This round has no dispute items — add items before downloading the letter.")
+    case = db.query(AegisCase).filter(AegisCase.id == round_.case_id).first()
+    if not case:
+        raise HTTPException(404, "Case not found")
+    client = db.query(AegisClient).filter(AegisClient.id == case.client_id).first()
+    if not client:
+        raise HTTPException(404, "Client not found")
+
+    today = datetime.now().strftime("%B %d, %Y")
+    content = _make_dispute_letter(round_, client, today)
+    filename = f"dispute_letter_{round_.bureau}_round{round_.round_number}_{datetime.now().strftime('%Y%m%d')}.txt"
+    return PlainTextResponse(
+        content,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

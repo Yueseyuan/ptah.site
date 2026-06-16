@@ -73,6 +73,8 @@ export const updateStrategyItem = (id: number, data: Record<string, unknown>) =>
 export const listGeneratedReports = (caseId: number) => api.get(`/api/report-generator/case/${caseId}`).then(r => r.data);
 export const generateReport = (caseId: number, reportType = 'summary') =>
   api.post(`/api/report-generator/case/${caseId}/generate`, null, { params: { report_type: reportType } }).then(r => r.data);
+export const downloadDisputeLetter = (roundId: number) =>
+  api.get(`/api/report-generator/dispute-letter/${roundId}`, { responseType: 'blob' }).then(r => r.data);
 
 // Disputes
 export const listDisputeRounds = (caseId: number) => api.get(`/api/disputes/case/${caseId}`).then(r => r.data);

@@ -1,5 +1,6 @@
 import json
 import re
+import time
 import anthropic
 from app.config import settings
 
@@ -130,18 +131,33 @@ def _require_api_key() -> None:
         raise RuntimeError("ANTHROPIC_API_KEY is not configured in backend/.env.")
 
 
+def _create_message(client: anthropic.Anthropic, **kwargs):
+    """Call the Anthropic API with a couple of retries for transient server-side errors."""
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            return client.messages.create(**kwargs)
+        except (anthropic.InternalServerError, anthropic.APIConnectionError, anthropic.RateLimitError) as e:
+            last_error = e
+            if attempt < 2:
+                time.sleep(2 * (attempt + 1))
+                continue
+            raise RuntimeError(f"Anthropic API call failed after retries: {e}") from e
+        except anthropic.APIError as e:
+            raise RuntimeError(f"Anthropic API call failed: {e}") from e
+    raise RuntimeError(f"Anthropic API call failed after retries: {last_error}")
+
+
 def extract_tradelines_from_text(raw_text: str) -> list[dict]:
     """Use Claude to extract structured tradeline data from raw credit report text."""
     _require_api_key()
     client = _client()
-    try:
-        message = client.messages.create(
-            model=AI_MODEL,
-            max_tokens=16000,
-            messages=[{"role": "user", "content": TRADELINE_EXTRACTION_PROMPT + raw_text[:60000]}],
-        )
-    except anthropic.APIError as e:
-        raise RuntimeError(f"Anthropic API call failed: {e}") from e
+    message = _create_message(
+        client,
+        model=AI_MODEL,
+        max_tokens=8192,
+        messages=[{"role": "user", "content": TRADELINE_EXTRACTION_PROMPT + raw_text[:60000]}],
+    )
     return _parse_json_response(message.content[0].text)
 
 
@@ -153,14 +169,12 @@ def generate_findings(tradelines_data: list[dict], comparisons_data: list[dict])
         tradelines=json.dumps(tradelines_data, indent=2)[:8000],
         comparisons=json.dumps(comparisons_data, indent=2)[:4000],
     )
-    try:
-        message = client.messages.create(
-            model=AI_MODEL,
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}],
-        )
-    except anthropic.APIError as e:
-        raise RuntimeError(f"Anthropic API call failed: {e}") from e
+    message = _create_message(
+        client,
+        model=AI_MODEL,
+        max_tokens=4096,
+        messages=[{"role": "user", "content": prompt}],
+    )
     findings = _parse_json_response(message.content[0].text)
     for f in findings:
         f["requires_human_review"] = True
@@ -175,14 +189,12 @@ def generate_strategy(findings_data: list[dict], client_goal: str) -> list[dict]
         findings=json.dumps(findings_data, indent=2)[:8000],
         goal=client_goal or "Improve credit score and remove inaccurate negative items",
     )
-    try:
-        message = ai_client.messages.create(
-            model=AI_MODEL,
-            max_tokens=3000,
-            messages=[{"role": "user", "content": prompt}],
-        )
-    except anthropic.APIError as e:
-        raise RuntimeError(f"Anthropic API call failed: {e}") from e
+    message = _create_message(
+        ai_client,
+        model=AI_MODEL,
+        max_tokens=3000,
+        messages=[{"role": "user", "content": prompt}],
+    )
     return _parse_json_response(message.content[0].text)
 
 

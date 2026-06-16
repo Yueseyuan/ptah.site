@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 from app.database import get_db
 from app.models import DisputeRound, DisputeItem, Tradeline
+from app.services.audit_service import log_action
 
 router = APIRouter(prefix="/api/disputes", tags=["disputes"])
 
@@ -191,4 +192,13 @@ def auto_generate_disputes(case_id: int, db: Session = Depends(get_db)):
             created_items += 1
 
     db.commit()
+
+    log_action(
+        db,
+        "AUTO_GENERATE",
+        "dispute",
+        resource_id=case_id,
+        detail=f"Auto-generated {created_rounds} rounds and {created_items} dispute items for case {case_id}",
+    )
+
     return {"rounds_created": created_rounds, "items_created": created_items}

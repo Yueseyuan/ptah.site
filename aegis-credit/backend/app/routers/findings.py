@@ -6,6 +6,7 @@ from typing import Optional
 from app.database import get_db
 from app.models import Finding, Tradeline, TradelineComparison
 from app.services.ai_service import generate_findings
+from app.services.audit_service import log_action
 
 router = APIRouter(prefix="/api/findings", tags=["findings"])
 
@@ -84,6 +85,15 @@ def generate_case_findings(case_id: int, db: Session = Depends(get_db)):
     db.commit()
     for f in new_findings:
         db.refresh(f)
+
+    log_action(
+        db,
+        "AI_GENERATE",
+        "finding",
+        resource_id=case_id,
+        detail=f"Generated {len(new_findings)} AI findings for case {case_id}",
+    )
+
     return {"findings_generated": len(new_findings), "items": [_out(f) for f in new_findings]}
 
 

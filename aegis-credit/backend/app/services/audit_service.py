@@ -1,3 +1,4 @@
+"""Audit logging service."""
 from sqlalchemy.orm import Session
 from app.models import AuditLog
 
@@ -12,6 +13,7 @@ def log_action(
     username: str = None,
     ip: str = None,
 ) -> None:
+    """Record an audit log entry and commit it."""
     entry = AuditLog(
         user_id=user_id,
         username=username or "system",

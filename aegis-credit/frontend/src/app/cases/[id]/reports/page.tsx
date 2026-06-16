@@ -137,7 +137,7 @@ export default function ReportsPage() {
                     </td>
                     <td>{r.has_text ? <span style={{ color: 'var(--success)' }}>✓ Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                     <td style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.created_at).toLocaleString()}</td>
-                    <td style={{ color: 'var(--danger)', fontSize: 11, maxWidth: 200 }}>{r.parse_error?.slice(0, 80) || ''}</td>
+                    <td style={{ color: 'var(--danger)', fontSize: 11, maxWidth: 280, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} title={r.parse_error || ''}>{r.parse_error || ''}</td>
                     <td style={{ display: 'flex', gap: 6 }}>
                       <button className="btn btn-outline btn-sm" onClick={() => reparse(r.id)}>Reparse</button>
                       <button className="btn btn-danger btn-sm" onClick={() => del(r.id)}>Delete</button>

@@ -131,15 +131,34 @@ def _require_api_key() -> None:
         raise RuntimeError("ANTHROPIC_API_KEY is not configured in backend/.env.")
 
 
+def _retry_after_seconds(e: anthropic.APIStatusError, default: float) -> float:
+    try:
+        header = e.response.headers.get("retry-after")
+        return float(header) if header else default
+    except Exception:
+        return default
+
+
 def _create_message(client: anthropic.Anthropic, **kwargs):
-    """Call the Anthropic API with a couple of retries for transient server-side errors."""
+    """Call the Anthropic API with retries for transient server-side errors and rate limits."""
     last_error: Exception | None = None
-    for attempt in range(3):
+    attempts = 4
+    for attempt in range(attempts):
         try:
             return client.messages.create(**kwargs)
-        except (anthropic.InternalServerError, anthropic.APIConnectionError, anthropic.RateLimitError) as e:
+        except anthropic.RateLimitError as e:
             last_error = e
-            if attempt < 2:
+            if attempt < attempts - 1:
+                time.sleep(_retry_after_seconds(e, default=15 * (attempt + 1)))
+                continue
+            raise RuntimeError(
+                f"Anthropic API rate limit hit and retries exhausted: {e}. "
+                "If you just added billing/credits, your account may still be on a low usage tier — "
+                "wait a minute and try Reparse again."
+            ) from e
+        except (anthropic.InternalServerError, anthropic.APIConnectionError) as e:
+            last_error = e
+            if attempt < attempts - 1:
                 time.sleep(2 * (attempt + 1))
                 continue
             raise RuntimeError(f"Anthropic API call failed after retries: {e}") from e

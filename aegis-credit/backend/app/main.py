@@ -22,6 +22,8 @@ from app.routers.learning import router as learning_router
 from app.routers.metro2 import router as metro2_router
 from app.routers.auth import router as auth_router
 from app.routers.audit import router as audit_router
+from app.routers.organizations import router as organizations_router
+from app.routers.inquiries import router as inquiries_router
 
 
 def run_migrations():
@@ -41,7 +43,9 @@ def run_migrations():
         Base.metadata.create_all(bind=engine)
 
 
-run_migrations()
+# Skip migrations during test runs (tests call create_all directly)
+if not os.environ.get("TESTING"):
+    run_migrations()
 
 app = FastAPI(title=settings.APP_NAME, version="1.0.0")
 
@@ -70,6 +74,8 @@ app.include_router(learning_router)
 app.include_router(metro2_router)
 app.include_router(auth_router)
 app.include_router(audit_router)
+app.include_router(organizations_router)
+app.include_router(inquiries_router)
 
 
 @app.get("/api/health")

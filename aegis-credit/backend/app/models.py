@@ -47,6 +47,7 @@ class AegisCase(Base):
     dispute_rounds = relationship("DisputeRound", back_populates="case")
     outcomes = relationship("Outcome", back_populates="case")
     metro2_findings = relationship("Metro2Finding", back_populates="case")
+    inquiries = relationship("Inquiry", back_populates="case")
 
 
 class CreditReport(Base):
@@ -283,16 +284,30 @@ class LearningEntry(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
+class Organization(Base):
+    __tablename__ = "organizations"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    address = Column(String)
+    phone = Column(String)
+    email = Column(String)
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    users = relationship("User", back_populates="organization")
+
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     full_name = Column(String)
     hashed_password = Column(String)
-    role = Column(String, default="investigator")   # admin, investigator, reviewer
+    role = Column(String, default="investigator")   # admin, investigator, reviewer, readonly
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
+    organization = relationship("Organization", back_populates="users")
 
 
 class AuditLog(Base):
@@ -306,3 +321,17 @@ class AuditLog(Base):
     detail = Column(Text, nullable=True)
     ip_address = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+
+
+class Inquiry(Base):
+    __tablename__ = "inquiries"
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(Integer, ForeignKey("aegis_cases.id"))
+    report_id = Column(Integer, ForeignKey("credit_reports.id"), nullable=True)
+    bureau = Column(String)
+    inquiry_type = Column(String, default="hard")  # hard, soft
+    subscriber_name = Column(String)
+    inquiry_date = Column(String)
+    purpose = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+    case = relationship("AegisCase", back_populates="inquiries")

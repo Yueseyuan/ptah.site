@@ -4,6 +4,38 @@ const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
 });
 
+// Inject JWT token on every request
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('aegis_token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// On 401, clear token and redirect to login
+api.interceptors.response.use(
+  (r) => r,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('aegis_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('aegis_token');
+}
+export function setToken(token: string) {
+  localStorage.setItem('aegis_token', token);
+}
+export function clearToken() {
+  localStorage.removeItem('aegis_token');
+}
+
 // Clients
 export const listClients = () => api.get('/api/clients/').then(r => r.data);
 export const getClient = (id: number) => api.get(`/api/clients/${id}`).then(r => r.data);
@@ -19,9 +51,8 @@ export const updateCase = (id: number, data: Record<string, unknown>) => api.pat
 
 // Reports
 export const listReports = (caseId: number) => api.get(`/api/reports/case/${caseId}`).then(r => r.data);
-export const uploadReport = (formData: FormData) => api.post('/api/reports/upload', formData, {
-  headers: { 'Content-Type': 'multipart/form-data' }
-}).then(r => r.data);
+export const uploadReport = (formData: FormData) =>
+  api.post('/api/reports/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
 export const reparseReport = (reportId: number) => api.post(`/api/reports/${reportId}/reparse`).then(r => r.data);
 export const deleteReport = (reportId: number) => api.delete(`/api/reports/${reportId}`);
 
@@ -44,9 +75,7 @@ export const updateFinding = (id: number, data: Record<string, unknown>) =>
 // Evidence
 export const listEvidence = (caseId: number) => api.get(`/api/evidence/case/${caseId}`).then(r => r.data);
 export const uploadEvidence = (caseId: number, formData: FormData) =>
-  api.post(`/api/evidence/case/${caseId}/upload`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }).then(r => r.data);
+  api.post(`/api/evidence/case/${caseId}/upload`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
 export const createEvidence = (data: Record<string, unknown>) => api.post('/api/evidence/', data).then(r => r.data);
 export const deleteEvidence = (id: number) => api.delete(`/api/evidence/${id}`);
 
@@ -86,9 +115,22 @@ export const createDisputeItem = (data: Record<string, unknown>) => api.post('/a
 export const updateDisputeItem = (id: number, data: Record<string, unknown>) =>
   api.patch(`/api/disputes/items/${id}`, data).then(r => r.data);
 
+// Outcomes
+export const listOutcomes = (caseId: number) => api.get(`/api/outcomes/case/${caseId}`).then(r => r.data);
+export const createOutcome = (data: Record<string, unknown>) => api.post('/api/outcomes/', data).then(r => r.data);
+export const updateOutcome = (id: number, data: Record<string, unknown>) =>
+  api.patch(`/api/outcomes/${id}`, data).then(r => r.data);
+export const deleteOutcome = (id: number) => api.delete(`/api/outcomes/${id}`);
+
 // Metro 2
 export const runMetro2Analysis = (caseId: number) => api.post(`/api/metro2/case/${caseId}/analyze`).then(r => r.data);
 export const listMetro2Findings = (caseId: number) => api.get(`/api/metro2/case/${caseId}`).then(r => r.data);
+
+// Learning
+export const listLearning = (filters?: { bureau?: string; outcome?: string }) =>
+  api.get('/api/learning/', { params: filters }).then(r => r.data);
+export const createLearningEntry = (data: Record<string, unknown>) => api.post('/api/learning/', data).then(r => r.data);
+export const deleteLearningEntry = (id: number) => api.delete(`/api/learning/${id}`);
 
 // Auth
 export const loginUser = (username: string, password: string) =>
@@ -102,31 +144,13 @@ export const updateUser = (id: number, data: Record<string, unknown>) => api.pat
 export const listCaseAudit = (caseId: number) => api.get(`/api/audit/case/${caseId}`).then(r => r.data);
 export const listAllAudit = () => api.get('/api/audit/').then(r => r.data);
 
-// Outcomes
-export const listOutcomes = (caseId: number) => api.get(`/api/outcomes/case/${caseId}`).then(r => r.data);
-export const createOutcome = (data: Record<string, unknown>) => api.post('/api/outcomes/', data).then(r => r.data);
-export const updateOutcome = (id: number, data: Record<string, unknown>) =>
-  api.patch(`/api/outcomes/${id}`, data).then(r => r.data);
-export const deleteOutcome = (id: number) => api.delete(`/api/outcomes/${id}`);
+// Organizations
+export const listOrganizations = () => api.get('/api/organizations/').then(r => r.data);
+export const getOrganization = (id: number) => api.get(`/api/organizations/${id}`).then(r => r.data);
+export const createOrganization = (data: Record<string, unknown>) => api.post('/api/organizations/', data).then(r => r.data);
+export const updateOrganization = (id: number, data: Record<string, unknown>) => api.patch(`/api/organizations/${id}`, data).then(r => r.data);
 
-// Learning
-export const listLearning = (filters?: { bureau?: string; outcome?: string }) =>
-  api.get('/api/learning/', { params: filters }).then(r => r.data);
-export const createLearningEntry = (data: Record<string, unknown>) => api.post('/api/learning/', data).then(r => r.data);
-export const deleteLearningEntry = (id: number) => api.delete(`/api/learning/${id}`);
-
-// Metro 2
-export const runMetro2Analysis = (caseId: number) => api.post(`/api/metro2/case/${caseId}/analyze`).then(r => r.data);
-export const listMetro2Findings = (caseId: number) => api.get(`/api/metro2/case/${caseId}`).then(r => r.data);
-
-// Auth
-export const loginUser = (username: string, password: string) =>
-  api.post('/api/auth/login', new URLSearchParams({ username, password })).then(r => r.data);
-export const getMe = () => api.get('/api/auth/me').then(r => r.data);
-export const registerUser = (data: Record<string, unknown>) => api.post('/api/auth/register', data).then(r => r.data);
-
-// Audit
-export const listAuditLogs = (caseId?: number) =>
-  caseId
-    ? api.get(`/api/audit/case/${caseId}`).then(r => r.data)
-    : api.get('/api/audit/').then(r => r.data);
+// Inquiries
+export const listInquiries = (caseId: number) => api.get(`/api/inquiries/case/${caseId}`).then(r => r.data);
+export const createInquiry = (data: Record<string, unknown>) => api.post('/api/inquiries/', data).then(r => r.data);
+export const deleteInquiry = (id: number) => api.delete(`/api/inquiries/${id}`);

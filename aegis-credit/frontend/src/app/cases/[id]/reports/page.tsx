@@ -28,7 +28,7 @@ export default function ReportsPage() {
     setUploading(true); setError(''); setSuccess('');
     const fd = new FormData();
     fd.append('case_id', String(caseId));
-    fd.append('bureau', bureau === 'all' ? 'experian' : bureau);
+    fd.append('bureau', bureau);
     fd.append('file', fileRef.current.files[0]);
     try {
       const result = await uploadReport(fd);

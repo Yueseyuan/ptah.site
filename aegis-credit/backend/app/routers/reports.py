@@ -11,6 +11,15 @@ from app.config import settings
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 BUREAUS = ["experian", "equifax", "transunion", "innovis"]
+UPLOAD_BUREAUS = BUREAUS + ["all"]
+
+
+def _resolve_tradeline_bureau(report_bureau: str, td: dict) -> str:
+    """For combined/tri-merge reports, trust the AI's per-account bureau identification."""
+    if report_bureau == "all":
+        td_bureau = td.get("bureau", "")
+        return td_bureau if td_bureau in BUREAUS else "unknown"
+    return report_bureau
 
 
 def _out(r: CreditReport) -> dict:
@@ -39,8 +48,8 @@ async def upload_report(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
-    if bureau not in BUREAUS:
-        raise HTTPException(400, f"Bureau must be one of: {BUREAUS}")
+    if bureau not in UPLOAD_BUREAUS:
+        raise HTTPException(400, f"Bureau must be one of: {UPLOAD_BUREAUS}")
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     safe_name = f"case_{case_id}_{bureau}_{file.filename}"
     file_path = os.path.join(settings.UPLOAD_DIR, safe_name)
@@ -63,7 +72,7 @@ async def upload_report(
             tl = Tradeline(
                 case_id=case_id,
                 report_id=report.id,
-                bureau=bureau,
+                bureau=_resolve_tradeline_bureau(bureau, td),
                 creditor_name=td.get("creditor_name", ""),
                 account_number_last4=td.get("account_number_last4", ""),
                 account_type=td.get("account_type", "other"),
@@ -110,7 +119,7 @@ def reparse_report(report_id: int, db: Session = Depends(get_db)):
             tl = Tradeline(
                 case_id=report.case_id,
                 report_id=report.id,
-                bureau=report.bureau,
+                bureau=_resolve_tradeline_bureau(report.bureau, td),
                 creditor_name=td.get("creditor_name", ""),
                 account_number_last4=td.get("account_number_last4", ""),
                 account_type=td.get("account_type", "other"),

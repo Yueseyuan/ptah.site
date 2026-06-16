@@ -37,7 +37,7 @@ export default function TradelinesPage() {
   async function addTradeline(e: React.FormEvent) {
     e.preventDefault(); setSaving(true); setError('');
     try {
-      const reportForBureau = reports.find(r => r.bureau === form.bureau);
+      const reportForBureau = reports.find(r => r.bureau === form.bureau || r.bureau === 'all');
       if (!reportForBureau) {
         setError(`No uploaded report found for ${form.bureau}. Upload a report for this bureau first, then add tradelines.`);
         setSaving(false); return;

@@ -13,7 +13,15 @@ COMPLIANCE_DISCLAIMER = (
 
 TRADELINE_EXTRACTION_PROMPT = """You are a credit report analyst. Extract all tradelines (accounts) from this credit report text.
 
+This text may be a single-bureau report, or a combined/tri-merge report containing data from multiple bureaus
+(Experian, Equifax, TransUnion, Innovis) side by side or interleaved for the same accounts. If the same account
+appears under more than one bureau, return ONE entry per bureau it appears under (do not merge them), since
+each bureau's data for an account can differ.
+
 Return a JSON array. Each object must have:
+- bureau: string, one of "experian", "equifax", "transunion", "innovis" (your best identification of which
+  bureau this specific entry's data came from; if the report is single-bureau and the bureau is unambiguous
+  but not explicitly labeled per-account, use that report's bureau)
 - creditor_name: string
 - account_number_last4: string (last 4 digits only, or "????" if not available)
 - account_type: string (e.g., "credit_card", "auto_loan", "mortgage", "student_loan", "collection", "other")
@@ -25,7 +33,8 @@ Return a JSON array. Each object must have:
 - payment_history: string (summary of payment history)
 - derogatory: boolean
 
-Return ONLY the JSON array with no other text.
+Return ONLY the JSON array with no other text. If you genuinely find no account/tradeline data in the text,
+return an empty array [] rather than guessing.
 
 Credit report text:
 """
@@ -111,8 +120,8 @@ def extract_tradelines_from_text(raw_text: str) -> list[dict]:
     try:
         message = client.messages.create(
             model=AI_MODEL,
-            max_tokens=4096,
-            messages=[{"role": "user", "content": TRADELINE_EXTRACTION_PROMPT + raw_text[:15000]}],
+            max_tokens=8192,
+            messages=[{"role": "user", "content": TRADELINE_EXTRACTION_PROMPT + raw_text[:60000]}],
         )
     except anthropic.APIError as e:
         raise RuntimeError(f"Anthropic API call failed: {e}") from e

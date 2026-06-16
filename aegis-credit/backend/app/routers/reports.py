@@ -85,6 +85,14 @@ async def upload_report(
     return _out(report)
 
 
+@router.get("/{report_id}/raw-text")
+def get_raw_text(report_id: int, db: Session = Depends(get_db)):
+    report = db.query(CreditReport).filter(CreditReport.id == report_id).first()
+    if not report:
+        raise HTTPException(404, "Report not found")
+    return {"raw_text": report.raw_text or ""}
+
+
 @router.post("/{report_id}/reparse")
 def reparse_report(report_id: int, db: Session = Depends(get_db)):
     report = db.query(CreditReport).filter(CreditReport.id == report_id).first()

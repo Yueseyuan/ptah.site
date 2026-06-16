@@ -48,6 +48,7 @@ class AegisCase(Base):
     outcomes = relationship("Outcome", back_populates="case")
     metro2_findings = relationship("Metro2Finding", back_populates="case")
     inquiries = relationship("Inquiry", back_populates="case")
+    personal_info_records = relationship("PersonalInfo", back_populates="case")
 
 
 class CreditReport(Base):
@@ -335,3 +336,77 @@ class Inquiry(Base):
     purpose = Column(String)
     created_at = Column(DateTime, server_default=func.now())
     case = relationship("AegisCase", back_populates="inquiries")
+
+
+class PersonalInfo(Base):
+    __tablename__ = "personal_info"
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(Integer, ForeignKey("aegis_cases.id"))
+    report_id = Column(Integer, ForeignKey("credit_reports.id"), nullable=True)
+    bureau = Column(String)
+    current_name = Column(String)
+    aliases = Column(Text)           # JSON list of strings
+    current_address = Column(String)
+    previous_addresses = Column(Text)   # JSON list of strings
+    current_employer = Column(String)
+    previous_employers = Column(Text)   # JSON list of strings
+    phone_numbers = Column(Text)      # JSON list of strings
+    dob = Column(String)
+    ssn_last4 = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+    case = relationship("AegisCase", back_populates="personal_info_records")
+
+
+class FederalLaw(Base):
+    __tablename__ = "federal_laws"
+    id = Column(Integer, primary_key=True, index=True)
+    short_name = Column(String)      # "FCRA", "FDCPA"
+    title = Column(String)           # "Fair Credit Reporting Act"
+    citation = Column(String)        # "15 U.S.C. § 1681 et seq."
+    section = Column(String)         # "§605(a)"
+    summary = Column(Text)
+    effective_date = Column(String)
+    category = Column(String)        # "credit_reporting", "debt_collection"
+    source_url = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class AgencyGuidance(Base):
+    __tablename__ = "agency_guidance"
+    id = Column(Integer, primary_key=True, index=True)
+    agency = Column(String)           # "CFPB", "FTC"
+    document_name = Column(String)
+    publication_date = Column(String)
+    topic = Column(String)
+    summary = Column(Text)
+    source_url = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class StateLaw(Base):
+    __tablename__ = "state_laws"
+    id = Column(Integer, primary_key=True, index=True)
+    state = Column(String)            # "SC", "NY"
+    statute = Column(String)
+    citation = Column(String)
+    topic = Column(String)
+    effective_date = Column(String)
+    summary = Column(Text)
+    source_url = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class CaseLaw(Base):
+    __tablename__ = "case_law"
+    id = Column(Integer, primary_key=True, index=True)
+    case_name = Column(String)
+    citation = Column(String)
+    court = Column(String)
+    jurisdiction = Column(String)
+    year = Column(Integer)
+    topic = Column(String)
+    holding_summary = Column(Text)
+    legal_principle = Column(Text)
+    relevance_tags = Column(Text)    # JSON list of strings
+    source_url = Column(String)
+    created_at = Column(DateTime, server_default=func.now())

@@ -292,3 +292,93 @@ def run_cross_bureau_comparison(tradelines_by_bureau: dict) -> list[dict]:
                     })
 
     return discrepancies
+
+
+REPORT_EXTRACTION_PROMPT = """You are a credit report analyst. Extract ALL tradelines, inquiries, and personal information from this credit report text.
+
+TRADELINES:
+Extract every tradeline (account) from this report — including accounts from all sections such as
+"Credit cards", "Loans", "Closed accounts", "Collections", "Charge-offs", and "Negative accounts".
+For tri-merge reports, create one entry per bureau that actually reports the account (skip bureaus showing "--").
+
+INQUIRIES:
+Extract all inquiries from sections labeled "Inquiries", "Credit Checks", or "Requests for your credit history".
+For each inquiry provide:
+- bureau: which bureau recorded this inquiry
+- inquiry_type: "hard" or "soft" (hard = credit check by a lender; soft = promotional, employment, monitoring)
+- subscriber_name: name of the company that pulled the credit
+- inquiry_date: YYYY-MM-DD format if available, else empty string
+- purpose: purpose stated in the report, or empty string if not shown
+
+PERSONAL INFORMATION:
+Extract the personal information section for each bureau present. For each bureau provide:
+- bureau: bureau name (experian, equifax, transunion, innovis)
+- current_name: consumer's current name as listed
+- aliases: array of other names/aliases listed
+- current_address: most recent address
+- previous_addresses: array of previous addresses
+- current_employer: most recent employer listed
+- previous_employers: array of previous employers
+- phone_numbers: array of phone numbers listed
+- dob: date of birth in YYYY-MM-DD format if shown, else empty string
+- ssn_last4: last 4 digits of SSN if shown, else empty string
+
+Return a JSON OBJECT (not an array) with exactly three keys:
+{
+  "tradelines": [ ... array of tradeline objects ... ],
+  "inquiries": [ ... array of inquiry objects ... ],
+  "personal_info": [ ... array of per-bureau PI objects ... ]
+}
+
+Tradeline object fields (same as always):
+bureau, creditor_name, account_number_last4, account_type, open_date, close_date,
+balance, credit_limit, payment_status, payment_history, derogatory, high_balance,
+past_due_amount, scheduled_payment_amount, payment_rating, compliance_condition_code,
+consumer_information_indicator, dofd, date_reported, remarks
+
+Return ONLY the JSON object with no other text.
+
+Credit report text:
+"""
+
+
+def _parse_json_object_response(content: str) -> dict:
+    """Parse a JSON object response from Claude."""
+    cleaned = _extract_json(content)
+    try:
+        result = json.loads(cleaned)
+        if isinstance(result, dict):
+            return result
+        # If AI returned an array instead of an object, wrap it
+        if isinstance(result, list):
+            return {"tradelines": result, "inquiries": [], "personal_info": []}
+        raise RuntimeError("AI returned unexpected JSON type")
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"AI returned malformed JSON ({e}). Raw response: {cleaned[:300]}") from e
+
+
+def extract_report_data(raw_text: str) -> dict:
+    """
+    Use Claude to extract tradelines, inquiries, and personal info from credit report text.
+
+    Returns:
+        {
+            "tradelines": [...],
+            "inquiries": [...],
+            "personal_info": [...]
+        }
+    """
+    _require_api_key()
+    client = _client()
+    message = _create_message(
+        client,
+        model=AI_MODEL,
+        max_tokens=8192,
+        messages=[{"role": "user", "content": REPORT_EXTRACTION_PROMPT + raw_text[:60000]}],
+    )
+    result = _parse_json_object_response(message.content[0].text)
+    # Ensure all expected keys are present
+    result.setdefault("tradelines", [])
+    result.setdefault("inquiries", [])
+    result.setdefault("personal_info", [])
+    return result

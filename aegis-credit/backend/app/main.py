@@ -24,6 +24,8 @@ from app.routers.auth import router as auth_router
 from app.routers.audit import router as audit_router
 from app.routers.organizations import router as organizations_router
 from app.routers.inquiries import router as inquiries_router
+from app.routers.personal_info import router as personal_info_router
+from app.routers.legal import router as legal_router
 
 
 def run_migrations():
@@ -43,9 +45,26 @@ def run_migrations():
         Base.metadata.create_all(bind=engine)
 
 
+def run_seeds():
+    """Seed reference data (legal knowledge engine)."""
+    try:
+        from app.database import SessionLocal
+        from app.services.legal_seed import seed_federal_laws, seed_agency_guidance, seed_case_law
+        db = SessionLocal()
+        try:
+            seed_federal_laws(db)
+            seed_agency_guidance(db)
+            seed_case_law(db)
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"[WARNING] Seed functions failed ({e})")
+
+
 # Skip migrations during test runs (tests call create_all directly)
 if not os.environ.get("TESTING"):
     run_migrations()
+    run_seeds()
 
 app = FastAPI(title=settings.APP_NAME, version="1.0.0")
 
@@ -76,6 +95,8 @@ app.include_router(auth_router)
 app.include_router(audit_router)
 app.include_router(organizations_router)
 app.include_router(inquiries_router)
+app.include_router(personal_info_router)
+app.include_router(legal_router)
 
 
 @app.get("/api/health")

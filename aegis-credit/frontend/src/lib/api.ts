@@ -154,3 +154,18 @@ export const updateOrganization = (id: number, data: Record<string, unknown>) =>
 export const listInquiries = (caseId: number) => api.get(`/api/inquiries/case/${caseId}`).then(r => r.data);
 export const createInquiry = (data: Record<string, unknown>) => api.post('/api/inquiries/', data).then(r => r.data);
 export const deleteInquiry = (id: number) => api.delete(`/api/inquiries/${id}`);
+
+// Personal Info
+export const listPersonalInfo = (caseId: number) => api.get(`/api/personal-info/case/${caseId}`).then(r => r.data);
+export const analyzePersonalInfo = (caseId: number) => api.post(`/api/personal-info/case/${caseId}/analyze`).then(r => r.data);
+export const deletePersonalInfo = (id: number) => api.delete(`/api/personal-info/${id}`);
+
+// Inquiry Analysis
+export const analyzeInquiries = (caseId: number) => api.post(`/api/inquiries/case/${caseId}/analyze`).then(r => r.data);
+
+// Legal
+export const listFederalLaws = (params?: { category?: string; search?: string }) => api.get('/api/legal/federal', { params }).then(r => r.data);
+export const listAgencyGuidance = (params?: { agency?: string; search?: string }) => api.get('/api/legal/guidance', { params }).then(r => r.data);
+export const listStateLaws = (params?: { state?: string; search?: string }) => api.get('/api/legal/state', { params }).then(r => r.data);
+export const listCaseLaw = (params?: { topic?: string; search?: string }) => api.get('/api/legal/cases', { params }).then(r => r.data);
+export const searchLegal = (q: string) => api.get('/api/legal/search', { params: { q } }).then(r => r.data);

@@ -13,6 +13,12 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    section: 'Research',
+    items: [
+      { href: '/legal', label: 'Legal Knowledge', icon: '⚖' },
+    ],
+  },
+  {
     section: 'Knowledge',
     items: [
       { href: '/learning', label: 'Learning Vault', icon: '🧠' },

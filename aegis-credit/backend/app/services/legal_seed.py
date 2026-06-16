@@ -288,7 +288,7 @@ def seed_agency_guidance(db):
     ]
 
     for g in guidance_records:
-        doc = __import__("app.models", fromlist=["AgencyGuidance"]).AgencyGuidance(**g)
+        doc = AgencyGuidance(**g)
         db.add(doc)
     db.commit()
 

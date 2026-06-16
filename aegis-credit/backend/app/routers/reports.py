@@ -15,11 +15,15 @@ UPLOAD_BUREAUS = BUREAUS + ["all"]
 
 
 def _resolve_tradeline_bureau(report_bureau: str, td: dict) -> str:
-    """For combined/tri-merge reports, trust the AI's per-account bureau identification."""
-    if report_bureau == "all":
-        td_bureau = td.get("bureau", "")
-        return td_bureau if td_bureau in BUREAUS else "unknown"
-    return report_bureau
+    """Trust the AI's per-account bureau identification whenever it gave one — many
+    reports are tri-merge even when the uploader didn't select "All Bureaus", and the
+    AI is told to identify each account's actual bureau from the report text itself."""
+    td_bureau = td.get("bureau", "")
+    if td_bureau in BUREAUS:
+        return td_bureau
+    if report_bureau in BUREAUS:
+        return report_bureau
+    return "unknown"
 
 
 def _out(r: CreditReport) -> dict:

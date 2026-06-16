@@ -46,6 +46,7 @@ class AegisCase(Base):
     generated_reports = relationship("GeneratedReport", back_populates="case")
     dispute_rounds = relationship("DisputeRound", back_populates="case")
     outcomes = relationship("Outcome", back_populates="case")
+    metro2_findings = relationship("Metro2Finding", back_populates="case")
 
 
 class CreditReport(Base):
@@ -80,12 +81,39 @@ class Tradeline(Base):
     payment_history = Column(Text)  # JSON
     derogatory = Column(Boolean, default=False)
     dispute_status = Column(String, default="none")  # none, in_dispute, resolved
+    # Metro 2 fields
+    high_balance = Column(Float, nullable=True)
+    past_due_amount = Column(Float, nullable=True)
+    scheduled_payment_amount = Column(Float, nullable=True)
+    payment_rating = Column(String)          # Metro 2: 0=too new, 1=current, 2-9=days late, B=no hist, etc.
+    compliance_condition_code = Column(String)  # XF, XH, XJ, XR, XO, X1-X9, XA, XB
+    consumer_information_indicator = Column(String)  # A-J bankruptcy codes
+    dofd = Column(String)                    # Date of First Delinquency YYYY-MM-DD
+    date_reported = Column(String)
+    remarks = Column(Text)
+    raw_source_text = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
     case = relationship("AegisCase", back_populates="tradelines")
     report = relationship("CreditReport", back_populates="tradelines")
     findings = relationship("Finding", back_populates="tradeline")
     dispute_items = relationship("DisputeItem", back_populates="tradeline")
     outcomes = relationship("Outcome", back_populates="tradeline")
+    metro2_findings = relationship("Metro2Finding", back_populates="tradeline")
+
+
+class Metro2Finding(Base):
+    __tablename__ = "metro2_findings"
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(Integer, ForeignKey("aegis_cases.id"))
+    tradeline_id = Column(Integer, ForeignKey("tradelines.id"), nullable=True)
+    rule_code = Column(String)      # e.g. "DOFD_7YR", "MISSING_DOFD", "BALANCE_EXCEEDS_HIGH"
+    rule_name = Column(String)
+    severity = Column(String, default="medium")  # high, medium, low, info
+    description = Column(Text)
+    fcra_section = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+    case = relationship("AegisCase", back_populates="metro2_findings")
+    tradeline = relationship("Tradeline", back_populates="metro2_findings")
 
 
 class TradelineComparison(Base):
@@ -252,4 +280,29 @@ class LearningEntry(Base):
     fcra_basis = Column(String)
     outcome = Column(String)  # success, partial, failure
     notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    full_name = Column(String)
+    hashed_password = Column(String)
+    role = Column(String, default="investigator")   # admin, investigator, reviewer
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True)
+    username = Column(String, nullable=True)
+    action = Column(String)            # CREATE, UPDATE, DELETE, LOGIN, etc.
+    resource_type = Column(String)     # client, case, tradeline, finding, etc.
+    resource_id = Column(Integer, nullable=True)
+    detail = Column(Text, nullable=True)
+    ip_address = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())

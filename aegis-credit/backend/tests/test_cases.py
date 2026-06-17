@@ -136,3 +136,31 @@ def test_add_finding_to_dispute(client):
     assert f2.status_code == 200
     updated = next((x for x in f2.json() if x["id"] == fid), None)
     assert updated["status"] == "in_dispute"
+
+
+def test_list_cases_by_client(client):
+    cr = client.post("/api/clients/", json={"first_name": "Filter", "last_name": "Test", "email": "ft@test.invalid"})
+    assert cr.status_code == 201
+    cid = cr.json()["id"]
+    c1 = client.post("/api/cases/", json={"client_id": cid, "goal": "Case A"})
+    c2 = client.post("/api/cases/", json={"client_id": cid, "goal": "Case B"})
+    assert c1.status_code == 201 and c2.status_code == 201
+    r = client.get(f"/api/cases/?client_id={cid}")
+    assert r.status_code == 200
+    cases = r.json()
+    assert len(cases) == 2
+    assert all(c["client_id"] == cid for c in cases)
+
+
+def test_analyze_all(client):
+    cr = client.post("/api/clients/", json={"first_name": "AllEngine", "last_name": "Test", "email": "ae@test.invalid"})
+    assert cr.status_code == 201
+    cas = client.post("/api/cases/", json={"client_id": cr.json()["id"]})
+    assert cas.status_code == 201
+    cid = cas.json()["id"]
+    # Run analyze-all with no data — should return empty findings, not error
+    r = client.post(f"/api/cases/{cid}/analyze-all")
+    assert r.status_code == 200
+    data = r.json()
+    assert "total_findings" in data
+    assert isinstance(data["total_findings"], int)

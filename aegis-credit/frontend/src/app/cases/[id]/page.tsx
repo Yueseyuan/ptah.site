@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { getCaseSummary, updateCase, getApplicableLaws, exportCase } from '@/lib/api';
+import { getCaseSummary, updateCase, getApplicableLaws, exportCase, analyzeAll } from '@/lib/api';
 
 interface Summary {
   case: { id: number; case_number: string; client_id: number; status: string; goal: string; notes: string; assigned_to: string; created_at: string; };
@@ -41,6 +41,8 @@ export default function CaseDashboard() {
   const [saving, setSaving] = useState(false);
   const [applicableLaws, setApplicableLaws] = useState<ApplicableLaws | null>(null);
   const [lawsOpen, setLawsOpen] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeResult, setAnalyzeResult] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     getCaseSummary(caseId).then(setData).finally(() => setLoading(false));
@@ -51,6 +53,15 @@ export default function CaseDashboard() {
     setSaving(true);
     await updateCase(caseId, { status });
     getCaseSummary(caseId).then(setData).finally(() => setSaving(false));
+  }
+
+  async function handleAnalyzeAll() {
+    setAnalyzing(true); setAnalyzeResult(null);
+    try {
+      const r = await analyzeAll(caseId);
+      setAnalyzeResult(r);
+      getCaseSummary(caseId).then(setData);
+    } finally { setAnalyzing(false); }
   }
 
   async function handleExport() {
@@ -108,14 +119,35 @@ export default function CaseDashboard() {
 
         <div className="card">
           <h3>Quick Actions</h3>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
             <Link href={`/cases/${caseId}/reports`} className="btn btn-outline">Upload Report</Link>
             <Link href={`/cases/${caseId}/tradelines`} className="btn btn-outline">View Tradelines</Link>
             <Link href={`/cases/${caseId}/comparison`} className="btn btn-outline">Run Comparison</Link>
-            <Link href={`/cases/${caseId}/findings`} className="btn btn-outline">Generate Findings</Link>
+            <Link href={`/cases/${caseId}/findings`} className="btn btn-outline">View Findings</Link>
             <Link href={`/cases/${caseId}/strategy`} className="btn btn-outline">Build Strategy</Link>
             <Link href={`/cases/${caseId}/disputes`} className="btn btn-outline">Manage Disputes</Link>
           </div>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+            <button className="btn btn-primary" onClick={handleAnalyzeAll} disabled={analyzing}>
+              {analyzing ? 'Running All Analyses…' : '⚡ Run All Analyses'}
+            </button>
+            <span style={{ marginLeft: 10, fontSize: 12, color: 'var(--muted)' }}>
+              Collection · Court · PI · Inquiry · Metro 2
+            </span>
+          </div>
+          {analyzeResult && (
+            <div className="alert-success" style={{ marginTop: 10, fontSize: 13 }}>
+              Analysis complete: {analyzeResult.total_findings} finding(s) generated
+              {' — '}
+              {['collection', 'court', 'personal_info', 'inquiry', 'metro2']
+                .filter(k => typeof analyzeResult[k] === 'number')
+                .map(k => `${k.replace('_', ' ')}: ${analyzeResult[k]}`)
+                .join(' · ')}
+              {Object.entries(analyzeResult).filter(([k]) => k.endsWith('_error')).map(([k, v]) => (
+                <div key={k} style={{ color: 'var(--danger)' }}>{k}: {String(v)}</div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Applicable State Laws Widget */}

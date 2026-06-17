@@ -3,15 +3,17 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import { getClient, listCourtRecordsByClient, createCourtRecord } from '@/lib/api';
+import { getClient, listCourtRecordsByClient, createCourtRecord, getCasesByClient } from '@/lib/api';
 
 interface Client { id: number; first_name: string; last_name: string; email: string; phone: string; address: string; city: string; state: string; zip_code: string; dob: string; ssn_last4: string; notes: string; created_at: string; }
 interface CourtRecord { id: number; record_type: string; court_name: string; jurisdiction: string; docket_number: string; offense_date: string; disposition: string; expungement_eligible: boolean; }
+interface Case { id: number; case_number: string; status: string; goal: string; created_at: string; }
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [client, setClient] = useState<Client | null>(null);
   const [records, setRecords] = useState<CourtRecord[]>([]);
+  const [cases, setCases] = useState<Case[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ record_type: 'criminal', court_name: '', jurisdiction: '', docket_number: '', offense_date: '', disposition: '', expungement_eligible: false, notes: '' });
   const [error, setError] = useState('');
@@ -20,6 +22,7 @@ export default function ClientDetailPage() {
     const n = parseInt(id);
     getClient(n).then(setClient).catch(console.error);
     listCourtRecordsByClient(n).then(setRecords).catch(console.error);
+    getCasesByClient(n).then(setCases).catch(console.error);
   }, [id]);
 
   async function addRecord(e: React.FormEvent) {
@@ -46,7 +49,7 @@ export default function ClientDetailPage() {
             <h1>{client.first_name} {client.last_name}</h1>
             <p>Client #{client.id} · Added {new Date(client.created_at).toLocaleDateString()}</p>
           </div>
-          <Link href={`/cases/new?client_id=${client.id}`} className="btn btn-primary">+ New Case</Link>
+          <Link href="/clients" className="btn btn-outline">← Clients</Link>
         </div>
 
         <div className="grid-2" style={{ marginBottom: 16 }}>
@@ -63,6 +66,31 @@ export default function ClientDetailPage() {
             <p>{[client.city, client.state, client.zip_code].filter(Boolean).join(', ')}</p>
             {client.notes && <><br /><p style={{ color: 'var(--muted)', fontSize: 12 }}>{client.notes}</p></>}
           </div>
+        </div>
+
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ marginBottom: 0 }}>Cases ({cases.length})</h3>
+            <Link href={`/cases/new?client_id=${client.id}`} className="btn btn-outline btn-sm">+ New Case</Link>
+          </div>
+          {cases.length === 0 ? (
+            <p className="empty">No cases yet. <Link href={`/cases/new?client_id=${client.id}`}>Create the first case.</Link></p>
+          ) : (
+            <table>
+              <thead><tr><th>Case #</th><th>Status</th><th>Goal</th><th>Opened</th><th></th></tr></thead>
+              <tbody>
+                {cases.map(c => (
+                  <tr key={c.id}>
+                    <td><code>{c.case_number}</code></td>
+                    <td><span className={`badge badge-${c.status === 'active' ? 'success' : c.status === 'closed' ? 'pending' : 'medium'}`}>{c.status.replace('_', ' ')}</span></td>
+                    <td style={{ fontSize: 12, color: 'var(--muted)', maxWidth: 300 }}>{c.goal || '—'}</td>
+                    <td style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(c.created_at).toLocaleDateString()}</td>
+                    <td><Link href={`/cases/${c.id}`} className="btn btn-outline btn-sm">Open</Link></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className="card">

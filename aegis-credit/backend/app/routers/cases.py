@@ -47,8 +47,11 @@ def _out(c: AegisCase) -> dict:
 
 
 @router.get("/")
-def list_cases(db: Session = Depends(get_db)):
-    return [_out(c) for c in db.query(AegisCase).order_by(AegisCase.id.desc()).all()]
+def list_cases(client_id: Optional[int] = None, db: Session = Depends(get_db)):
+    q = db.query(AegisCase)
+    if client_id is not None:
+        q = q.filter(AegisCase.client_id == client_id)
+    return [_out(c) for c in q.order_by(AegisCase.id.desc()).all()]
 
 
 @router.post("/", status_code=201)
@@ -191,3 +194,101 @@ def get_applicable_laws(case_id: int, db: Session = Depends(get_db)):
             for law in laws
         ],
     }
+
+
+@router.post("/{case_id}/analyze-all")
+def analyze_all(case_id: int, db: Session = Depends(get_db)):
+    """Run all analysis engines for a case: collection, court, PI, inquiry, Metro 2."""
+    from app.models import Tradeline, Finding, PersonalInfo, Inquiry, CourtRecord, Metro2Finding
+    from app.services.collection_service import analyze_collection_accounts
+    from app.services.court_service import analyze_court_records
+    from app.services.pi_service import run_pi_analysis
+    from app.services.inquiry_service import run_inquiry_analysis
+    from app.services.metro2_service import run_metro2_rules
+
+    case = db.query(AegisCase).filter(AegisCase.id == case_id).first()
+    if not case:
+        raise HTTPException(404, "Case not found")
+
+    tradelines = db.query(Tradeline).filter(Tradeline.case_id == case_id).all()
+    tl_dicts = [{"id": t.id, "bureau": t.bureau, "creditor_name": t.creditor_name, "account_number_last4": t.account_number_last4,
+                 "account_type": t.account_type, "balance": t.balance, "payment_status": t.payment_status, "dofd": t.dofd, "derogatory": t.derogatory}
+                for t in tradelines]
+    results = {}
+
+    # Collection analysis
+    try:
+        db.query(Finding).filter(Finding.case_id == case_id, Finding.finding_type == "collection").delete()
+        raw = analyze_collection_accounts(tl_dicts)
+        for fd in raw:
+            db.add(Finding(case_id=case_id, finding_type="collection", severity=fd["severity"],
+                           title=f"{fd['rule_code']}: {fd['rule_name']}", description=fd["description"],
+                           fcra_section=fd.get("fcra_section", ""), requires_human_review=True, status="open"))
+        results["collection"] = len(raw)
+    except Exception as e:
+        results["collection_error"] = str(e)
+
+    # Court analysis
+    try:
+        court_records = db.query(CourtRecord).filter(CourtRecord.case_id == case_id).all()
+        cr_dicts = [{"id": r.id, "record_type": r.record_type, "disposition": r.disposition, "court_name": r.court_name}
+                    for r in court_records]
+        db.query(Finding).filter(Finding.case_id == case_id, Finding.finding_type == "court").delete()
+        raw_ct = analyze_court_records(cr_dicts, tl_dicts)
+        for fd in raw_ct:
+            db.add(Finding(case_id=case_id, finding_type="court", severity=fd["severity"],
+                           title=f"{fd['rule_code']}: {fd['rule_name']}", description=fd["description"],
+                           fcra_section=fd.get("fcra_section", ""), requires_human_review=True, status="open"))
+        results["court"] = len(raw_ct)
+    except Exception as e:
+        results["court_error"] = str(e)
+
+    # PI analysis
+    try:
+        pi_records = db.query(PersonalInfo).filter(PersonalInfo.case_id == case_id).all()
+        pi_dicts = [{"id": r.id, "bureau": r.bureau, "current_name": r.current_name, "aliases": r.aliases,
+                     "current_address": r.current_address, "previous_addresses": r.previous_addresses,
+                     "dob": r.dob, "ssn_last4": r.ssn_last4}
+                    for r in pi_records]
+        db.query(Finding).filter(Finding.case_id == case_id, Finding.finding_type == "personal_info").delete()
+        raw_pi = run_pi_analysis(pi_dicts)
+        for fd in raw_pi:
+            db.add(Finding(case_id=case_id, finding_type="personal_info", severity=fd["severity"],
+                           title=f"{fd['rule_code']}: {fd['rule_name']}", description=fd["description"],
+                           fcra_section=fd.get("fcra_section", ""), requires_human_review=True, status="open"))
+        results["personal_info"] = len(raw_pi)
+    except Exception as e:
+        results["personal_info_error"] = str(e)
+
+    # Inquiry analysis
+    try:
+        inq_records = db.query(Inquiry).filter(Inquiry.case_id == case_id).all()
+        inq_dicts = [{"id": i.id, "bureau": i.bureau, "inquiry_type": i.inquiry_type,
+                      "subscriber_name": i.subscriber_name, "inquiry_date": i.inquiry_date}
+                     for i in inq_records]
+        db.query(Finding).filter(Finding.case_id == case_id, Finding.finding_type == "inquiry").delete()
+        raw_inq = run_inquiry_analysis(inq_dicts)
+        for fd in raw_inq:
+            db.add(Finding(case_id=case_id, finding_type="inquiry", severity=fd["severity"],
+                           title=f"{fd['rule_code']}: {fd['rule_name']}", description=fd["description"],
+                           fcra_section=fd.get("fcra_section", ""), requires_human_review=True, status="open"))
+        results["inquiry"] = len(raw_inq)
+    except Exception as e:
+        results["inquiry_error"] = str(e)
+
+    # Metro 2 analysis (uses Metro2Finding model)
+    try:
+        db.query(Metro2Finding).filter(Metro2Finding.case_id == case_id).delete()
+        raw_m2 = run_metro2_rules(tradelines)
+        for fd in raw_m2:
+            db.add(Metro2Finding(case_id=case_id, tradeline_id=fd.get("tradeline_id"),
+                                 rule_code=fd.get("rule_code", ""), rule_name=fd.get("rule_name", ""),
+                                 severity=fd.get("severity", "medium"), description=fd.get("description", ""),
+                                 fcra_section=fd.get("fcra_section", "")))
+        results["metro2"] = len(raw_m2)
+    except Exception as e:
+        results["metro2_error"] = str(e)
+
+    db.commit()
+    results["total_findings"] = sum(v for k, v in results.items() if isinstance(v, int))
+    return results

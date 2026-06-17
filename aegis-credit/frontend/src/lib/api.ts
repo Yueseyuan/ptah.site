@@ -207,3 +207,11 @@ export const addFindingToDispute = (findingId: number, roundId: number, disputeR
   api.post('/api/disputes/add-finding', { finding_id: findingId, round_id: roundId, dispute_reason: disputeReason, fcra_basis: fcraBasis }).then(r => r.data);
 export const listDisputeRoundsForCase = (caseId: number) =>
   api.get(`/api/disputes/case/${caseId}`).then(r => r.data);
+
+// Cases by client
+export const getCasesByClient = (clientId: number) =>
+  api.get('/api/cases/', { params: { client_id: clientId } }).then(r => r.data);
+
+// Analyze all engines
+export const analyzeAll = (caseId: number) =>
+  api.post(`/api/cases/${caseId}/analyze-all`).then(r => r.data);

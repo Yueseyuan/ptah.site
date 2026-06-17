@@ -102,3 +102,34 @@ def case_summary(case_id: int, db: Session = Depends(get_db)):
         "dispute_rounds": rounds,
         "outcomes": outcomes,
     }
+
+
+@router.get("/{case_id}/applicable-laws")
+def get_applicable_laws(case_id: int, db: Session = Depends(get_db)):
+    from app.models import AegisClient, StateLaw
+    case = db.query(AegisCase).filter(AegisCase.id == case_id).first()
+    if not case:
+        raise HTTPException(404, "Case not found")
+    client = db.query(AegisClient).filter(AegisClient.id == case.client_id).first()
+    state = client.state if client else None
+    if not state:
+        return {"state": None, "laws": []}
+    laws = db.query(StateLaw).filter(
+        StateLaw.state == state,
+        StateLaw.superseded == False,
+    ).all()
+    return {
+        "state": state,
+        "laws": [
+            {
+                "id": law.id,
+                "statute": law.statute,
+                "citation": law.citation,
+                "topic": law.topic,
+                "summary": law.summary,
+                "effective_date": law.effective_date,
+                "effective_as_of": getattr(law, "effective_as_of", None),
+            }
+            for law in laws
+        ],
+    }

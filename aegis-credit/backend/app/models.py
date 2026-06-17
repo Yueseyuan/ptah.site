@@ -368,6 +368,9 @@ class FederalLaw(Base):
     effective_date = Column(String)
     category = Column(String)        # "credit_reporting", "debt_collection"
     source_url = Column(String)
+    effective_as_of = Column(String)
+    superseded_by_id = Column(Integer, ForeignKey("federal_laws.id"), nullable=True)
+    version_notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -380,6 +383,9 @@ class AgencyGuidance(Base):
     topic = Column(String)
     summary = Column(Text)
     source_url = Column(String)
+    effective_as_of = Column(String)
+    superseded = Column(Boolean, default=False)
+    version_notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -393,6 +399,9 @@ class StateLaw(Base):
     effective_date = Column(String)
     summary = Column(Text)
     source_url = Column(String)
+    effective_as_of = Column(String)
+    superseded = Column(Boolean, default=False)
+    version_notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -409,4 +418,20 @@ class CaseLaw(Base):
     legal_principle = Column(Text)
     relevance_tags = Column(Text)    # JSON list of strings
     source_url = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class LegalUpdate(Base):
+    __tablename__ = "legal_updates"
+    id = Column(Integer, primary_key=True, index=True)
+    update_type = Column(String)       # "federal", "guidance", "state", "case_law"
+    title = Column(String)
+    source_url = Column(String)
+    summary = Column(Text)
+    proposed_changes = Column(Text)    # JSON describing what would be added/changed
+    status = Column(String, default="pending")  # pending, approved, rejected
+    submitted_by = Column(String)
+    reviewed_by = Column(String, nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+    review_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())

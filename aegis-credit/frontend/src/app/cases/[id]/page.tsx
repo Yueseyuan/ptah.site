@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { getCaseSummary, updateCase } from '@/lib/api';
+import { getCaseSummary, updateCase, getApplicableLaws } from '@/lib/api';
 
 interface Summary {
   case: { id: number; case_number: string; client_id: number; status: string; goal: string; notes: string; assigned_to: string; created_at: string; };
@@ -17,6 +17,20 @@ interface Summary {
   outcomes: number;
 }
 
+interface StateLawEntry {
+  id: number;
+  statute: string;
+  citation: string;
+  topic: string;
+  summary: string;
+  effective_date: string | null;
+}
+
+interface ApplicableLaws {
+  state: string | null;
+  laws: StateLawEntry[];
+}
+
 const STATUSES = ['intake', 'active', 'on_hold', 'closed'];
 
 export default function CaseDashboard() {
@@ -25,9 +39,12 @@ export default function CaseDashboard() {
   const [data, setData] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [applicableLaws, setApplicableLaws] = useState<ApplicableLaws | null>(null);
+  const [lawsOpen, setLawsOpen] = useState(false);
 
   useEffect(() => {
     getCaseSummary(caseId).then(setData).finally(() => setLoading(false));
+    getApplicableLaws(caseId).then(setApplicableLaws).catch(() => {});
   }, [caseId]);
 
   async function changeStatus(status: string) {
@@ -87,6 +104,46 @@ export default function CaseDashboard() {
             <Link href={`/cases/${caseId}/strategy`} className="btn btn-outline">Build Strategy</Link>
             <Link href={`/cases/${caseId}/disputes`} className="btn btn-outline">Manage Disputes</Link>
           </div>
+        </div>
+
+        {/* Applicable State Laws Widget */}
+        <div className="card" style={{ marginTop: 16 }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => setLawsOpen(o => !o)}
+          >
+            <h3 style={{ margin: 0 }}>
+              Applicable State Laws
+              {applicableLaws?.state ? ` — ${applicableLaws.state}` : ''}
+            </h3>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{lawsOpen ? 'Collapse' : 'Expand'}</span>
+          </div>
+          {lawsOpen && (
+            <div style={{ marginTop: 12 }}>
+              <p style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 10, fontStyle: 'italic' }}>
+                For research support only. Not legal advice.
+              </p>
+              {!applicableLaws || !applicableLaws.laws || applicableLaws.laws.length === 0 ? (
+                <p style={{ color: 'var(--muted)', fontSize: 13 }}>
+                  {applicableLaws?.state
+                    ? `No state laws found for ${applicableLaws.state}.`
+                    : 'No client state on file.'}
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {applicableLaws.laws.map(law => (
+                    <div key={law.id} style={{ borderLeft: '3px solid var(--accent, #4f46e5)', paddingLeft: 12 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{law.statute}</div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>
+                        {law.citation} · {law.topic}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text, #111)' }}>{law.summary}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {c.notes && (

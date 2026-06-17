@@ -169,3 +169,12 @@ export const listAgencyGuidance = (params?: { agency?: string; search?: string }
 export const listStateLaws = (params?: { state?: string; search?: string }) => api.get('/api/legal/state', { params }).then(r => r.data);
 export const listCaseLaw = (params?: { topic?: string; search?: string }) => api.get('/api/legal/cases', { params }).then(r => r.data);
 export const searchLegal = (q: string) => api.get('/api/legal/search', { params: { q } }).then(r => r.data);
+
+// Legal Updates
+export const listLegalUpdates = () => api.get('/api/legal-updates/').then(r => r.data);
+export const submitLegalUpdate = (data: Record<string, unknown>) => api.post('/api/legal-updates/', data).then(r => r.data);
+export const approveLegalUpdate = (id: number) => api.post(`/api/legal-updates/${id}/approve`).then(r => r.data);
+export const rejectLegalUpdate = (id: number, notes: string) => api.post(`/api/legal-updates/${id}/reject`, { notes }).then(r => r.data);
+
+// Applicable Laws (per case)
+export const getApplicableLaws = (caseId: number) => api.get(`/api/cases/${caseId}/applicable-laws`).then(r => r.data);

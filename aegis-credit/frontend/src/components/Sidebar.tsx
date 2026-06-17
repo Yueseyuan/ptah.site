@@ -28,6 +28,7 @@ const NAV_SECTIONS = [
     section: 'Administration',
     items: [
       { href: '/organizations', label: 'Organizations', icon: '🏢' },
+      { href: '/admin/users', label: 'User Management', icon: '👤' },
     ],
   },
 ];

@@ -23,6 +23,9 @@ def _out_federal(law: FederalLaw) -> dict:
         "effective_date": law.effective_date,
         "category": law.category,
         "source_url": law.source_url,
+        "effective_as_of": getattr(law, "effective_as_of", None),
+        "superseded_by_id": getattr(law, "superseded_by_id", None),
+        "version_notes": getattr(law, "version_notes", None),
         "created_at": law.created_at.isoformat() if law.created_at else None,
     }
 
@@ -36,6 +39,9 @@ def _out_guidance(g: AgencyGuidance) -> dict:
         "topic": g.topic,
         "summary": g.summary,
         "source_url": g.source_url,
+        "effective_as_of": getattr(g, "effective_as_of", None),
+        "superseded": getattr(g, "superseded", False),
+        "version_notes": getattr(g, "version_notes", None),
         "created_at": g.created_at.isoformat() if g.created_at else None,
     }
 
@@ -50,6 +56,9 @@ def _out_state(s: StateLaw) -> dict:
         "effective_date": s.effective_date,
         "summary": s.summary,
         "source_url": s.source_url,
+        "effective_as_of": getattr(s, "effective_as_of", None),
+        "superseded": getattr(s, "superseded", False),
+        "version_notes": getattr(s, "version_notes", None),
         "created_at": s.created_at.isoformat() if s.created_at else None,
     }
 
@@ -73,10 +82,24 @@ def _out_case(c: CaseLaw) -> dict:
 
 # ─── Federal Laws ─────────────────────────────────────────────────────────────
 
+class FederalLawCreate(BaseModel):
+    short_name: str
+    title: str
+    citation: str
+    section: Optional[str] = None
+    summary: Optional[str] = None
+    effective_date: Optional[str] = None
+    category: Optional[str] = None
+    source_url: Optional[str] = None
+    effective_as_of: Optional[str] = None
+    version_notes: Optional[str] = None
+
+
 @router.get("/federal")
 def list_federal_laws(
     category: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    as_of: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
     q = db.query(FederalLaw)
@@ -93,7 +116,20 @@ def list_federal_laws(
                 FederalLaw.short_name.ilike(term),
             )
         )
+    if as_of:
+        q = q.filter(
+            or_(FederalLaw.effective_as_of == None, FederalLaw.effective_as_of <= as_of)
+        ).filter(FederalLaw.superseded_by_id == None)
     return [_out_federal(law) for law in q.all()]
+
+
+@router.post("/federal", status_code=201)
+def create_federal_law(data: FederalLawCreate, db: Session = Depends(get_db)):
+    law = FederalLaw(**data.model_dump())
+    db.add(law)
+    db.commit()
+    db.refresh(law)
+    return _out_federal(law)
 
 
 @router.get("/federal/{law_id}")
@@ -111,6 +147,7 @@ def get_federal_law(law_id: int, db: Session = Depends(get_db)):
 def list_agency_guidance(
     agency: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    as_of: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
     q = db.query(AgencyGuidance)
@@ -126,6 +163,10 @@ def list_agency_guidance(
                 AgencyGuidance.agency.ilike(term),
             )
         )
+    if as_of:
+        q = q.filter(
+            or_(AgencyGuidance.effective_as_of == None, AgencyGuidance.effective_as_of <= as_of)
+        ).filter(AgencyGuidance.superseded == False)
     return [_out_guidance(g) for g in q.all()]
 
 
@@ -139,6 +180,8 @@ class StateLawCreate(BaseModel):
     effective_date: Optional[str] = None
     summary: Optional[str] = None
     source_url: Optional[str] = None
+    effective_as_of: Optional[str] = None
+    version_notes: Optional[str] = None
 
 
 @router.get("/state")

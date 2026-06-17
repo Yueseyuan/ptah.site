@@ -26,6 +26,7 @@ from app.routers.organizations import router as organizations_router
 from app.routers.inquiries import router as inquiries_router
 from app.routers.personal_info import router as personal_info_router
 from app.routers.legal import router as legal_router
+from app.routers.legal_updates import router as legal_updates_router
 
 
 def run_migrations():
@@ -49,12 +50,13 @@ def run_seeds():
     """Seed reference data (legal knowledge engine)."""
     try:
         from app.database import SessionLocal
-        from app.services.legal_seed import seed_federal_laws, seed_agency_guidance, seed_case_law
+        from app.services.legal_seed import seed_federal_laws, seed_agency_guidance, seed_case_law, seed_state_laws
         db = SessionLocal()
         try:
             seed_federal_laws(db)
             seed_agency_guidance(db)
             seed_case_law(db)
+            seed_state_laws(db)
         finally:
             db.close()
     except Exception as e:
@@ -97,6 +99,7 @@ app.include_router(organizations_router)
 app.include_router(inquiries_router)
 app.include_router(personal_info_router)
 app.include_router(legal_router)
+app.include_router(legal_updates_router)
 
 
 @app.get("/api/health")

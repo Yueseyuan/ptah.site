@@ -2,7 +2,7 @@ import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from app.database import get_db
 from app.models import Finding, Tradeline, TradelineComparison
 from app.services.ai_service import generate_findings
@@ -161,3 +161,25 @@ def update_finding(finding_id: int, data: FindingUpdate, db: Session = Depends(g
     db.commit()
     db.refresh(f)
     return _out(f)
+
+
+class BulkUpdateRequest(BaseModel):
+    ids: List[int]
+    status: str
+
+
+@router.post("/bulk-update")
+def bulk_update_findings(data: BulkUpdateRequest, db: Session = Depends(get_db)):
+    """Update the status of multiple findings at once."""
+    allowed = {"open", "reviewed", "in_dispute", "closed"}
+    if data.status not in allowed:
+        raise HTTPException(400, f"Invalid status. Must be one of: {', '.join(allowed)}")
+    if not data.ids:
+        return {"updated": 0}
+    updated = (
+        db.query(Finding)
+        .filter(Finding.id.in_(data.ids))
+        .update({"status": data.status}, synchronize_session=False)
+    )
+    db.commit()
+    return {"updated": updated}

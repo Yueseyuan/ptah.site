@@ -221,3 +221,7 @@ export const exportTradelinesCsv = (caseId: number) =>
 // Analyze all engines
 export const analyzeAll = (caseId: number) =>
   api.post(`/api/cases/${caseId}/analyze-all`).then(r => r.data);
+
+// Bulk update findings status
+export const bulkUpdateFindings = (ids: number[], status: string) =>
+  api.post('/api/findings/bulk-update', { ids, status }).then(r => r.data);

@@ -87,6 +87,7 @@ def update_case(case_id: int, data: CaseUpdate, db: Session = Depends(get_db)):
 @router.get("/{case_id}/summary")
 def case_summary(case_id: int, db: Session = Depends(get_db)):
     from app.models import CreditReport, Tradeline, Finding, DisputeRound, Outcome
+    from datetime import date
     case = db.query(AegisCase).filter(AegisCase.id == case_id).first()
     if not case:
         raise HTTPException(404, "Case not found")
@@ -95,7 +96,14 @@ def case_summary(case_id: int, db: Session = Depends(get_db)):
     derogatory = db.query(Tradeline).filter(Tradeline.case_id == case_id, Tradeline.derogatory == True).count()
     findings = db.query(Finding).filter(Finding.case_id == case_id).count()
     high_findings = db.query(Finding).filter(Finding.case_id == case_id, Finding.severity == "high").count()
+    open_high = db.query(Finding).filter(Finding.case_id == case_id, Finding.severity == "high", Finding.status == "open").count()
     rounds = db.query(DisputeRound).filter(DisputeRound.case_id == case_id).count()
+    today_str = date.today().isoformat()
+    overdue = db.query(DisputeRound).filter(
+        DisputeRound.case_id == case_id,
+        DisputeRound.response_due_date < today_str,
+        DisputeRound.status.notin_(["response_received", "closed"]),
+    ).count()
     outcomes = db.query(Outcome).filter(Outcome.case_id == case_id).count()
     return {
         "case": _out(case),
@@ -104,7 +112,9 @@ def case_summary(case_id: int, db: Session = Depends(get_db)):
         "tradelines_derogatory": derogatory,
         "findings_total": findings,
         "findings_high": high_findings,
+        "open_high_findings": open_high,
         "dispute_rounds": rounds,
+        "overdue_disputes": overdue,
         "outcomes": outcomes,
     }
 

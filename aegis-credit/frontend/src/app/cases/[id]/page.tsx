@@ -13,7 +13,9 @@ interface Summary {
   tradelines_derogatory: number;
   findings_total: number;
   findings_high: number;
+  open_high_findings: number;
   dispute_rounds: number;
+  overdue_disputes: number;
   outcomes: number;
 }
 
@@ -109,6 +111,22 @@ export default function CaseDashboard() {
           <div className="stat-card"><div className="label">Dispute Rounds</div><div className="value">{data.dispute_rounds}</div></div>
           <div className="stat-card"><div className="label">Outcomes Logged</div><div className="value" style={{ color: 'var(--success)' }}>{data.outcomes}</div></div>
         </div>
+
+        {(data.overdue_disputes > 0 || data.open_high_findings > 0) && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontWeight: 700, color: '#991b1b', fontSize: 13 }}>Attention Required</span>
+            {data.overdue_disputes > 0 && (
+              <Link href={`/cases/${caseId}/disputes`} style={{ fontSize: 12, color: '#b91c1c', fontWeight: 600, textDecoration: 'none', background: '#fee2e2', borderRadius: 4, padding: '3px 10px' }}>
+                ⏰ {data.overdue_disputes} overdue dispute{data.overdue_disputes !== 1 ? 's' : ''}
+              </Link>
+            )}
+            {data.open_high_findings > 0 && (
+              <Link href={`/cases/${caseId}/findings`} style={{ fontSize: 12, color: '#b91c1c', fontWeight: 600, textDecoration: 'none', background: '#fee2e2', borderRadius: 4, padding: '3px 10px' }}>
+                ⚠ {data.open_high_findings} open high-severity finding{data.open_high_findings !== 1 ? 's' : ''}
+              </Link>
+            )}
+          </div>
+        )}
 
         {c.goal && (
           <div className="card" style={{ marginBottom: 16 }}>

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listFindings, generateFindings, updateFinding, approveFinding, listDisputeRounds, addFindingToDispute } from '@/lib/api';
+import { listFindings, generateFindings, updateFinding, approveFinding, listDisputeRounds, addFindingToDispute, bulkUpdateFindings } from '@/lib/api';
 
 interface Finding { id: number; finding_type: string; severity: string; title: string; description: string; fcra_section: string; requires_human_review: boolean; status: string; tradeline_id?: number; }
 interface Round { id: number; round_number: number; bureau: string; status: string; }
@@ -32,6 +32,8 @@ export default function FindingsPage() {
   const [filterType, setFilterType] = useState('');
   const [filterSeverity, setFilterSeverity] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkWorking, setBulkWorking] = useState(false);
 
   function load() {
     Promise.all([
@@ -73,6 +75,31 @@ export default function FindingsPage() {
       const e = err as { message?: string };
       setError(e.message || 'Failed to add to dispute.');
     }
+  }
+
+  function toggleSelect(id: number) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    setSelected(displayed.length === selected.size ? new Set() : new Set(displayed.map(f => f.id)));
+  }
+
+  async function bulkAction(status: string) {
+    if (selected.size === 0) return;
+    setBulkWorking(true);
+    try {
+      const r = await bulkUpdateFindings(Array.from(selected), status);
+      setSuccess(`Updated ${r.updated} finding(s) to "${status}".`);
+      setSelected(new Set());
+      load();
+    } catch {
+      setError('Bulk update failed.');
+    } finally { setBulkWorking(false); }
   }
 
   const allTypes = Array.from(new Set(findings.map(f => f.finding_type))).sort();
@@ -127,6 +154,30 @@ export default function FindingsPage() {
           </div>
         )}
 
+        {displayed.length > 0 && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', padding: '8px 12px', background: 'var(--bg)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', flexWrap: 'wrap' }}>
+            <label style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, cursor: 'pointer', userSelect: 'none' }}>
+              <input type="checkbox" checked={selected.size === displayed.length && displayed.length > 0}
+                onChange={selectAll} style={{ width: 'auto' }} />
+              {selected.size === 0 ? 'Select All' : `${selected.size} selected`}
+            </label>
+            {selected.size > 0 && (
+              <>
+                <span style={{ color: 'var(--muted)', fontSize: 12 }}>·</span>
+                <button onClick={() => bulkAction('reviewed')} disabled={bulkWorking} className="btn" style={{ fontSize: 11, padding: '3px 10px', background: '#dcfce7', color: '#166534', border: 'none' }}>
+                  ✓ Approve All
+                </button>
+                <button onClick={() => bulkAction('closed')} disabled={bulkWorking} className="btn" style={{ fontSize: 11, padding: '3px 10px', background: '#f3f4f6', color: '#374151', border: 'none' }}>
+                  Close All
+                </button>
+                <button onClick={() => setSelected(new Set())} className="btn btn-outline" style={{ fontSize: 11, padding: '3px 8px' }}>
+                  Clear
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         {loading ? <div className="spinner" /> : displayed.length === 0 ? (
           <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
             {findings.length === 0
@@ -138,8 +189,10 @@ export default function FindingsPage() {
             {displayed.map(f => {
               const sb = STATUS_BADGE[f.status] || STATUS_BADGE.open;
               return (
-                <div key={f.id} className="card" style={{ marginBottom: 10, borderLeft: `4px solid ${SEV_TEXT[f.severity] || '#6b7280'}` }}>
+                <div key={f.id} className="card" style={{ marginBottom: 10, borderLeft: `4px solid ${SEV_TEXT[f.severity] || '#6b7280'}`, outline: selected.has(f.id) ? '2px solid #6366f1' : 'none' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                    <input type="checkbox" checked={selected.has(f.id)} onChange={() => toggleSelect(f.id)}
+                      style={{ width: 'auto', marginTop: 3, flexShrink: 0 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
                         <span style={{ background: SEV_COLOR[f.severity], color: SEV_TEXT[f.severity], borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>

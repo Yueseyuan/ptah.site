@@ -164,3 +164,39 @@ def test_analyze_all(client):
     data = r.json()
     assert "total_findings" in data
     assert isinstance(data["total_findings"], int)
+
+
+def test_case_summary_attention_fields(client, client_id):
+    cas = client.post("/api/cases/", json={"client_id": client_id})
+    assert cas.status_code == 201
+    cid = cas.json()["id"]
+    r = client.get(f"/api/cases/{cid}/summary")
+    assert r.status_code == 200
+    data = r.json()
+    assert "overdue_disputes" in data
+    assert "open_high_findings" in data
+    assert isinstance(data["overdue_disputes"], int)
+    assert isinstance(data["open_high_findings"], int)
+
+
+def test_bulk_update_findings(client, client_id):
+    cas = client.post("/api/cases/", json={"client_id": client_id})
+    assert cas.status_code == 201
+    cid = cas.json()["id"]
+    # Create 3 findings
+    ids = []
+    for i in range(3):
+        f = client.post("/api/findings/", json={
+            "case_id": cid, "finding_type": "collection", "severity": "high",
+            "title": f"BulkFinding{i}", "description": "Test",
+        })
+        assert f.status_code == 201
+        ids.append(f.json()["id"])
+    # Bulk approve
+    r = client.post("/api/findings/bulk-update", json={"ids": ids[:2], "status": "reviewed"})
+    assert r.status_code == 200
+    assert r.json()["updated"] == 2
+    # Verify status changed
+    findings = client.get(f"/api/findings/case/{cid}").json()
+    reviewed = [f for f in findings if f["status"] == "reviewed"]
+    assert len(reviewed) == 2

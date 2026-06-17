@@ -160,6 +160,7 @@ export const deleteInquiry = (id: number) => api.delete(`/api/inquiries/${id}`);
 
 // Personal Info
 export const listPersonalInfo = (caseId: number) => api.get(`/api/personal-info/case/${caseId}`).then(r => r.data);
+export const createPersonalInfo = (data: Record<string, unknown>) => api.post('/api/personal-info/', data).then(r => r.data);
 export const analyzePersonalInfo = (caseId: number) => api.post(`/api/personal-info/case/${caseId}/analyze`).then(r => r.data);
 export const deletePersonalInfo = (id: number) => api.delete(`/api/personal-info/${id}`);
 

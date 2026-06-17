@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listPersonalInfo, analyzePersonalInfo } from '@/lib/api';
+import { listPersonalInfo, createPersonalInfo, deletePersonalInfo, analyzePersonalInfo } from '@/lib/api';
 
 interface PIRecord {
   id: number;
@@ -46,12 +46,31 @@ export default function PersonalInfoPage() {
   const [findings, setFindings] = useState<PIFinding[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [piForm, setPiForm] = useState({ bureau: 'experian', current_name: '', current_address: '', dob: '', ssn_last4: '', current_employer: '' });
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    listPersonalInfo(caseId).then(setRecords).finally(() => setLoading(false));
-  }, [caseId]);
+  function load() { listPersonalInfo(caseId).then(setRecords).finally(() => setLoading(false)); }
+  useEffect(() => { load(); }, [caseId]);
+
+  async function addRecord(e: React.FormEvent) {
+    e.preventDefault();
+    setAdding(true); setError('');
+    try {
+      await createPersonalInfo({ ...piForm, case_id: caseId });
+      setShowForm(false);
+      setPiForm({ bureau: 'experian', current_name: '', current_address: '', dob: '', ssn_last4: '', current_employer: '' });
+      load();
+    } catch { setError('Failed to add record.'); }
+    finally { setAdding(false); }
+  }
+
+  async function removeRecord(rid: number) {
+    await deletePersonalInfo(rid);
+    load();
+  }
 
   async function analyze() {
     setAnalyzing(true); setError(''); setSuccess('');
@@ -77,9 +96,12 @@ export default function PersonalInfoPage() {
             <h1>Personal Information Audit</h1>
             <p>Cross-bureau comparison of consumer personal information records</p>
           </div>
-          <button className="btn btn-primary" onClick={analyze} disabled={analyzing || records.length === 0}>
-            {analyzing ? 'Analyzing…' : '🔍 Run PI Analysis'}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-outline" onClick={() => setShowForm(s => !s)}>{showForm ? 'Cancel' : '+ Add Record'}</button>
+            <button className="btn btn-primary" onClick={analyze} disabled={analyzing || records.length === 0}>
+              {analyzing ? 'Analyzing…' : '🔍 Run PI Analysis'}
+            </button>
+          </div>
         </div>
         <CaseNav caseId={caseId} />
 
@@ -87,8 +109,29 @@ export default function PersonalInfoPage() {
           All findings are preliminary and require human review before any action is taken. No finding constitutes a proven violation, legal advice, or a guarantee of any outcome.
         </div>
 
-        {error && <div className="alert-error">{error}</div>}
-        {success && <div className="alert-success">{success}</div>}
+        {error && <div className="alert-error" style={{ marginBottom: 12 }}>{error}</div>}
+        {success && <div className="alert-success" style={{ marginBottom: 12 }}>{success}</div>}
+
+        {showForm && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3>Add PI Record</h3>
+            <form onSubmit={addRecord}>
+              <div className="grid-2">
+                <div className="form-group"><label>Bureau *</label>
+                  <select value={piForm.bureau} onChange={e => setPiForm(f => ({ ...f, bureau: e.target.value }))}>
+                    {['experian','equifax','transunion','innovis'].map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div className="form-group"><label>Name on Report *</label><input required value={piForm.current_name} onChange={e => setPiForm(f => ({ ...f, current_name: e.target.value }))} /></div>
+                <div className="form-group"><label>Current Address</label><input value={piForm.current_address} onChange={e => setPiForm(f => ({ ...f, current_address: e.target.value }))} /></div>
+                <div className="form-group"><label>Date of Birth</label><input type="date" value={piForm.dob} onChange={e => setPiForm(f => ({ ...f, dob: e.target.value }))} /></div>
+                <div className="form-group"><label>SSN Last 4</label><input maxLength={4} value={piForm.ssn_last4} onChange={e => setPiForm(f => ({ ...f, ssn_last4: e.target.value.replace(/\D/g,'').slice(0,4) }))} placeholder="xxxx" /></div>
+                <div className="form-group"><label>Current Employer</label><input value={piForm.current_employer} onChange={e => setPiForm(f => ({ ...f, current_employer: e.target.value }))} /></div>
+              </div>
+              <button type="submit" className="btn btn-primary btn-sm" disabled={adding}>{adding ? 'Saving…' : 'Save Record'}</button>
+            </form>
+          </div>
+        )}
 
         {loading ? (
           <p>Loading personal information records…</p>
@@ -98,7 +141,9 @@ export default function PersonalInfoPage() {
           </div>
         ) : (
           <>
-            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Bureau Comparison</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Bureau Records
+            <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 400, color: 'var(--muted)' }}>{records.length} record{records.length !== 1 ? 's' : ''} · <button onClick={() => records.forEach(r => removeRecord(r.id))} style={{ background:'none',border:'none',color:'#ef4444',cursor:'pointer',fontSize:12,padding:0 }}>clear all</button></span>
+          </h2>
             <div style={{ overflowX: 'auto', marginBottom: 24 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>

@@ -9,7 +9,7 @@ interface DisputeItem { id: number; creditor_name: string; account_number_last4:
 interface Round { id: number; round_number: number; bureau: string; sent_date: string; response_due_date: string; response_received_date: string; status: string; notes: string; items: DisputeItem[]; }
 
 const BUREAUS = ['experian', 'equifax', 'transunion', 'innovis'];
-const STATUSES = ['preparing', 'sent', 'response_received', 'escalated', 'closed'];
+const STATUSES = ['draft', 'preparing', 'sent', 'response_received', 'escalated', 'closed'];
 
 export default function DisputesPage() {
   const { id } = useParams<{ id: string }>();

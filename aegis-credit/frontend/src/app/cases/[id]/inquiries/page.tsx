@@ -77,7 +77,7 @@ export default function InquiriesPage() {
     load();
   }
 
-  const bureaus = [...new Set(inquiries.map(i => i.bureau))].sort();
+  const bureaus = Array.from(new Set(inquiries.map(i => i.bureau))).sort();
 
   return (
     <div className="main-layout">

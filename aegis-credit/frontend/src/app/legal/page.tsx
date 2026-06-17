@@ -39,7 +39,7 @@ export default function LegalPage() {
     }).finally(() => setLoading(false));
   }, [debouncedSearch]);
 
-  const categories = [...new Set(federal.map(f => f.category))].sort();
+  const categories = Array.from(new Set(federal.map(f => f.category))).sort();
 
   const tabStyle = (t: Tab) => ({
     padding: '8px 16px',

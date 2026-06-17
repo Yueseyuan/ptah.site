@@ -66,7 +66,7 @@ export default function PersonalInfoPage() {
     } finally { setAnalyzing(false); }
   }
 
-  const bureaus = [...new Set(records.map(r => r.bureau))].sort();
+  const bureaus = Array.from(new Set(records.map(r => r.bureau))).sort();
 
   return (
     <div className="main-layout">
@@ -125,7 +125,7 @@ export default function PersonalInfoPage() {
                       <td style={{ padding: '8px 12px', fontWeight: 500, color: '#374151', whiteSpace: 'nowrap' }}>{label}</td>
                       {bureaus.map(b => {
                         const rec = records.find(r => r.bureau === b);
-                        const val = rec ? (rec as Record<string, string>)[key] : null;
+                        const val = rec ? (rec as unknown as Record<string, string>)[key] : null;
                         const display = array ? parseSafe(val).join(', ') || '—' : (val || '—');
                         return (
                           <td key={b} style={{ padding: '8px 12px', color: '#374151', verticalAlign: 'top' }}>{display}</td>

@@ -55,7 +55,7 @@ export default function FindingsPage() {
   }
 
   async function approve(findingId: number) {
-    await approveFinding(findingId, { review_notes: 'Approved by investigator' });
+    await approveFinding(findingId, 'Approved by investigator');
     load();
   }
 

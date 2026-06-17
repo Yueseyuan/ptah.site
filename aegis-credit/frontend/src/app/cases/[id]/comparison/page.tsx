@@ -54,7 +54,7 @@ export default function ComparisonPage() {
         <div className="card">
           <h3>Discrepancies Found ({comparisons.length})</h3>
           {loading ? <div className="spinner" /> : comparisons.length === 0 ? (
-            <p className="empty">No comparisons yet. Click "Run Comparison" to analyze tradelines across bureaus.</p>
+            <p className="empty">No comparisons yet. Click &quot;Run Comparison&quot; to analyze tradelines across bureaus.</p>
           ) : (
             <table>
               <thead><tr><th>Severity</th><th>Creditor</th><th>Account</th><th>Type</th><th>Bureaus Affected</th><th>Details</th></tr></thead>

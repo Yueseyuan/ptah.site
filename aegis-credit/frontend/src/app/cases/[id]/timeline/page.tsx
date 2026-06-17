@@ -82,7 +82,7 @@ export default function TimelinePage() {
         )}
 
         {loading ? <div className="spinner" /> : events.length === 0 ? (
-          <div className="card"><p className="empty">No timeline events yet. Click "Auto-Build" to generate from tradelines.</p></div>
+          <div className="card"><p className="empty">No timeline events yet. Click &quot;Auto-Build&quot; to generate from tradelines.</p></div>
         ) : (
           <div style={{ position: 'relative', paddingLeft: 24 }}>
             <div style={{ position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, background: 'var(--border)' }} />

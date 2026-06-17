@@ -28,6 +28,8 @@ from app.routers.personal_info import router as personal_info_router
 from app.routers.legal import router as legal_router
 from app.routers.legal_updates import router as legal_updates_router
 from app.routers.collection_review import router as collection_review_router
+from app.routers.analytics import router as analytics_router
+from app.routers.search import router as search_router
 
 
 def run_migrations():
@@ -102,6 +104,8 @@ app.include_router(personal_info_router)
 app.include_router(legal_router)
 app.include_router(legal_updates_router)
 app.include_router(collection_review_router)
+app.include_router(analytics_router)
+app.include_router(search_router)
 
 
 @app.get("/api/health")

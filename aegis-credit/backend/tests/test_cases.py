@@ -66,3 +66,33 @@ def test_metro2_findings_empty(client, client_id):
     r = client.get(f"/api/metro2/case/{case_id}")
     assert r.status_code == 200
     assert r.json() == []
+
+
+def test_analytics_summary(client):
+    resp = client.get("/api/analytics/summary")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "total_cases" in data
+    assert "total_findings" in data
+
+
+def test_global_search(client):
+    resp = client.get("/api/search/", params={"q": "ae"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "clients" in data and "cases" in data
+
+
+def test_case_export(client):
+    # Create a case first
+    cr = client.post("/api/clients/", json={"first_name": "Export", "last_name": "Test", "email": "export@test.invalid"})
+    assert cr.status_code == 201
+    cas = client.post("/api/cases/", json={"client_id": cr.json()["id"]})
+    assert cas.status_code == 201
+    cid = cas.json()["id"]
+    resp = client.get(f"/api/cases/{cid}/export")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["case"]["id"] == cid
+    assert "findings" in data
+    assert "system" in data

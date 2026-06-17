@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { getCaseSummary, updateCase, getApplicableLaws } from '@/lib/api';
+import { getCaseSummary, updateCase, getApplicableLaws, exportCase } from '@/lib/api';
 
 interface Summary {
   case: { id: number; case_number: string; client_id: number; status: string; goal: string; notes: string; assigned_to: string; created_at: string; };
@@ -53,6 +53,15 @@ export default function CaseDashboard() {
     getCaseSummary(caseId).then(setData).finally(() => setSaving(false));
   }
 
+  async function handleExport() {
+    const data = await exportCase(caseId);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `case-${caseId}-export.json`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (loading) return <div className="main-layout"><Sidebar /><main className="main-content"><div className="spinner" /></main></div>;
   if (!data) return <div className="main-layout"><Sidebar /><main className="main-content"><p>Case not found.</p></main></div>;
 
@@ -72,6 +81,9 @@ export default function CaseDashboard() {
               style={{ padding: '6px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }}>
               {STATUSES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
             </select>
+            <button onClick={handleExport} className="btn btn-outline" style={{ fontSize: 12, padding: '6px 12px' }}>
+              Export
+            </button>
           </div>
         </div>
 

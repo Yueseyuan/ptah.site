@@ -6,7 +6,9 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 from app.database import get_db
-from app.models import AegisCase
+from app.models import AegisCase, AegisClient
+from app.dependencies import get_current_user
+from app.models import User
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
 
@@ -101,6 +103,62 @@ def case_summary(case_id: int, db: Session = Depends(get_db)):
         "findings_high": high_findings,
         "dispute_rounds": rounds,
         "outcomes": outcomes,
+    }
+
+
+@router.get("/{case_id}/export")
+def export_case(case_id: int, db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
+    """Export a complete case snapshot as JSON."""
+    from app.models import Tradeline, Finding, DisputeRound, DisputeItem, Outcome, TimelineEvent, Inquiry, PersonalInfo
+    case = db.query(AegisCase).filter(AegisCase.id == case_id).first()
+    if not case:
+        raise HTTPException(404, "Case not found")
+    client = db.query(AegisClient).filter(AegisClient.id == case.client_id).first()
+    tradelines = db.query(Tradeline).filter(Tradeline.case_id == case_id).all()
+    findings = db.query(Finding).filter(Finding.case_id == case_id).all()
+    rounds = db.query(DisputeRound).filter(DisputeRound.case_id == case_id).all()
+    outcomes = db.query(Outcome).filter(Outcome.case_id == case_id).all()
+    timeline = db.query(TimelineEvent).filter(TimelineEvent.case_id == case_id).order_by(TimelineEvent.event_date).all()
+    inquiries = db.query(Inquiry).filter(Inquiry.case_id == case_id).all()
+    pi_records = db.query(PersonalInfo).filter(PersonalInfo.case_id == case_id).all()
+
+    return {
+        "exported_at": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+        "system": "Aegis Credit Intelligence — For human review only. Not legal advice.",
+        "case": {
+            "id": case.id,
+            "case_number": case.case_number,
+            "status": case.status,
+            "goal": case.goal,
+            "notes": case.notes,
+            "created_at": case.created_at.isoformat() if case.created_at else None,
+        },
+        "client": {
+            "id": client.id if client else None,
+            "name": f"{client.first_name} {client.last_name}" if client else None,
+            "state": client.state if client else None,
+        } if client else None,
+        "tradelines_count": len(tradelines),
+        "tradelines": [
+            {"bureau": t.bureau, "creditor_name": t.creditor_name, "account_type": t.account_type,
+             "payment_status": t.payment_status, "balance": t.balance, "derogatory": t.derogatory}
+            for t in tradelines
+        ],
+        "findings_count": len(findings),
+        "findings": [
+            {"severity": f.severity, "title": f.title, "description": f.description,
+             "fcra_section": f.fcra_section, "status": f.status, "finding_type": f.finding_type}
+            for f in findings
+        ],
+        "dispute_rounds": len(rounds),
+        "outcomes": [
+            {"bureau": o.bureau, "creditor_name": o.creditor_name,
+             "outcome_type": o.outcome_type, "notes": o.notes}
+            for o in outcomes
+        ],
+        "timeline_events": len(timeline),
+        "inquiries_count": len(inquiries),
+        "personal_info_records": len(pi_records),
     }
 
 

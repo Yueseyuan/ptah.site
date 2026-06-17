@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pydantic import BaseModel
 from typing import Optional
 from app.database import get_db
 from app.models import AegisClient
+from app.dependencies import get_current_user
+from app.models import User
 
 router = APIRouter(prefix="/api/clients", tags=["clients"])
 
@@ -79,6 +82,20 @@ def get_client(client_id: int, db: Session = Depends(get_db)):
     if not client:
         raise HTTPException(404, "Client not found")
     return _out(client)
+
+
+@router.get("/search")
+def search_clients(q: str = "", db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
+    """Search clients by name, email, or SSN last4."""
+    if not q or len(q) < 2:
+        return []
+    q_lower = f"%{q.lower()}%"
+    results = db.query(AegisClient).filter(
+        (func.lower(AegisClient.first_name + ' ' + AegisClient.last_name).like(q_lower)) |
+        (func.lower(AegisClient.email).like(q_lower)) |
+        (AegisClient.ssn_last4.like(f"%{q}%"))
+    ).limit(20).all()
+    return [_out(c) for c in results]
 
 
 @router.put("/{client_id}")

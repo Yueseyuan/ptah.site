@@ -189,3 +189,15 @@ export const runCollectionAnalysis = (caseId: number) => api.post(`/api/collecti
 
 // Court Record Analysis
 export const analyzeCourtRecords = (caseId: number) => api.post(`/api/court-records/case/${caseId}/analyze`).then(r => r.data);
+
+// Analytics
+export const getAnalyticsSummary = () => api.get('/api/analytics/summary').then(r => r.data);
+export const getBureauAccuracy = () => api.get('/api/analytics/bureau-accuracy').then(r => r.data);
+export const getDisputeOutcomes = () => api.get('/api/analytics/dispute-outcomes').then(r => r.data);
+export const getFindingsTrend = () => api.get('/api/analytics/findings-trend').then(r => r.data);
+
+// Global Search
+export const globalSearch = (q: string) => api.get('/api/search/', { params: { q } }).then(r => r.data);
+
+// Case Export
+export const exportCase = (caseId: number) => api.get(`/api/cases/${caseId}/export`).then(r => r.data);

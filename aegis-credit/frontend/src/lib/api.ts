@@ -138,6 +138,7 @@ export const deleteLearningEntry = (id: number) => api.delete(`/api/learning/${i
 export const loginUser = (username: string, password: string) =>
   api.post('/api/auth/login', new URLSearchParams({ username, password })).then(r => r.data);
 export const getMe = () => api.get('/api/auth/me').then(r => r.data);
+export const updateMyProfile = (data: Record<string, unknown>) => api.patch('/api/auth/me', data).then(r => r.data);
 export const registerUser = (data: Record<string, unknown>) => api.post('/api/auth/register', data).then(r => r.data);
 export const listUsers = () => api.get('/api/auth/users').then(r => r.data);
 export const updateUser = (id: number, data: Record<string, unknown>) => api.patch(`/api/auth/users/${id}`, data).then(r => r.data);

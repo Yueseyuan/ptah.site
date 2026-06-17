@@ -33,6 +33,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/organizations', label: 'Organizations', icon: '🏢' },
       { href: '/admin/users', label: 'User Management', icon: '👤' },
+      { href: '/admin/legal-updates', label: 'Legal Updates', icon: '📝' },
       { href: '/admin/audit', label: 'Audit Log', icon: '📋' },
     ],
   },
@@ -116,7 +117,10 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Link href="/profile" style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', textDecoration: 'none' }}>
+          ⚙ Profile
+        </Link>
         <button
           onClick={handleLogout}
           style={{

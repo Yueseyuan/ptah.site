@@ -38,6 +38,13 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class ProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
+
 def _out(u: User) -> dict:
     return {
         "id": u.id,
@@ -46,6 +53,7 @@ def _out(u: User) -> dict:
         "full_name": u.full_name,
         "role": u.role,
         "is_active": u.is_active,
+        "created_at": u.created_at.isoformat() if u.created_at else None,
     }
 
 
@@ -113,6 +121,45 @@ def login(
 def me(current_user: User = Depends(get_current_user)):
     """Return current user info."""
     return _out(current_user)
+
+
+@router.patch("/me")
+def update_me(
+    data: ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update own profile. Password change requires current_password + new_password."""
+    # Re-fetch so we have a session-attached object (DEV_NO_AUTH returns a transient user).
+    user = db.query(User).filter(User.id == current_user.id).first()
+    if user is None:
+        # No persisted user (e.g. DEV_NO_AUTH mode) — validate then return in-memory.
+        if data.new_password:
+            if not data.current_password:
+                raise HTTPException(400, "current_password is required to change password")
+            raise HTTPException(400, "Current password is incorrect")
+        if data.full_name is not None:
+            current_user.full_name = data.full_name
+        if data.email is not None:
+            current_user.email = data.email
+        return _out(current_user)
+
+    if data.new_password:
+        if not data.current_password:
+            raise HTTPException(400, "current_password is required to change password")
+        if not user.hashed_password or not verify_password(data.current_password, user.hashed_password):
+            raise HTTPException(400, "Current password is incorrect")
+        user.hashed_password = hash_password(data.new_password)
+    if data.full_name is not None:
+        user.full_name = data.full_name
+    if data.email is not None:
+        conflict = db.query(User).filter(User.email == data.email, User.id != user.id).first()
+        if conflict:
+            raise HTTPException(400, "Email already in use")
+        user.email = data.email
+    db.commit()
+    db.refresh(user)
+    return _out(user)
 
 
 @router.get("/users")

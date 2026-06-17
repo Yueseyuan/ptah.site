@@ -108,13 +108,13 @@ STRATEGY_PROMPT = """You are a credit restoration strategist. Based on the findi
 COMPLIANCE: All strategies are administrative recommendations. No strategy constitutes legal advice.
 Label each item clearly as requiring client and investigator review before implementation.
 
-Return a JSON array of strategy items. Each must have:
+Return a JSON array of UP TO 5 strategy items (the most important ones only). Keep descriptions under 100 words each. Each must have:
 - priority: 1 (high), 2 (medium), or 3 (low)
 - strategy_type: "dispute" | "goodwill" | "validation" | "pay_for_delete" | "consolidation" | "monitoring"
-- title: string
-- description: string
-- action_items: array of strings
-- estimated_timeline: string (e.g., "30-45 days", "60-90 days")
+- title: string (concise, under 10 words)
+- description: string (under 100 words)
+- action_items: array of 2-3 short strings
+- estimated_timeline: string (e.g., "30-45 days")
 
 Findings:
 {findings}
@@ -145,22 +145,33 @@ def _extract_json(content: str) -> str:
 
 def _parse_json_response(content: str) -> list[dict]:
     cleaned = _extract_json(content)
+    # Try as-is first
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError:
-        # Last resort: scan for the first [ or { and parse from there
-        for ch in ['[', '{']:
-            idx = cleaned.find(ch)
-            if idx >= 0:
-                try:
-                    result = json.loads(cleaned[idx:])
-                    if isinstance(result, list):
-                        return result
-                    if isinstance(result, dict):
-                        return [result]
-                except json.JSONDecodeError:
-                    pass
-        raise RuntimeError(f"AI returned malformed JSON. Raw response: {content[:300]}")
+        pass
+    # Find where the JSON array/object starts
+    for ch in ['[', '{']:
+        idx = cleaned.find(ch)
+        if idx < 0:
+            continue
+        fragment = cleaned[idx:]
+        # Try as-is
+        try:
+            result = json.loads(fragment)
+            return result if isinstance(result, list) else [result]
+        except json.JSONDecodeError:
+            pass
+        # Try to repair truncated JSON: find last complete object and close the array
+        last_brace = fragment.rfind('}')
+        if last_brace >= 0:
+            repaired = fragment[:last_brace + 1] + ']'
+            try:
+                result = json.loads(repaired)
+                return result if isinstance(result, list) else [result]
+            except json.JSONDecodeError:
+                pass
+    raise RuntimeError(f"AI returned malformed JSON. Raw response: {content[:300]}")
 
 
 def _require_api_key() -> None:

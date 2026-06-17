@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import { getClient, listCourtRecordsByClient, createCourtRecord, getCasesByClient } from '@/lib/api';
+import { getClient, updateClient, listCourtRecordsByClient, createCourtRecord, getCasesByClient } from '@/lib/api';
 
 interface Client { id: number; first_name: string; last_name: string; email: string; phone: string; address: string; city: string; state: string; zip_code: string; dob: string; ssn_last4: string; notes: string; created_at: string; }
 interface CourtRecord { id: number; record_type: string; court_name: string; jurisdiction: string; docket_number: string; offense_date: string; disposition: string; expungement_eligible: boolean; }
@@ -16,6 +16,9 @@ export default function ClientDetailPage() {
   const [cases, setCases] = useState<Case[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ record_type: 'criminal', court_name: '', jurisdiction: '', docket_number: '', offense_date: '', disposition: '', expungement_eligible: false, notes: '' });
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ first_name: '', last_name: '', email: '', phone: '', address: '', city: '', state: '', zip_code: '', dob: '', ssn_last4: '', notes: '' });
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -24,6 +27,19 @@ export default function ClientDetailPage() {
     listCourtRecordsByClient(n).then(setRecords).catch(console.error);
     getCasesByClient(n).then(setCases).catch(console.error);
   }, [id]);
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true); setError('');
+    try {
+      const updated = await updateClient(parseInt(id), editForm);
+      setClient(updated);
+      setEditing(false);
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || 'Failed to save.');
+    } finally { setSaving(false); }
+  }
 
   async function addRecord(e: React.FormEvent) {
     e.preventDefault();
@@ -49,8 +65,36 @@ export default function ClientDetailPage() {
             <h1>{client.first_name} {client.last_name}</h1>
             <p>Client #{client.id} · Added {new Date(client.created_at).toLocaleDateString()}</p>
           </div>
-          <Link href="/clients" className="btn btn-outline">← Clients</Link>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-outline btn-sm" onClick={() => { if (!editing) setEditForm({ first_name: client.first_name, last_name: client.last_name, email: client.email, phone: client.phone, address: client.address, city: client.city, state: client.state, zip_code: client.zip_code, dob: client.dob, ssn_last4: client.ssn_last4, notes: client.notes }); setEditing(e => !e); setError(''); }}>
+              {editing ? 'Cancel' : 'Edit Client'}
+            </button>
+            <Link href="/clients" className="btn btn-outline btn-sm">← Clients</Link>
+          </div>
         </div>
+
+        {editing && (
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3>Edit Client</h3>
+            {error && <div className="alert-error">{error}</div>}
+            <form onSubmit={handleEdit}>
+              <div className="grid-2">
+                <div className="form-group"><label>First Name</label><input value={editForm.first_name} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} /></div>
+                <div className="form-group"><label>Last Name</label><input value={editForm.last_name} onChange={e => setEditForm(f => ({ ...f, last_name: e.target.value }))} /></div>
+                <div className="form-group"><label>Email</label><input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} /></div>
+                <div className="form-group"><label>Phone</label><input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} /></div>
+                <div className="form-group"><label>Address</label><input value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} /></div>
+                <div className="form-group"><label>City</label><input value={editForm.city} onChange={e => setEditForm(f => ({ ...f, city: e.target.value }))} /></div>
+                <div className="form-group"><label>State</label><input value={editForm.state} onChange={e => setEditForm(f => ({ ...f, state: e.target.value }))} /></div>
+                <div className="form-group"><label>ZIP Code</label><input value={editForm.zip_code} onChange={e => setEditForm(f => ({ ...f, zip_code: e.target.value }))} /></div>
+                <div className="form-group"><label>Date of Birth</label><input type="date" value={editForm.dob} onChange={e => setEditForm(f => ({ ...f, dob: e.target.value }))} /></div>
+                <div className="form-group"><label>SSN Last 4</label><input value={editForm.ssn_last4} onChange={e => setEditForm(f => ({ ...f, ssn_last4: e.target.value }))} maxLength={4} /></div>
+              </div>
+              <div className="form-group"><label>Notes</label><textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={3} /></div>
+              <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</button>
+            </form>
+          </div>
+        )}
 
         <div className="grid-2" style={{ marginBottom: 16 }}>
           <div className="card">

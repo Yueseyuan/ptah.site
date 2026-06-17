@@ -3,9 +3,10 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listReports, uploadReport, reparseReport, deleteReport } from '@/lib/api';
+import { listReports, uploadReport, reparseReport, deleteReport, listGeneratedReports, generateReport, downloadGeneratedReport } from '@/lib/api';
 
 interface Report { id: number; bureau: string; parse_status: string; report_date: string; has_text: boolean; created_at: string; parse_error?: string; }
+interface GeneratedReport { id: number; report_type: string; file_path: string; generated_at: string; }
 
 const BUREAUS = ['experian', 'equifax', 'transunion', 'innovis', 'all'];
 
@@ -19,8 +20,13 @@ export default function ReportsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const [generatedReports, setGeneratedReports] = useState<GeneratedReport[]>([]);
+  const [generating, setGenerating] = useState(false);
 
-  function load() { listReports(caseId).then(setReports).finally(() => setLoading(false)); }
+  function load() {
+    listReports(caseId).then(setReports).finally(() => setLoading(false));
+    listGeneratedReports(caseId).then(setGeneratedReports).catch(() => {});
+  }
   useEffect(() => { load(); }, [caseId]);
 
   async function upload() {
@@ -62,6 +68,33 @@ export default function ReportsPage() {
       const e = err as { response?: { data?: { detail?: unknown } }; message?: string };
       const d = e.response?.data?.detail;
       setError(typeof d === 'string' ? d : e.message || 'Reparse failed.');
+    }
+  }
+
+  async function handleGenerate() {
+    setGenerating(true); setError(''); setSuccess('');
+    try {
+      await generateReport(caseId);
+      setSuccess('Summary report generated. Download it below.');
+      listGeneratedReports(caseId).then(setGeneratedReports);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } }; message?: string };
+      const d = e.response?.data?.detail;
+      setError(typeof d === 'string' ? d : e.message || 'Generate failed.');
+    } finally { setGenerating(false); }
+  }
+
+  async function handleDownloadGenerated(reportId: number, filePath: string) {
+    try {
+      const blob = await downloadGeneratedReport(reportId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filePath.split('/').pop() || `report_${reportId}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError('Download failed.');
     }
   }
 
@@ -155,6 +188,34 @@ export default function ReportsPage() {
             Go to the <b>Tradelines</b> tab — you can view what was parsed. If empty, you can add tradelines manually from the Tradelines page after setting up your API key and reparsing.
           </p>
           <a href={`/cases/${caseId}/tradelines`} className="btn btn-outline btn-sm">Go to Tradelines</a>
+        </div>
+
+        <div className="card" style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ marginBottom: 0 }}>Generated Case Reports</h3>
+            <button className="btn btn-outline" onClick={handleGenerate} disabled={generating}>
+              {generating ? 'Generating…' : 'Generate Summary Report'}
+            </button>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
+            Summary report includes all tradelines, findings, and strategy items for this case.
+          </p>
+          {generatedReports.length === 0 ? (
+            <p className="empty">No summary reports generated yet.</p>
+          ) : (
+            <table>
+              <thead><tr><th>Type</th><th>Generated</th><th></th></tr></thead>
+              <tbody>
+                {generatedReports.map(r => (
+                  <tr key={r.id}>
+                    <td><span className="badge badge-success">{r.report_type}</span></td>
+                    <td style={{ fontSize: 12, color: 'var(--muted)' }}>{new Date(r.generated_at).toLocaleString()}</td>
+                    <td><button className="btn btn-outline btn-sm" onClick={() => handleDownloadGenerated(r.id, r.file_path)}>Download</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </main>
     </div>

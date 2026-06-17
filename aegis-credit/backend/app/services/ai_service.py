@@ -132,7 +132,12 @@ def _client() -> anthropic.Anthropic:
 def _extract_json(content: str) -> str:
     """Pull a JSON array/object out of a Claude response, tolerating markdown code fences."""
     content = content.strip()
-    match = re.search(r"```(?:json)?\s*(.*?)```", content, re.DOTALL)
+    # Try full fence first: ```json ... ```
+    match = re.search(r"```(?:json)?\s*([\s\S]*?)```", content)
+    if match:
+        return match.group(1).strip()
+    # Opening fence only (truncated response): ```json ...
+    match = re.search(r"```(?:json)?\s*([\s\S]+)", content)
     if match:
         return match.group(1).strip()
     return content
@@ -231,7 +236,7 @@ def generate_strategy(findings_data: list[dict], client_goal: str) -> list[dict]
     message = _create_message(
         ai_client,
         model=AI_MODEL,
-        max_tokens=3000,
+        max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
     )
     return _parse_json_response(message.content[0].text)

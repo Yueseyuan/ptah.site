@@ -178,3 +178,14 @@ export const rejectLegalUpdate = (id: number, notes: string) => api.post(`/api/l
 
 // Applicable Laws (per case)
 export const getApplicableLaws = (caseId: number) => api.get(`/api/cases/${caseId}/applicable-laws`).then(r => r.data);
+
+// Approve Finding
+export const approveFinding = (id: number, notes?: string) =>
+  api.post(`/api/findings/${id}/approve`, { review_notes: notes || '' }).then(r => r.data);
+
+// Collection Review
+export const listCollectionFindings = (caseId: number) => api.get(`/api/collection-review/case/${caseId}`).then(r => r.data);
+export const runCollectionAnalysis = (caseId: number) => api.post(`/api/collection-review/case/${caseId}/analyze`).then(r => r.data);
+
+// Court Record Analysis
+export const analyzeCourtRecords = (caseId: number) => api.post(`/api/court-records/case/${caseId}/analyze`).then(r => r.data);

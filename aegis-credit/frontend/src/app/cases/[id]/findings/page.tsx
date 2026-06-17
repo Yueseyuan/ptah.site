@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listFindings, generateFindings, updateFinding } from '@/lib/api';
+import { listFindings, generateFindings, updateFinding, approveFinding } from '@/lib/api';
 
 interface Finding { id: number; finding_type: string; severity: string; title: string; description: string; fcra_section: string; requires_human_review: boolean; status: string; tradeline_id?: number; }
 
@@ -78,12 +78,23 @@ export default function FindingsPage() {
                     <option value="actioned">Actioned</option>
                     <option value="dismissed">Dismissed</option>
                   </select>
+                  {f.status === 'open' && (
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={async () => { await approveFinding(f.id); load(); }}
+                    >
+                      Approve
+                    </button>
+                  )}
                 </div>
               </div>
               <h4 style={{ marginBottom: 6, color: 'var(--navy)' }}>{f.title}</h4>
               <p style={{ color: 'var(--muted)', fontSize: 13 }}>{f.description}</p>
               {f.requires_human_review && (
                 <span className="review-flag">⚠ Requires human review before any action</span>
+              )}
+              {f.status === 'open' && (
+                <div className="review-flag" style={{ marginTop: 4 }}>Human Review Required</div>
               )}
             </div>
           ))

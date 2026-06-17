@@ -29,6 +29,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/organizations', label: 'Organizations', icon: '🏢' },
       { href: '/admin/users', label: 'User Management', icon: '👤' },
+      { href: '/admin/audit', label: 'Audit Log', icon: '📋' },
     ],
   },
 ];

@@ -1,6 +1,8 @@
 """Personal Information Audit Engine router."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional
 from app.database import get_db
 from app.models import PersonalInfo, Finding
 from app.services.pi_service import run_pi_analysis
@@ -26,6 +28,31 @@ def _out(pi: PersonalInfo) -> dict:
         "created_at": pi.created_at.isoformat() if pi.created_at else None,
     }
 
+
+
+
+class PersonalInfoCreate(BaseModel):
+    case_id: int
+    report_id: Optional[int] = None
+    bureau: str
+    current_name: Optional[str] = None
+    aliases: Optional[str] = None
+    current_address: Optional[str] = None
+    previous_addresses: Optional[str] = None
+    current_employer: Optional[str] = None
+    previous_employers: Optional[str] = None
+    phone_numbers: Optional[str] = None
+    dob: Optional[str] = None
+    ssn_last4: Optional[str] = None
+
+
+@router.post("/", status_code=201)
+def create_personal_info(data: PersonalInfoCreate, db: Session = Depends(get_db)):
+    record = PersonalInfo(**data.model_dump())
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return _out(record)
 
 @router.get("/case/{case_id}")
 def list_personal_info(case_id: int, db: Session = Depends(get_db)):

@@ -34,6 +34,59 @@ def _out(f: Finding) -> dict:
     }
 
 
+
+
+class FindingCreate(BaseModel):
+    case_id: int
+    tradeline_id: Optional[int] = None
+    finding_type: str = "discrepancy"
+    severity: str = "medium"
+    title: str
+    description: str = ""
+    fcra_section: str = ""
+    requires_human_review: bool = True
+
+
+class ApproveRequest(BaseModel):
+    review_notes: Optional[str] = None
+
+
+@router.post("/", status_code=201)
+def create_finding(data: FindingCreate, db: Session = Depends(get_db)):
+    f = Finding(
+        case_id=data.case_id,
+        tradeline_id=data.tradeline_id,
+        finding_type=data.finding_type,
+        severity=data.severity,
+        title=data.title,
+        description=data.description,
+        fcra_section=data.fcra_section,
+        requires_human_review=data.requires_human_review,
+        status="open",
+    )
+    db.add(f)
+    db.commit()
+    db.refresh(f)
+    return _out(f)
+
+
+@router.post("/{finding_id}/approve")
+def approve_finding(finding_id: int, data: ApproveRequest = None, db: Session = Depends(get_db)):
+    f = db.query(Finding).filter(Finding.id == finding_id).first()
+    if not f:
+        raise HTTPException(404, "Finding not found")
+    f.status = "reviewed"
+    db.commit()
+    db.refresh(f)
+    log_action(
+        db,
+        "APPROVE_FINDING",
+        "finding",
+        resource_id=finding_id,
+        detail=f"Finding {finding_id} approved. Notes: {(data.review_notes if data else '') or ''}",
+    )
+    return _out(f)
+
 @router.get("/case/{case_id}")
 def list_findings(case_id: int, db: Session = Depends(get_db)):
     return [_out(f) for f in db.query(Finding).filter(Finding.case_id == case_id).order_by(Finding.severity).all()]

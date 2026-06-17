@@ -9,6 +9,7 @@ const TABS = [
   { href: '/comparison', label: 'Comparison' },
   { href: '/findings', label: 'Findings' },
   { href: '/metro2', label: 'Metro 2' },
+  { href: '/collection-review', label: 'Collections' },
   { href: '/evidence', label: 'Evidence' },
   { href: '/court-records', label: 'Court Records' },
   { href: '/timeline', label: 'Timeline' },

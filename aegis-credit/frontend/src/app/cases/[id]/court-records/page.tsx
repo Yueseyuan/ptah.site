@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listCourtRecordsByCase, createCourtRecord, deleteCourtRecord, getCase } from '@/lib/api';
+import { listCourtRecordsByCase, createCourtRecord, deleteCourtRecord, getCase, analyzeCourtRecords } from '@/lib/api';
 
 interface CourtRecord { id: number; record_type: string; court_name: string; jurisdiction: string; docket_number: string; offense_date: string; disposition: string; disposition_date: string; expungement_eligible: boolean; notes: string; }
 
@@ -15,6 +15,8 @@ export default function CourtRecordsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ record_type: 'criminal', court_name: '', jurisdiction: '', docket_number: '', offense_date: '', disposition: '', disposition_date: '', expungement_eligible: false, notes: '' });
   const [error, setError] = useState('');
+  const [analysis, setAnalysis] = useState<{records_analyzed: number; findings_generated: number; findings: {rule_code: string; rule_name: string; severity: string; description: string}[]} | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
     getCase(caseId).then(c => setClientId(c.client_id));
@@ -43,7 +45,19 @@ export default function CourtRecordsPage() {
       <main className="main-content">
         <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div><h1>Court Records</h1><p>Criminal, civil, bankruptcy, judgment, and lien records</p></div>
-          <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>{showForm ? 'Cancel' : '+ Add Record'}</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-secondary btn-sm" onClick={async () => {
+              setAnalyzing(true);
+              try {
+                const r = await analyzeCourtRecords(caseId);
+                setAnalysis(r);
+              } catch { setError('Analysis failed.'); }
+              finally { setAnalyzing(false); }
+            }} disabled={analyzing}>
+              {analyzing ? 'Analyzing…' : '⚡ Analyze Court Records'}
+            </button>
+            <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>{showForm ? 'Cancel' : '+ Add Record'}</button>
+          </div>
         </div>
         <CaseNav caseId={caseId} />
 
@@ -93,6 +107,21 @@ export default function CourtRecordsPage() {
             </table>
           )}
         </div>
+        {analysis && (
+          <div className="card" style={{ marginTop: 16 }}>
+            <h3>Court Analysis Results — {analysis.findings_generated} finding(s)</h3>
+            {analysis.findings.length === 0 ? (
+              <p className="empty">No court record issues detected.</p>
+            ) : (
+              analysis.findings.map((f, i) => (
+                <div key={i} style={{ marginBottom: 12, padding: '10px 14px', background: 'var(--bg)', borderRadius: 6, borderLeft: `4px solid ${f.severity === 'high' ? 'var(--danger)' : 'var(--warning)'}` }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--navy)', marginBottom: 4 }}>{f.rule_code}: {f.rule_name}</div>
+                  <p style={{ color: 'var(--muted)', fontSize: 13 }}>{f.description}</p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </main>
     </div>
   );

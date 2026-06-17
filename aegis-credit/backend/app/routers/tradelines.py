@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/tradelines", tags=["tradelines"])
 
 class TradelineCreate(BaseModel):
     case_id: int
-    report_id: int
+    report_id: Optional[int] = None
     bureau: str
     creditor_name: str
     account_number_last4: Optional[str] = None
@@ -21,6 +21,17 @@ class TradelineCreate(BaseModel):
     credit_limit: Optional[float] = None
     payment_status: str = "unknown"
     derogatory: bool = False
+    # Metro 2 / extended fields
+    high_balance: Optional[float] = None
+    past_due_amount: Optional[float] = None
+    scheduled_payment_amount: Optional[float] = None
+    payment_rating: Optional[str] = None
+    compliance_condition_code: Optional[str] = None
+    consumer_information_indicator: Optional[str] = None
+    dofd: Optional[str] = None
+    date_reported: Optional[str] = None
+    remarks: Optional[str] = None
+    raw_source_text: Optional[str] = None
 
 
 class TradelineUpdate(BaseModel):

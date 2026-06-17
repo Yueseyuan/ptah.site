@@ -147,8 +147,20 @@ def _parse_json_response(content: str) -> list[dict]:
     cleaned = _extract_json(content)
     try:
         return json.loads(cleaned)
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"AI returned malformed JSON ({e}). Raw response: {cleaned[:300]}") from e
+    except json.JSONDecodeError:
+        # Last resort: scan for the first [ or { and parse from there
+        for ch in ['[', '{']:
+            idx = cleaned.find(ch)
+            if idx >= 0:
+                try:
+                    result = json.loads(cleaned[idx:])
+                    if isinstance(result, list):
+                        return result
+                    if isinstance(result, dict):
+                        return [result]
+                except json.JSONDecodeError:
+                    pass
+        raise RuntimeError(f"AI returned malformed JSON. Raw response: {content[:300]}")
 
 
 def _require_api_key() -> None:

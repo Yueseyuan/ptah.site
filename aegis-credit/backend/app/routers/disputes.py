@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from app.database import get_db
-from app.models import DisputeRound, DisputeItem, Tradeline
+from app.models import DisputeRound, DisputeItem, Tradeline, User
+from app.dependencies import get_current_user
 from app.services.audit_service import log_action
 
 router = APIRouter(prefix="/api/disputes", tags=["disputes"])
@@ -202,3 +203,54 @@ def auto_generate_disputes(case_id: int, db: Session = Depends(get_db)):
     )
 
     return {"rounds_created": created_rounds, "items_created": created_items}
+
+
+class AddFindingToDisputeRequest(BaseModel):
+    finding_id: int
+    round_id: int
+    dispute_reason: Optional[str] = None
+    fcra_basis: Optional[str] = None
+
+
+@router.post("/add-finding")
+def add_finding_to_dispute(
+    data: AddFindingToDisputeRequest,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """Create a DisputeItem from a Finding, linking them directly."""
+    from app.models import Finding, DisputeRound
+    finding = db.query(Finding).filter(Finding.id == data.finding_id).first()
+    if not finding:
+        raise HTTPException(404, "Finding not found")
+    round_ = db.query(DisputeRound).filter(DisputeRound.id == data.round_id).first()
+    if not round_:
+        raise HTTPException(404, "Dispute round not found")
+
+    # Build dispute reason from finding if not provided
+    reason = data.dispute_reason or (finding.description[:500] if finding.description else "Inaccurate information")
+    fcra = data.fcra_basis or finding.fcra_section or ""
+
+    item = DisputeItem(
+        round_id=data.round_id,
+        creditor_name=finding.title[:200],
+        account_number_last4="",
+        dispute_reason=reason,
+        fcra_basis=fcra,
+        status="pending",
+    )
+    db.add(item)
+    # Mark finding as "in_dispute"
+    finding.status = "in_dispute"
+    db.commit()
+    db.refresh(item)
+
+    return {
+        "id": item.id,
+        "round_id": item.round_id,
+        "creditor_name": item.creditor_name,
+        "dispute_reason": item.dispute_reason,
+        "fcra_basis": item.fcra_basis,
+        "status": item.status,
+        "finding_id": data.finding_id,
+    }

@@ -69,6 +69,16 @@ export default function DisputesPage() {
     }
   }
 
+  function getDueStatus(dueDateStr: string | null): { label: string; color: string } | null {
+    if (!dueDateStr) return null;
+    const due = new Date(dueDateStr);
+    const now = new Date();
+    const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { label: `OVERDUE by ${Math.abs(diffDays)}d`, color: '#fee2e2' };
+    if (diffDays <= 7) return { label: `Due in ${diffDays}d`, color: '#fef3c7' };
+    return null;
+  }
+
   async function autoGenerate() {
     setAutoGenerating(true); setAutoError(''); setAutoSuccess('');
     try {
@@ -131,9 +141,21 @@ export default function DisputesPage() {
                   <button className="btn btn-outline btn-sm" onClick={() => setAddItemRoundId(addItemRoundId === round.id ? null : round.id)}>+ Item</button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 24, fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
+              <div style={{ display: 'flex', gap: 24, fontSize: 12, color: 'var(--muted)', marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
                 {round.sent_date && <span>Sent: {round.sent_date}</span>}
-                {round.response_due_date && <span>Due: {round.response_due_date}</span>}
+                {round.response_due_date && (
+                  <span>
+                    Due: {round.response_due_date}
+                    {(() => {
+                      const ds = getDueStatus(round.response_due_date);
+                      return ds ? (
+                        <span style={{ background: ds.color, color: '#7c2d12', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700, marginLeft: 8 }}>
+                          ⏰ {ds.label}
+                        </span>
+                      ) : null;
+                    })()}
+                  </span>
+                )}
                 {round.response_received_date && <span style={{ color: 'var(--success)' }}>Received: {round.response_received_date}</span>}
               </div>
 

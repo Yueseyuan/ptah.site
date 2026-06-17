@@ -96,3 +96,43 @@ def test_case_export(client):
     assert data["case"]["id"] == cid
     assert "findings" in data
     assert "system" in data
+
+
+def test_add_finding_to_dispute(client):
+    # Setup: client → case → tradeline → finding → dispute round
+    cr = client.post("/api/clients/", json={"first_name": "Dispute", "last_name": "Link", "email": "dl@test.invalid"})
+    assert cr.status_code == 201
+    cas = client.post("/api/cases/", json={"client_id": cr.json()["id"]})
+    assert cas.status_code == 201
+    cid = cas.json()["id"]
+
+    # Create a finding
+    f = client.post("/api/findings/", json={
+        "case_id": cid, "finding_type": "collection", "severity": "high",
+        "title": "COL-001: Known Debt Buyer", "description": "Test finding",
+        "fcra_section": "FCRA §623",
+    })
+    assert f.status_code == 201
+    fid = f.json()["id"]
+
+    # Create a dispute round
+    r = client.post("/api/disputes/rounds/", json={
+        "case_id": cid, "round_number": 1, "bureau": "experian", "status": "draft",
+    })
+    assert r.status_code in (200, 201), r.text
+    rid = r.json()["id"]
+
+    # Add finding to dispute round
+    resp = client.post("/api/disputes/add-finding", json={
+        "finding_id": fid, "round_id": rid,
+    })
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["round_id"] == rid
+    assert data["finding_id"] == fid
+
+    # Finding status should now be "in_dispute"
+    f2 = client.get(f"/api/findings/case/{cid}")
+    assert f2.status_code == 200
+    updated = next((x for x in f2.json() if x["id"] == fid), None)
+    assert updated["status"] == "in_dispute"

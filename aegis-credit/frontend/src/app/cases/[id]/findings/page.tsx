@@ -29,6 +29,9 @@ export default function FindingsPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [disputeForm, setDisputeForm] = useState<{ findingId: number; roundId: string } | null>(null);
+  const [filterType, setFilterType] = useState('');
+  const [filterSeverity, setFilterSeverity] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   function load() {
     Promise.all([
@@ -72,12 +75,19 @@ export default function FindingsPage() {
     }
   }
 
+  const allTypes = Array.from(new Set(findings.map(f => f.finding_type))).sort();
+  const displayed = findings.filter(f =>
+    (!filterType || f.finding_type === filterType) &&
+    (!filterSeverity || f.severity === filterSeverity) &&
+    (!filterStatus || f.status === filterStatus)
+  );
+
   return (
     <div className="main-layout">
       <Sidebar />
       <main className="main-content">
         <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div><h1>Findings</h1><p>AI-identified issues, discrepancies, and FCRA concerns</p></div>
+          <div><h1>Findings</h1><p>{findings.length} total · {displayed.length} shown</p></div>
           <button className="btn btn-primary" onClick={generate} disabled={generating}>
             {generating ? 'Generating…' : '⚡ AI Generate Findings'}
           </button>
@@ -93,13 +103,39 @@ export default function FindingsPage() {
           </p>
         </div>
 
-        {loading ? <div className="spinner" /> : findings.length === 0 ? (
+        {findings.length > 0 && (
+          <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+            <select value={filterType} onChange={e => setFilterType(e.target.value)}
+              style={{ fontSize: 12, padding: '6px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+              <option value="">All Types</option>
+              {allTypes.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+            </select>
+            <select value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)}
+              style={{ fontSize: 12, padding: '6px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+              <option value="">All Severities</option>
+              {['high', 'medium', 'low', 'info'].map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+              style={{ fontSize: 12, padding: '6px 10px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+              <option value="">All Statuses</option>
+              {['open', 'reviewed', 'in_dispute', 'closed'].map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+            </select>
+            {(filterType || filterSeverity || filterStatus) && (
+              <button onClick={() => { setFilterType(''); setFilterSeverity(''); setFilterStatus(''); }}
+                className="btn btn-outline" style={{ fontSize: 12, padding: '6px 10px' }}>Clear Filters</button>
+            )}
+          </div>
+        )}
+
+        {loading ? <div className="spinner" /> : displayed.length === 0 ? (
           <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
-            No findings yet. Run AI Generate or analyze specific engines from their tabs.
+            {findings.length === 0
+              ? 'No findings yet. Run AI Generate or analyze specific engines from their tabs.'
+              : 'No findings match the current filters.'}
           </div>
         ) : (
           <div>
-            {findings.map(f => {
+            {displayed.map(f => {
               const sb = STATUS_BADGE[f.status] || STATUS_BADGE.open;
               return (
                 <div key={f.id} className="card" style={{ marginBottom: 10, borderLeft: `4px solid ${SEV_TEXT[f.severity] || '#6b7280'}` }}>

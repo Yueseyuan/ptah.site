@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listTradelines, updateTradeline } from '@/lib/api';
+import { listTradelines, updateTradeline, exportTradelinesCsv } from '@/lib/api';
 import axios from 'axios';
 
 interface Tradeline {
@@ -123,7 +123,16 @@ export default function TradelinesPage() {
       <main className="main-content">
         <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div><h1>Tradelines</h1><p>{tradelines.length} accounts across all bureaus</p></div>
-          <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>{showForm ? 'Cancel' : '+ Add Manually'}</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-outline" onClick={async () => {
+              const blob = await exportTradelinesCsv(caseId);
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a'); a.href = url;
+              a.download = `tradelines_case${caseId}.csv`; a.click();
+              URL.revokeObjectURL(url);
+            }}>Export CSV</button>
+            <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>{showForm ? 'Cancel' : '+ Add Manually'}</button>
+          </div>
         </div>
         <CaseNav caseId={caseId} />
 

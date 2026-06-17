@@ -212,6 +212,10 @@ export const listDisputeRoundsForCase = (caseId: number) =>
 export const getCasesByClient = (clientId: number) =>
   api.get('/api/cases/', { params: { client_id: clientId } }).then(r => r.data);
 
+// Tradelines CSV export
+export const exportTradelinesCsv = (caseId: number) =>
+  api.get(`/api/tradelines/case/${caseId}/export.csv`, { responseType: 'blob' }).then(r => r.data);
+
 // Analyze all engines
 export const analyzeAll = (caseId: number) =>
   api.post(`/api/cases/${caseId}/analyze-all`).then(r => r.data);

@@ -1,4 +1,7 @@
+import csv
+import io
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
@@ -110,3 +113,26 @@ def update_tradeline(tradeline_id: int, data: TradelineUpdate, db: Session = Dep
     db.commit()
     db.refresh(t)
     return _out(t)
+
+
+@router.get("/case/{case_id}/export.csv")
+def export_tradelines_csv(case_id: int, db: Session = Depends(get_db)):
+    """Export all tradelines for a case as CSV."""
+    tradelines = db.query(Tradeline).filter(Tradeline.case_id == case_id).order_by(Tradeline.bureau, Tradeline.creditor_name).all()
+    fields = ["id", "bureau", "creditor_name", "account_number_last4", "account_type",
+              "open_date", "close_date", "balance", "credit_limit", "payment_status",
+              "derogatory", "dofd", "date_reported", "payment_rating",
+              "compliance_condition_code", "past_due_amount", "high_balance"]
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    for t in tradelines:
+        row = {f: getattr(t, f, "") for f in fields}
+        row["derogatory"] = "yes" if t.derogatory else "no"
+        writer.writerow(row)
+    buf.seek(0)
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=tradelines_case{case_id}.csv"},
+    )

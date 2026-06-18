@@ -229,11 +229,15 @@ class DisputeRound(Base):
     id = Column(Integer, primary_key=True, index=True)
     case_id = Column(Integer, ForeignKey("aegis_cases.id"))
     round_number = Column(Integer, default=1)
+    recipient_type = Column(String, default="bureau")  # bureau, creditor, collection_agency, debt_buyer
     bureau = Column(String)
+    recipient_name = Column(String)
+    recipient_address = Column(Text)
     sent_date = Column(String)
     response_due_date = Column(String)
     response_received_date = Column(String)
-    status = Column(String, default="preparing")  # preparing, sent, response_received, escalated, closed
+    certified_mail_tracking = Column(String)
+    status = Column(String, default="preparing")
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
     case = relationship("AegisCase", back_populates="dispute_rounds")

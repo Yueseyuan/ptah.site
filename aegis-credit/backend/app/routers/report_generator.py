@@ -19,7 +19,19 @@ _BUREAU_ADDRESS = {
 
 
 def _make_dispute_letter(round_: DisputeRound, client: AegisClient, today: str) -> str:
-    bureau_addr = _BUREAU_ADDRESS.get(round_.bureau.lower(), round_.bureau.upper())
+    recipient_type = (round_.recipient_type or "bureau").lower()
+    is_bureau = recipient_type == "bureau"
+
+    # Determine recipient address block
+    if is_bureau and round_.bureau:
+        recipient_addr = _BUREAU_ADDRESS.get(round_.bureau.lower(), round_.bureau.upper())
+    elif round_.recipient_name:
+        recipient_addr = round_.recipient_name
+        if round_.recipient_address:
+            recipient_addr += "\n" + round_.recipient_address
+    else:
+        recipient_addr = recipient_type.replace("_", " ").title()
+
     client_addr_parts = [f"{client.first_name} {client.last_name}"]
     if client.address:
         client_addr_parts.append(client.address)
@@ -27,22 +39,82 @@ def _make_dispute_letter(round_: DisputeRound, client: AegisClient, today: str) 
         client_addr_parts.append(f"{client.city or ''}, {client.state or ''} {client.zip_code or ''}".strip(", "))
     client_addr = "\n".join(client_addr_parts)
 
+    # Letter varies by recipient type
+    if is_bureau:
+        re_line = f"RE: Formal Dispute of Inaccurate Credit Information — Round {round_.round_number}"
+        authority_line = "    Pursuant to FCRA §§ 611, 623"
+        body_intro = [
+            "I am writing to formally dispute the following inaccurate and/or unverifiable",
+            "information appearing on my credit report. Under the Fair Credit Reporting Act",
+            "(FCRA) § 611, I request that you investigate and correct or delete each item",
+            "listed below within 30 days of receipt of this letter.",
+        ]
+        close_demands = [
+            "Please investigate each item above and:",
+            "  1. Correct any inaccurate information, OR",
+            "  2. Delete any information that cannot be verified.",
+            "",
+            "Under FCRA § 611(a)(1), you must complete your investigation within 30 days",
+            "(or 45 days if I provide additional information during the investigation period).",
+            "Please send written notice of the results of your investigation to the address",
+            "above, including a copy of my updated credit report if any changes are made.",
+        ]
+        compliance = "FCRA §§ 611, 623"
+    elif recipient_type == "collection_agency":
+        re_line = f"RE: Debt Validation Request — Round {round_.round_number}"
+        authority_line = "    Pursuant to FDCPA § 809(b) and FCRA § 623"
+        body_intro = [
+            "I am writing to formally request validation of the debt(s) listed below, pursuant",
+            "to the Fair Debt Collection Practices Act (FDCPA) § 809(b). You are hereby",
+            "notified to cease collection activities until you have provided proper validation.",
+            "Additionally, I dispute the accuracy of the information reported to credit bureaus",
+            "under FCRA § 623.",
+        ]
+        close_demands = [
+            "Please provide the following within 30 days:",
+            "  1. Proof that your agency is licensed to collect debt in my state.",
+            "  2. The name and address of the original creditor.",
+            "  3. A copy of the original signed agreement.",
+            "  4. Verification that the statute of limitations has not expired.",
+            "  5. Proof of the amount claimed, including all fees and interest.",
+            "",
+            "If you cannot validate this debt, you must cease all collection activities",
+            "and instruct all credit reporting agencies to delete the account.",
+        ]
+        compliance = "FDCPA § 809(b), FCRA § 623"
+    else:  # creditor or debt_buyer
+        re_line = f"RE: Dispute of Inaccurate Account Information — Round {round_.round_number}"
+        authority_line = "    Pursuant to FCRA § 623"
+        body_intro = [
+            "I am writing to formally dispute inaccurate information you have reported to",
+            "credit reporting agencies regarding my account(s). Under FCRA § 623, furnishers",
+            "of information have a duty to report accurate data and must investigate disputes",
+            "and correct any inaccuracies within 30 days.",
+        ]
+        close_demands = [
+            "Please investigate each item above and:",
+            "  1. Correct any inaccurate information with all credit reporting agencies, OR",
+            "  2. Delete the account from all credit reports if the information cannot be verified.",
+            "",
+            "Under FCRA § 623(b), you must complete your investigation within 30 days and",
+            "report the results to the credit reporting agencies. Please send written",
+            "confirmation of the correction(s) to the address above.",
+        ]
+        compliance = "FCRA § 623"
+
     lines = [
         client_addr,
         "",
         today,
         "",
-        bureau_addr,
+        recipient_addr,
         "",
-        f"RE: Formal Dispute of Inaccurate Credit Information — Round {round_.round_number}",
-        f"    Pursuant to FCRA §§ 611, 623",
+        re_line,
+        authority_line,
         "",
-        f"To Whom It May Concern:",
+        "To Whom It May Concern:",
         "",
-        "I am writing to formally dispute the following inaccurate and/or unverifiable",
-        "information appearing on my credit report. Under the Fair Credit Reporting Act",
-        "(FCRA) § 611, I request that you investigate and correct or delete each item",
-        "listed below within 30 days of receipt of this letter.",
+    ] + body_intro + [
         "",
         "─" * 65,
         "DISPUTED ACCOUNTS",
@@ -56,24 +128,17 @@ def _make_dispute_letter(round_: DisputeRound, client: AegisClient, today: str) 
             f"Item {i}: {item.creditor_name}",
             f"  Account: {acct}",
             f"  Dispute Reason: {item.dispute_reason}",
-            f"  FCRA Basis: {item.fcra_basis or 'FCRA § 623 — duty to report accurately'}",
+            f"  Legal Basis: {item.fcra_basis or compliance}",
         ]
 
     lines += [
         "",
         "─" * 65,
         "",
-        "Please investigate each item above and:",
-        "  1. Correct any inaccurate information, OR",
-        "  2. Delete any information that cannot be verified.",
+    ] + close_demands + [
         "",
-        "Under FCRA § 611(a)(1), you must complete your investigation within 30 days",
-        "(or 45 days if I provide additional information during the investigation period).",
-        "Please send written notice of the results of your investigation to the address",
-        "above, including a copy of my updated credit report if any changes are made.",
-        "",
-        "If you need additional documentation to process this dispute, please contact me",
-        "at the address above. I reserve all rights and remedies available under the FCRA.",
+        "If you need additional documentation, please contact me at the address above.",
+        "I reserve all rights and remedies available under applicable law.",
         "",
         "Sincerely,",
         "",

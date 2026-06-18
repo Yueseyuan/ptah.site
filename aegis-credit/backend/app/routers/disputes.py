@@ -12,10 +12,14 @@ router = APIRouter(prefix="/api/disputes", tags=["disputes"])
 
 class RoundCreate(BaseModel):
     case_id: int
-    bureau: str
+    recipient_type: str = "bureau"
+    bureau: Optional[str] = None
+    recipient_name: Optional[str] = None
+    recipient_address: Optional[str] = None
     round_number: int = 1
     sent_date: Optional[str] = None
     response_due_date: Optional[str] = None
+    certified_mail_tracking: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -24,6 +28,9 @@ class RoundUpdate(BaseModel):
     sent_date: Optional[str] = None
     response_due_date: Optional[str] = None
     response_received_date: Optional[str] = None
+    certified_mail_tracking: Optional[str] = None
+    recipient_name: Optional[str] = None
+    recipient_address: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -46,10 +53,14 @@ def _round_out(r: DisputeRound) -> dict:
         "id": r.id,
         "case_id": r.case_id,
         "round_number": r.round_number,
+        "recipient_type": r.recipient_type or "bureau",
         "bureau": r.bureau,
+        "recipient_name": r.recipient_name,
+        "recipient_address": r.recipient_address,
         "sent_date": r.sent_date,
         "response_due_date": r.response_due_date,
         "response_received_date": r.response_received_date,
+        "certified_mail_tracking": r.certified_mail_tracking,
         "status": r.status,
         "notes": r.notes,
         "created_at": r.created_at.isoformat() if r.created_at else None,

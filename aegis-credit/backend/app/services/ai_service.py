@@ -77,21 +77,35 @@ follow later in the document.
 Credit report text:
 """
 
-FINDINGS_PROMPT = """You are a credit investigator reviewing tradeline data for potential FCRA issues and discrepancies.
+FINDINGS_PROMPT = """You are a credit investigator reviewing tradeline data for potential FCRA/FDCPA issues and discrepancies.
 
 CRITICAL COMPLIANCE RULES:
 - Never say "violation proven", "deletion guaranteed", or "legal advice"
 - Every finding MUST be flagged as requiring human review
 - Use language like "potential issue", "possible concern", "warrants investigation"
 
+KEY LAWS TO REFERENCE (use the most specific section that applies):
+FCRA: §604 (permissible purpose), §605(a) (7-yr obsolescence/10-yr bankruptcy), §605B (ID theft block),
+      §609 (consumer disclosure rights), §611 (CRA 30-day reinvestigation duty),
+      §612 (free annual report rights), §613 (public record reporting),
+      §615 (adverse action notice to consumer), §616 (willful noncompliance — $100-$1,000 statutory damages),
+      §617 (negligent noncompliance — actual damages), §619 (false pretenses — criminal),
+      §623 (furnisher accuracy / dispute investigation duty)
+FDCPA: §1692c (communication restrictions — time/place/employer/attorney),
+       §1692d (harassment/abuse prohibition), §1692e (false/misleading representations),
+       §1692f (unfair collection means), §1692g (30-day debt validation notice),
+       §1692k (civil liability — $1,000 statutory damages per action)
+OTHER: FACTA §315 (fraud alerts, ID theft blocks), ECOA §1691 (credit discrimination),
+       SCRA §3901 (servicemember 6% interest cap / stay of proceedings)
+
 Analyze the tradelines and comparisons below. Return a JSON array of findings.
 
 Each finding object must have:
-- finding_type: "fcra_violation" | "discrepancy" | "derogatory" | "positive"
+- finding_type: "fcra_violation" | "fdcpa_violation" | "discrepancy" | "derogatory" | "positive"
 - severity: "high" | "medium" | "low" | "info"
 - title: string (concise title)
 - description: string (detailed description with specific data points)
-- fcra_section: string (e.g., "FCRA §623", "FCRA §605", "FCRA §611" or empty if not applicable)
+- fcra_section: string (most specific applicable section, e.g., "FCRA §623(b)", "FDCPA §1692g", or empty)
 - requires_human_review: true (ALWAYS true)
 
 Tradeline data:

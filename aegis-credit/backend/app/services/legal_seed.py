@@ -3,14 +3,28 @@ from __future__ import annotations
 
 
 def seed_federal_laws(db):
-    """Seed federal laws if the table is empty."""
+    """Upsert federal laws (keyed on citation+section)."""
     from app.models import FederalLaw
 
-    if db.query(FederalLaw).count() > 0:
-        return
-
     laws = [
-        # FCRA key sections
+        # ── FCRA ──────────────────────────────────────────────────────────────
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§604",
+            "summary": (
+                "Limits the permissible purposes for which a consumer report may be obtained. "
+                "A consumer report may only be furnished for: credit or insurance transactions "
+                "initiated by the consumer, employment purposes (with written consent), "
+                "legitimate business needs in a transaction initiated by the consumer, "
+                "court orders or subpoenas, and child-support enforcement. "
+                "Users who obtain reports under false pretenses may face criminal liability under §619."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
         {
             "short_name": "FCRA",
             "title": "Fair Credit Reporting Act",
@@ -22,6 +36,41 @@ def seed_federal_laws(db):
                 "Bankruptcies may be reported for up to 10 years. "
                 "Certain items such as criminal convictions, credit transactions over $150,000, and life "
                 "insurance policies over $150,000 are exempt from these time limits."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§605B",
+            "summary": (
+                "Requires consumer reporting agencies to block the reporting of information the consumer "
+                "identifies as resulting from identity theft. Upon receiving a valid identity-theft report "
+                "and proof of identity, the CRA must block the information within 4 business days and "
+                "notify the furnisher. The CRA may decline or rescind the block if it determines the "
+                "information was not the result of identity theft. Furnishers must also be notified and "
+                "may not re-furnish the blocked information."
+            ),
+            "effective_date": "2004-12-04",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§609",
+            "summary": (
+                "Requires consumer reporting agencies to disclose to the consumer, on request, "
+                "all information in the consumer's file at the time of the request, the sources of "
+                "the information, and the identity of each person that procured a consumer report for "
+                "employment purposes within the preceding 2-year period, or for any other purpose "
+                "within the preceding 1-year period. "
+                "The CRA must also provide a summary of rights and a written statement of dispute "
+                "procedures if the consumer disputes the accuracy of any item."
             ),
             "effective_date": "1971-04-25",
             "category": "credit_reporting",
@@ -64,6 +113,109 @@ def seed_federal_laws(db):
             "short_name": "FCRA",
             "title": "Fair Credit Reporting Act",
             "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§613",
+            "summary": (
+                "Governs the reporting of public-record information (e.g., bankruptcies, judgments, tax liens, "
+                "and arrest records) to consumer reporting agencies. "
+                "CRAs that compile and report public-record information must either: "
+                "(1) notify the consumer at the time the information is reported, or "
+                "(2) maintain strict procedures to ensure the information is complete and up to date. "
+                "This section is particularly relevant when public records are outdated, expunged, or sealed."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§615",
+            "summary": (
+                "Imposes requirements on users of consumer reports who take adverse action. "
+                "When a person takes adverse action based in whole or in part on a consumer report, "
+                "they must: (1) notify the consumer of the adverse action, (2) provide the name, "
+                "address, and phone number of the CRA that furnished the report, (3) state that the "
+                "CRA did not make the decision and cannot explain it, and (4) inform the consumer of "
+                "their right to obtain a free copy of the report and to dispute its accuracy. "
+                "Failure to provide adverse action notices is a common FCRA violation."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§616",
+            "summary": (
+                "Provides civil liability for willful noncompliance with the FCRA. "
+                "Any person who willfully fails to comply with any requirement of the FCRA is liable "
+                "to the consumer for: (1) actual damages or statutory damages of $100–$1,000 per violation, "
+                "(2) punitive damages as the court may allow, and (3) attorney fees and costs. "
+                "The 'willful' standard includes reckless disregard of the consumer's FCRA rights "
+                "(see Safeco Insurance Co. v. Burr, 551 U.S. 47 (2007))."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§617",
+            "summary": (
+                "Provides civil liability for negligent noncompliance with the FCRA. "
+                "Any person who negligently fails to comply with any requirement of the FCRA "
+                "is liable to the consumer for: (1) actual damages sustained, and "
+                "(2) attorney fees and costs. Unlike §616 (willful violations), §617 does not "
+                "allow statutory or punitive damages — the consumer must prove actual harm. "
+                "Common negligent violations include failure to reinvestigate disputes within "
+                "the required 30-day period and failure to delete unverifiable information."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§619",
+            "summary": (
+                "Criminalizes obtaining a consumer report under false pretenses. "
+                "Any person who knowingly and willfully obtains information on a consumer from a "
+                "consumer reporting agency under false pretenses is subject to a fine and/or "
+                "imprisonment for up to 2 years. Officers and employees of CRAs who knowingly "
+                "disclose consumer report information to unauthorized persons face similar penalties. "
+                "This section reinforces the permissible purpose requirements of §604."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§620",
+            "summary": (
+                "Prohibits unauthorized disclosures by officers or employees of consumer reporting agencies. "
+                "Officers, employees, and contractors of CRAs who knowingly and willfully provide "
+                "consumer report information to an unauthorized person may be fined and/or imprisoned "
+                "for up to 2 years. This section works in conjunction with §604 (permissible purposes) "
+                "and §619 (obtaining information under false pretenses) to protect consumer privacy."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
             "section": "§623",
             "summary": (
                 "Imposes accuracy requirements on furnishers of information to CRAs. "
@@ -77,7 +229,25 @@ def seed_federal_laws(db):
             "category": "credit_reporting",
             "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
         },
-        # FDCPA
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§625",
+            "summary": (
+                "Establishes the relationship between the FCRA and state laws. "
+                "The FCRA generally preempts state laws that impose inconsistent requirements on "
+                "consumer reporting agencies and furnishers of information — however, states may enact "
+                "laws that provide greater protections for consumers. "
+                "Key exceptions: states may regulate consumer reporting to the extent not preempted, "
+                "and the FCRA specifically preserves state laws relating to the obligations of "
+                "furnishers, adverse action procedures, and identity theft protections."
+            ),
+            "effective_date": "1996-09-30",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        # ── FDCPA ─────────────────────────────────────────────────────────────
         {
             "short_name": "FDCPA",
             "title": "Fair Debt Collection Practices Act",
@@ -95,7 +265,116 @@ def seed_federal_laws(db):
             "category": "debt_collection",
             "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
         },
-        # CROA
+        {
+            "short_name": "FDCPA",
+            "title": "Fair Debt Collection Practices Act",
+            "citation": "15 U.S.C. § 1692 et seq.",
+            "section": "§1692c",
+            "summary": (
+                "Restricts communication by debt collectors. Collectors may not contact consumers "
+                "at unusual times (before 8 a.m. or after 9 p.m.), at a place of employment if the "
+                "collector knows the employer prohibits such calls, or directly with a consumer who "
+                "is represented by an attorney. If the consumer notifies the collector in writing to "
+                "cease communication, the collector must stop all contact except to notify the consumer "
+                "of specific actions (e.g., filing a lawsuit). Third-party communication is also "
+                "sharply limited — collectors may only contact third parties to locate the consumer."
+            ),
+            "effective_date": "1978-03-20",
+            "category": "debt_collection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
+        },
+        {
+            "short_name": "FDCPA",
+            "title": "Fair Debt Collection Practices Act",
+            "citation": "15 U.S.C. § 1692 et seq.",
+            "section": "§1692d",
+            "summary": (
+                "Prohibits harassment, oppression, and abuse by debt collectors. "
+                "Specifically bars: threatening violence or harm, using obscene or profane language, "
+                "publishing a list of consumers who refuse to pay debts, advertising the debt for sale "
+                "to coerce payment, causing the telephone to ring repeatedly to annoy the consumer, "
+                "and failing to disclose identity when placing a telephone call. "
+                "Each harassing act or communication may constitute a separate violation."
+            ),
+            "effective_date": "1978-03-20",
+            "category": "debt_collection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
+        },
+        {
+            "short_name": "FDCPA",
+            "title": "Fair Debt Collection Practices Act",
+            "citation": "15 U.S.C. § 1692 et seq.",
+            "section": "§1692e",
+            "summary": (
+                "Prohibits false, deceptive, and misleading representations by debt collectors. "
+                "Specifically prohibits: falsely implying government or attorney affiliation, "
+                "misrepresenting the character, amount, or legal status of the debt, threatening "
+                "legal action that cannot be taken or is not intended, using false business names, "
+                "and failing to disclose that the communication is from a debt collector. "
+                "The 'least sophisticated consumer' standard is applied — the prohibition covers "
+                "statements that would mislead even the least sophisticated consumer."
+            ),
+            "effective_date": "1978-03-20",
+            "category": "debt_collection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
+        },
+        {
+            "short_name": "FDCPA",
+            "title": "Fair Debt Collection Practices Act",
+            "citation": "15 U.S.C. § 1692 et seq.",
+            "section": "§1692f",
+            "summary": (
+                "Prohibits unfair or unconscionable means to collect debts. "
+                "Specifically bars: collecting amounts not expressly authorized by the agreement "
+                "or permitted by law, depositing post-dated checks prematurely, causing charges "
+                "(e.g., collect calls) to the consumer by concealing the purpose of communications, "
+                "threatening to take or actually taking any non-judicial action to repossess property "
+                "without a present right, communicating via postcard, and using any language or "
+                "symbol on an envelope that indicates the communication is from a debt collector."
+            ),
+            "effective_date": "1978-03-20",
+            "category": "debt_collection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
+        },
+        {
+            "short_name": "FDCPA",
+            "title": "Fair Debt Collection Practices Act",
+            "citation": "15 U.S.C. § 1692 et seq.",
+            "section": "§1692g",
+            "summary": (
+                "Requires debt collectors to provide a written debt validation notice within 5 days "
+                "of the initial communication. The notice must state: the amount of the debt, the "
+                "name of the creditor, and a 30-day window during which the consumer may dispute "
+                "the debt in writing. If the consumer disputes in writing within 30 days, the "
+                "collector must cease collection until it obtains verification and mails it to the "
+                "consumer. The collector must also provide the name and address of the original "
+                "creditor if the consumer requests it within 30 days."
+            ),
+            "effective_date": "1978-03-20",
+            "category": "debt_collection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
+        },
+        {
+            "short_name": "FDCPA",
+            "title": "Fair Debt Collection Practices Act",
+            "citation": "15 U.S.C. § 1692 et seq.",
+            "section": "§1692k",
+            "summary": (
+                "Sets out civil liability for FDCPA violations. Any debt collector who fails to "
+                "comply with any provision of the FDCPA is liable to the consumer for: "
+                "(1) actual damages, (2) statutory damages up to $1,000 per action (regardless of "
+                "whether actual damages are proven), and (3) attorney fees and costs. "
+                "In class actions, statutory damages are capped at $500,000 or 1% of the debt "
+                "collector's net worth. Courts may consider the frequency/persistence of "
+                "noncompliance, nature of noncompliance, and extent to which it was intentional. "
+                "Bona fide error defense available if violation was unintentional despite "
+                "maintenance of reasonable procedures."
+            ),
+            "effective_date": "1978-03-20",
+            "category": "debt_collection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
+        },
+        # ── CROA ──────────────────────────────────────────────────────────────
         {
             "short_name": "CROA",
             "title": "Credit Repair Organizations Act",
@@ -112,7 +391,7 @@ def seed_federal_laws(db):
             "category": "credit_repair",
             "source_url": "https://www.ftc.gov/legal-library/browse/statutes/credit-repair-organizations-act",
         },
-        # ECOA
+        # ── ECOA ──────────────────────────────────────────────────────────────
         {
             "short_name": "ECOA",
             "title": "Equal Credit Opportunity Act",
@@ -129,7 +408,7 @@ def seed_federal_laws(db):
             "category": "lending",
             "source_url": "https://www.consumerfinance.gov/compliance/compliance-resources/other-applicable-requirements/equal-credit-opportunity-act/",
         },
-        # TILA
+        # ── TILA ──────────────────────────────────────────────────────────────
         {
             "short_name": "TILA",
             "title": "Truth in Lending Act",
@@ -146,7 +425,7 @@ def seed_federal_laws(db):
             "category": "lending",
             "source_url": "https://www.consumerfinance.gov/compliance/compliance-resources/mortgage-resources/tila-respa-integrated-disclosures/",
         },
-        # FACTA
+        # ── FACTA ─────────────────────────────────────────────────────────────
         {
             "short_name": "FACTA",
             "title": "Fair and Accurate Credit Transactions Act",
@@ -164,7 +443,7 @@ def seed_federal_laws(db):
             "category": "credit_reporting",
             "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
         },
-        # GLBA
+        # ── GLBA ──────────────────────────────────────────────────────────────
         {
             "short_name": "GLBA",
             "title": "Gramm-Leach-Bliley Act",
@@ -182,7 +461,7 @@ def seed_federal_laws(db):
             "category": "privacy",
             "source_url": "https://www.ftc.gov/business-guidance/privacy-security/gramm-leach-bliley-act",
         },
-        # Regulation V
+        # ── Regulation V ──────────────────────────────────────────────────────
         {
             "short_name": "Reg V",
             "title": "Regulation V — Fair Credit Reporting",
@@ -202,18 +481,24 @@ def seed_federal_laws(db):
         },
     ]
 
+    existing = set()
+    for row in db.query(FederalLaw).with_entities(FederalLaw.citation, FederalLaw.section).all():
+        existing.add((row.citation, row.section))
+
+    added = 0
     for law_data in laws:
-        law = FederalLaw(**law_data)
-        db.add(law)
-    db.commit()
+        key = (law_data["citation"], law_data["section"])
+        if key not in existing:
+            db.add(FederalLaw(**law_data))
+            added += 1
+
+    if added:
+        db.commit()
 
 
 def seed_agency_guidance(db):
-    """Seed CFPB/FTC agency guidance if the table is empty."""
+    """Upsert CFPB/FTC agency guidance (keyed on agency+document_name)."""
     from app.models import AgencyGuidance
-
-    if db.query(AgencyGuidance).count() > 0:
-        return
 
     guidance_records = [
         {
@@ -285,21 +570,90 @@ def seed_agency_guidance(db):
             ),
             "source_url": "https://www.consumerfinance.gov/data-research/research-reports/",
         },
+        {
+            "agency": "FTC/CFPB",
+            "document_name": "Red Flags Rule — Identity Theft Prevention Programs",
+            "publication_date": "2013-05-01",
+            "topic": "Identity Theft Prevention",
+            "summary": (
+                "Implements Section 315 of FACTA. Requires financial institutions and creditors to "
+                "develop and implement written identity theft prevention programs designed to detect, "
+                "prevent, and mitigate identity theft in connection with covered accounts. "
+                "Programs must include policies for identifying relevant patterns, practices, and "
+                "specific forms of activity ('red flags') that signal possible identity theft. "
+                "Financial institutions must also respond appropriately when red flags are detected. "
+                "The rule is codified at 16 C.F.R. § 681 (FTC) and 12 C.F.R. § 1022.40-42 (CFPB)."
+            ),
+            "source_url": "https://www.ftc.gov/business-guidance/privacy-security/red-flags-rule",
+        },
+        {
+            "agency": "FTC",
+            "document_name": "Disposal Rule — Proper Disposal of Consumer Report Information",
+            "publication_date": "2005-06-01",
+            "topic": "Data Security / Disposal of Consumer Reports",
+            "summary": (
+                "Implements Section 628 of FCRA (added by FACTA). Requires any person who maintains "
+                "or possesses consumer report information for a business purpose to properly dispose "
+                "of it in a manner that protects against unauthorized access and use. "
+                "Covered entities must take reasonable measures to destroy such information — for "
+                "example, burning, pulverizing, or shredding paper, and destroying electronic media. "
+                "Violations may result in FTC enforcement action and civil liability under FCRA §§616-617. "
+                "Codified at 16 C.F.R. § 682."
+            ),
+            "source_url": "https://www.ftc.gov/legal-library/browse/rules/disposal-rule",
+        },
+        {
+            "agency": "CFPB",
+            "document_name": "CFPB Circular 2022-03 — BNPL and Credit Reporting",
+            "publication_date": "2022-09-15",
+            "topic": "Buy Now Pay Later / Emerging Credit Products",
+            "summary": (
+                "CFPB guidance addressing whether consumer protection laws — including the FCRA — "
+                "apply to buy-now-pay-later (BNPL) products. The CFPB found that many BNPL products "
+                "are credit products subject to Regulation Z (TILA) and that BNPL lenders who report "
+                "to credit bureaus must comply with FCRA §623 furnisher accuracy requirements. "
+                "The guidance also raised concerns about lack of uniform credit reporting for BNPL "
+                "products creating inaccurate or incomplete credit pictures for consumers. "
+                "Relevant for analyzing whether non-traditional credit lines are accurately reported."
+            ),
+            "source_url": "https://www.consumerfinance.gov/compliance/circulars/",
+        },
+        {
+            "agency": "CFPB",
+            "document_name": "CFPB — Fair Debt Collection Practices Act Annual Report",
+            "publication_date": "2023-03-01",
+            "topic": "FDCPA Enforcement Trends",
+            "summary": (
+                "Annual CFPB report on FDCPA enforcement and supervision activities. "
+                "Identifies top FDCPA complaint categories including false representations about "
+                "debt amounts (§1692e), failure to provide debt validation notices (§1692g), "
+                "harassment (§1692d), and improper third-party disclosures (§1692c). "
+                "Data used to prioritize FDCPA supervisory examinations. Key resource for "
+                "understanding current enforcement priorities and systemic debt collection issues."
+            ),
+            "source_url": "https://www.consumerfinance.gov/data-research/research-reports/",
+        },
     ]
 
+    existing = set()
+    for row in db.query(AgencyGuidance).with_entities(AgencyGuidance.agency, AgencyGuidance.document_name).all():
+        existing.add((row.agency, row.document_name))
+
+    added = 0
     for g in guidance_records:
-        doc = AgencyGuidance(**g)
-        db.add(doc)
-    db.commit()
+        key = (g["agency"], g["document_name"])
+        if key not in existing:
+            db.add(AgencyGuidance(**g))
+            added += 1
+
+    if added:
+        db.commit()
 
 
 def seed_case_law(db):
-    """Seed landmark FCRA/FDCPA cases if the table is empty."""
+    """Upsert landmark FCRA/FDCPA cases (keyed on citation)."""
     from app.models import CaseLaw
     import json
-
-    if db.query(CaseLaw).count() > 0:
-        return
 
     cases = [
         {
@@ -324,6 +678,29 @@ def seed_case_law(db):
             "source_url": "https://www.supremecourt.gov/opinions/15pdf/13-1339_0pm1.pdf",
         },
         {
+            "case_name": "TransUnion LLC v. Ramirez",
+            "citation": "594 U.S. 413 (2021)",
+            "court": "U.S. Supreme Court",
+            "jurisdiction": "Federal",
+            "year": 2021,
+            "topic": "FCRA Standing / Concrete Harm / Class Actions",
+            "holding_summary": (
+                "Only plaintiffs who suffer concrete harm from an FCRA violation have Article III "
+                "standing to sue in federal court. The Court held that of 8,185 class members whose "
+                "credit files contained false OFAC alerts, only the ~1,853 whose reports were "
+                "actually disseminated to third parties suffered a concrete injury. Class members "
+                "whose inaccurate files were never shared with third parties lacked standing. "
+                "This decision significantly limits FCRA class action exposure for CRAs and furnishers."
+            ),
+            "legal_principle": (
+                "Dissemination of inaccurate information to third parties is required for FCRA "
+                "standing; a consumer whose inaccurate file exists internally but is never shared "
+                "cannot sue in federal court. Narrows Spokeo and limits class action FCRA damages."
+            ),
+            "relevance_tags": json.dumps(["standing", "class action", "FCRA", "concrete harm", "Article III", "OFAC"]),
+            "source_url": "https://www.supremecourt.gov/opinions/20pdf/20-297_20e2.pdf",
+        },
+        {
             "case_name": "Safeco Insurance Co. of America v. Burr",
             "citation": "551 U.S. 47 (2007)",
             "court": "U.S. Supreme Court",
@@ -342,6 +719,30 @@ def seed_case_law(db):
             ),
             "relevance_tags": json.dumps(["willfulness", "punitive damages", "adverse action", "FCRA §616"]),
             "source_url": "https://www.supremecourt.gov/opinions/06pdf/06-84.pdf",
+        },
+        {
+            "case_name": "Rotkiske v. Klemm",
+            "citation": "589 U.S. 8 (2019)",
+            "court": "U.S. Supreme Court",
+            "jurisdiction": "Federal",
+            "year": 2019,
+            "topic": "FDCPA Statute of Limitations — Discovery Rule",
+            "holding_summary": (
+                "The FDCPA's 1-year statute of limitations (15 U.S.C. §1692k(d)) runs from the date "
+                "of the violation, not from the date the consumer discovers the violation. "
+                "The Court rejected the 'discovery rule' for FDCPA claims, holding that the plain "
+                "text of the statute specifies that an action must be brought within one year 'from "
+                "the date on which the violation occurs.' Only equitable tolling (fraud or active "
+                "concealment) may extend the deadline, and only where the discovery rule exception "
+                "within §1692k itself applies."
+            ),
+            "legal_principle": (
+                "FDCPA claims must be filed within 1 year of the violation date, not the discovery "
+                "date. The discovery rule does not apply to FDCPA §1692k(d) absent fraudulent "
+                "concealment. Critical for evaluating timeliness of FDCPA claims."
+            ),
+            "relevance_tags": json.dumps(["FDCPA", "statute of limitations", "1692k", "discovery rule", "time-barred"]),
+            "source_url": "https://www.supremecourt.gov/opinions/19pdf/18-328_i4dk.pdf",
         },
         {
             "case_name": "Gorman v. Wolpoff & Abramson, LLP",
@@ -409,12 +810,67 @@ def seed_case_law(db):
             "relevance_tags": json.dumps(["CRA", "reinvestigation", "FCRA §611", "negligence", "actual damages"]),
             "source_url": "https://law.justia.com/cases/federal/appellate-courts/F2/936/1151/47617/",
         },
+        {
+            "case_name": "Johnson v. MBNA America Bank, NA",
+            "citation": "357 F.3d 426 (4th Cir. 2004)",
+            "court": "U.S. Court of Appeals, Fourth Circuit",
+            "jurisdiction": "4th Circuit",
+            "year": 2004,
+            "topic": "FCRA Furnisher Reasonable Investigation",
+            "holding_summary": (
+                "The Fourth Circuit held that FCRA §623(b) requires furnishers to conduct a "
+                "reasonable investigation after receiving notice of a consumer's dispute from a CRA. "
+                "The court rejected the argument that a furnisher satisfies its duty simply by "
+                "checking its own records. Whether an investigation is 'reasonable' depends on "
+                "what the furnisher knew at the time and what steps a reasonable furnisher would "
+                "have taken given that knowledge. The case is foundational for furnisher liability."
+            ),
+            "legal_principle": (
+                "Furnishers must conduct a reasonable investigation of disputes under FCRA §623(b). "
+                "The reasonableness standard is fact-specific and requires more than an internal "
+                "records check when the dispute raises legitimate factual questions."
+            ),
+            "relevance_tags": json.dumps(["furnisher", "FCRA §623", "reasonable investigation", "dispute"]),
+            "source_url": "https://law.justia.com/cases/federal/appellate-courts/F3/357/426/594268/",
+        },
+        {
+            "case_name": "Evon v. Law Offices of Sidney Mickell",
+            "citation": "688 F.3d 1015 (9th Cir. 2012)",
+            "court": "U.S. Court of Appeals, Ninth Circuit",
+            "jurisdiction": "9th Circuit",
+            "year": 2012,
+            "topic": "FDCPA — False/Misleading Representations §1692e",
+            "holding_summary": (
+                "The Ninth Circuit applied the 'least sophisticated debtor' standard to assess "
+                "whether a debt collection letter violated FDCPA §1692e. Under this standard, a "
+                "collection communication is assessed from the perspective of the least "
+                "sophisticated consumer — a consumer who may lack sophistication or legal knowledge "
+                "but possesses a willingness to read and understand communications carefully. "
+                "Statements that would be understood as false or misleading by such a consumer "
+                "violate §1692e even if technically accurate."
+            ),
+            "legal_principle": (
+                "FDCPA §1692e violations are assessed using the 'least sophisticated debtor' "
+                "standard. Courts evaluate whether a communication would mislead the most "
+                "vulnerable consumers, not a sophisticated or legally knowledgeable one."
+            ),
+            "relevance_tags": json.dumps(["FDCPA", "1692e", "least sophisticated debtor", "false representations", "collection letter"]),
+            "source_url": "https://law.justia.com/cases/federal/appellate-courts/ca9/10-15888/10-15888-2012-07-13.html",
+        },
     ]
 
+    existing = set()
+    for row in db.query(CaseLaw).with_entities(CaseLaw.citation).all():
+        existing.add(row.citation)
+
+    added = 0
     for c in cases:
-        case = CaseLaw(**c)
-        db.add(case)
-    db.commit()
+        if c["citation"] not in existing:
+            db.add(CaseLaw(**c))
+            added += 1
+
+    if added:
+        db.commit()
 
 
 def seed_state_laws(db):

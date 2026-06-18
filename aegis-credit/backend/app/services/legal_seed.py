@@ -479,6 +479,167 @@ def seed_federal_laws(db):
             "category": "credit_reporting",
             "source_url": "https://www.consumerfinance.gov/rules-policy/final-rules/regulation-v-fair-credit-reporting-act/",
         },
+        # ── Metro 2 / CDIA ────────────────────────────────────────────────────
+        {
+            "short_name": "Metro 2",
+            "title": "Metro 2 Credit Reporting Resource Guide (CRRG)",
+            "citation": "CDIA Metro 2 Format (Credit Reporting Resource Guide)",
+            "section": "Full CRRG specification",
+            "summary": (
+                "The Metro 2 format is the industry-standard data format established by the "
+                "Consumer Data Industry Association (CDIA) for furnishing consumer credit "
+                "information to credit reporting agencies (CRAs). "
+                "Key Metro 2 fields and requirements: "
+                "§1.2 — Obsolescence dates (7-year adverse, 10-year bankruptcy per FCRA §605(a)); "
+                "§1.3 — Account number format and masking requirements; "
+                "§1.4 — Date Reported (furnishers must update monthly); "
+                "§1.5 — Date of First Delinquency (DOFD): required on all derogatory accounts, "
+                "must reflect the date the account FIRST became delinquent and was never cured, "
+                "must NOT be updated after being set (re-aging violation); "
+                "§1.6 — Account status must accurately reflect current account standing; "
+                "§2.1 — Payment Rating codes (0=new/approved, 1=current, 2-6=30-180 DPD, "
+                "7=collection, 8=charge-off, 9=repo/foreclosure); "
+                "§2.3 — Balance fields: current balance, high balance, original charge-off amount; "
+                "§2.4 — Past-due amount (must be $0 on current accounts); "
+                "§2.5 — Credit limit required on revolving accounts; "
+                "§2.6 — Special Comment codes (AC=partial payment, AU=settled, BL=forbearance); "
+                "§2.7 — Compliance Condition codes (XF=in dispute per FCRA §611, XO=sold/transferred, "
+                "XH=FCBA dispute, X1=closed by consumer, X2=closed by grantor); "
+                "§2.8 — Consumer Information Indicator (A-K=bankruptcy chapter and status codes); "
+                "§4.1 — Prohibition on duplicate reporting of the same debt."
+            ),
+            "effective_date": "2003-01-01",
+            "category": "credit_reporting",
+            "source_url": "https://www.cdiaonline.org/resources/metro2-format/",
+        },
+        # ── FTC Act §5 (UDAP) ─────────────────────────────────────────────────
+        {
+            "short_name": "FTC Act §5",
+            "title": "Federal Trade Commission Act — Section 5 (UDAP)",
+            "citation": "15 U.S.C. § 45",
+            "section": "§45",
+            "summary": (
+                "Section 5 of the FTC Act prohibits unfair or deceptive acts or practices "
+                "(UDAP) in or affecting commerce. The FTC uses this authority to enforce "
+                "against deceptive debt collection, deceptive credit repair, and deceptive "
+                "credit reporting practices that are not covered by specific statutes. "
+                "A practice is 'deceptive' if it is likely to mislead a reasonable consumer "
+                "about a material fact. A practice is 'unfair' if it causes substantial injury, "
+                "is not reasonably avoidable, and is not outweighed by countervailing benefits. "
+                "The FTC has used §5 to bring enforcement actions against CRAs, furnishers, "
+                "and debt collectors for systematic inaccuracies and misleading reporting."
+            ),
+            "effective_date": "1914-09-26",
+            "category": "consumer_protection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/federal-trade-commission-act",
+        },
+        # ── Dodd-Frank Act Title X / UDAAP ────────────────────────────────────
+        {
+            "short_name": "Dodd-Frank §1031",
+            "title": "Dodd-Frank Act — CFPB UDAAP Authority",
+            "citation": "12 U.S.C. § 5531 et seq.",
+            "section": "§5531 (UDAAP)",
+            "summary": (
+                "Section 1031 of the Dodd-Frank Wall Street Reform and Consumer Protection Act "
+                "grants the CFPB authority to prohibit unfair, deceptive, or abusive acts or "
+                "practices (UDAAP) by covered persons and service providers. "
+                "Dodd-Frank expanded the FTC's UDAP standard by adding 'abusive' — a practice "
+                "is abusive if it materially interferes with the consumer's ability to understand "
+                "terms or conditions, or takes unreasonable advantage of a consumer's inability "
+                "to protect their interests. "
+                "The CFPB has applied UDAAP to: inaccurate debt collection, misleading credit "
+                "reporting, deceptive credit repair marketing, and discriminatory lending. "
+                "UDAAP enforcement can result in civil money penalties up to $1M/day and "
+                "consumer restitution."
+            ),
+            "effective_date": "2011-07-21",
+            "category": "consumer_protection",
+            "source_url": "https://www.consumerfinance.gov/compliance/compliance-resources/other-applicable-requirements/unfair-deceptive-or-abusive-acts-or-practices-udaaps/",
+        },
+        # ── Military Lending Act ───────────────────────────────────────────────
+        {
+            "short_name": "MLA",
+            "title": "Military Lending Act",
+            "citation": "10 U.S.C. § 987",
+            "section": "§987",
+            "summary": (
+                "The Military Lending Act protects active-duty servicemembers, spouses, and "
+                "dependents from predatory lending practices. Key protections: "
+                "(1) Military Annual Percentage Rate (MAPR) cap of 36% on consumer credit products; "
+                "(2) Prohibition on prepayment penalties; "
+                "(3) Prohibition on mandatory arbitration clauses; "
+                "(4) Prohibition on rollover or renewal of payday loans; "
+                "(5) Required statement of borrower rights. "
+                "MLA applies to payday loans, vehicle title loans, refund anticipation loans, "
+                "deposit advance loans, installment loans, and credit cards obtained after "
+                "October 2017. Violations render the loan void and expose creditors to "
+                "civil liability of $500 per violation plus attorney fees."
+            ),
+            "effective_date": "2007-10-01",
+            "category": "lending",
+            "source_url": "https://www.consumerfinance.gov/compliance/compliance-resources/other-applicable-requirements/military-lending-act/",
+        },
+        # ── Electronic Fund Transfer Act / Regulation E ───────────────────────
+        {
+            "short_name": "EFTA / Reg E",
+            "title": "Electronic Fund Transfer Act — Regulation E",
+            "citation": "15 U.S.C. § 1693 et seq. / 12 C.F.R. § 1005",
+            "section": "§1693 et seq.",
+            "summary": (
+                "The EFTA protects consumers engaged in electronic fund transfers (EFTs), "
+                "including ACH transfers, debit card transactions, and ATM transactions. "
+                "Key rights: consumers must receive error resolution notices and may dispute "
+                "unauthorized transactions within 60 days. Financial institutions must investigate "
+                "EFT errors within 10 business days (or provisionally credit the account within "
+                "5 days and investigate within 45 days). Unauthorized ACH debits used to collect "
+                "consumer debts are covered by EFTA. Debt collectors who initiate unauthorized "
+                "ACH debits may violate both EFTA and FDCPA §1692f."
+            ),
+            "effective_date": "1979-02-08",
+            "category": "payments",
+            "source_url": "https://www.consumerfinance.gov/compliance/compliance-resources/other-applicable-requirements/electronic-fund-transfer-act/",
+        },
+        # ── Fair Housing Act ───────────────────────────────────────────────────
+        {
+            "short_name": "FHA",
+            "title": "Fair Housing Act",
+            "citation": "42 U.S.C. § 3601 et seq.",
+            "section": "§3601 et seq.",
+            "summary": (
+                "The Fair Housing Act prohibits discrimination in the sale, rental, and financing "
+                "of housing based on race, color, national origin, religion, sex, familial status, "
+                "or disability. In the credit context, FHA applies to mortgage lending and "
+                "prohibits redlining (refusing to lend in minority neighborhoods), reverse "
+                "redlining (targeting minority communities with predatory loans), and other "
+                "discriminatory mortgage practices. FHA works in conjunction with ECOA to "
+                "prohibit discrimination in mortgage-related credit reporting. "
+                "Violations may result in HUD enforcement, DOJ litigation, and private suits "
+                "for actual and punitive damages."
+            ),
+            "effective_date": "1968-04-11",
+            "category": "lending",
+            "source_url": "https://www.hud.gov/program_offices/fair_housing_equal_opp/fair_housing_act_overview",
+        },
+        # ── HMDA ──────────────────────────────────────────────────────────────
+        {
+            "short_name": "HMDA",
+            "title": "Home Mortgage Disclosure Act",
+            "citation": "12 U.S.C. § 2801 et seq.",
+            "section": "§2801 et seq.",
+            "summary": (
+                "HMDA requires lenders to collect and publicly disclose data about mortgage "
+                "loan applications, including demographic information about applicants. "
+                "This data is used by regulators and consumers to identify potential patterns "
+                "of lending discrimination (redlining). HMDA data includes loan type, purpose, "
+                "amount, location, applicant race/ethnicity/sex, income, and action taken "
+                "(originated, denied, withdrawn). Disparities in HMDA data can support claims "
+                "of ECOA and FHA violations. Creditors who deny mortgages in a discriminatory "
+                "pattern may face both HMDA reporting violations and civil rights enforcement."
+            ),
+            "effective_date": "1976-01-01",
+            "category": "lending",
+            "source_url": "https://www.consumerfinance.gov/data-research/hmda/",
+        },
     ]
 
     existing = set()
@@ -1264,6 +1425,250 @@ def seed_state_laws(db):
                 "all pre-petition debts except those enumerated in § 523."
             ),
             "effective_as_of": "1979-10-01",
+        },
+        # Pennsylvania
+        {
+            "state": "PA",
+            "statute": "PA Fair Credit Extension Uniformity Act",
+            "citation": "73 P.S. § 2270.1 et seq.",
+            "topic": "debt_collection",
+            "summary": (
+                "Pennsylvania's FCEUA extends FDCPA-style protections to all creditors, "
+                "including original creditors collecting their own debts. Prohibits deceptive, "
+                "harassing, and abusive collection practices. The FCEUA is enforced under the "
+                "Unfair Trade Practices and Consumer Protection Law (UTPCPL), which permits "
+                "triple damages for willful violations."
+            ),
+            "effective_as_of": "1977-01-01",
+        },
+        {
+            "state": "PA",
+            "statute": "PA Statute of Limitations",
+            "citation": "42 Pa. C.S. § 5525",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Pennsylvania's SOL for written contracts and credit card debt is 4 years. "
+                "The 4-year period begins when the cause of action accrues, typically the "
+                "date of last payment or the date the account is charged off."
+            ),
+            "effective_as_of": "1982-01-01",
+        },
+        # Michigan
+        {
+            "state": "MI",
+            "statute": "MI Collection Practices Act",
+            "citation": "M.C.L. § 445.251 et seq.",
+            "topic": "debt_collection",
+            "summary": (
+                "Michigan's Collection Practices Act prohibits deceptive, harassing, and "
+                "oppressive debt collection practices by both original creditors and collection "
+                "agencies. The Act mirrors many FDCPA provisions and provides private rights "
+                "of action for violations. The Michigan Attorney General also has enforcement "
+                "authority."
+            ),
+            "effective_as_of": "1978-01-01",
+        },
+        {
+            "state": "MI",
+            "statute": "MI Statute of Limitations",
+            "citation": "M.C.L. § 600.5807",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Michigan's SOL for written contracts (including credit cards) is 6 years. "
+                "The SOL runs from the date the cause of action accrues, typically the date "
+                "of default or last payment."
+            ),
+            "effective_as_of": "1961-01-01",
+        },
+        # Arizona
+        {
+            "state": "AZ",
+            "statute": "AZ Consumer Fraud Act",
+            "citation": "A.R.S. § 44-1521 et seq.",
+            "topic": "consumer_protection",
+            "summary": (
+                "Arizona's Consumer Fraud Act prohibits deceptive and misleading acts in "
+                "connection with the sale or advertisement of merchandise. The Act applies "
+                "to debt collection and credit repair. The Arizona Attorney General enforces "
+                "the Act and consumers have a private right of action for actual damages."
+            ),
+            "effective_as_of": "1967-01-01",
+        },
+        {
+            "state": "AZ",
+            "statute": "AZ Statute of Limitations",
+            "citation": "A.R.S. § 12-548",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Arizona's SOL for credit card debt and open accounts is 6 years. "
+                "For written contracts, the SOL is also 6 years. The period runs from the "
+                "date of default or last payment."
+            ),
+            "effective_as_of": "1989-01-01",
+        },
+        # Washington
+        {
+            "state": "WA",
+            "statute": "WA Collection Agency Act",
+            "citation": "RCW 19.16.100 et seq.",
+            "topic": "debt_collection",
+            "summary": (
+                "Washington's Collection Agency Act requires debt collectors to be licensed "
+                "by the Washington Department of Financial Institutions. The Act prohibits "
+                "deceptive, harassing, and misleading collection practices. Washington also "
+                "applies its Consumer Protection Act (CPA) to debt collection, which allows "
+                "triple damages up to $25,000 per violation."
+            ),
+            "effective_as_of": "1971-01-01",
+        },
+        {
+            "state": "WA",
+            "statute": "WA Statute of Limitations",
+            "citation": "RCW 4.16.040",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Washington's SOL for written contracts is 6 years. For credit cards and "
+                "open-end accounts, courts apply a 6-year SOL from the date of default. "
+                "Washington courts look to the date the account became due and unpaid."
+            ),
+            "effective_as_of": "1891-01-01",
+        },
+        # Colorado
+        {
+            "state": "CO",
+            "statute": "CO Fair Debt Collection Practices Act",
+            "citation": "C.R.S. § 5-16-101 et seq.",
+            "topic": "debt_collection",
+            "summary": (
+                "Colorado's FDCPA supplements the federal FDCPA and applies to original "
+                "creditors as well as third-party collectors. Colorado requires debt collectors "
+                "to be licensed with the state. The Act prohibits deceptive and abusive "
+                "collection practices. Colorado's Administrator may issue cease-and-desist "
+                "orders and assess civil penalties."
+            ),
+            "effective_as_of": "1985-01-01",
+        },
+        {
+            "state": "CO",
+            "statute": "CO Statute of Limitations",
+            "citation": "C.R.S. § 13-80-101",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Colorado's SOL for written contracts and credit card debt is 6 years. "
+                "The SOL runs from the date the obligation was due. Colorado was formerly "
+                "3 years for some debt types but standardized to 6 years."
+            ),
+            "effective_as_of": "1986-01-01",
+        },
+        # Massachusetts
+        {
+            "state": "MA",
+            "statute": "MA Consumer Protection Act Chapter 93A",
+            "citation": "M.G.L. c. 93A",
+            "topic": "consumer_protection",
+            "summary": (
+                "Massachusetts Chapter 93A is one of the broadest state consumer protection "
+                "laws in the country, prohibiting unfair or deceptive acts or practices in "
+                "trade or commerce. Applied aggressively to debt collection and credit "
+                "reporting. Consumers may recover actual damages or $25 minimum, double or "
+                "triple damages for willful violations, and attorney fees. "
+                "The Massachusetts AG also enforces Chapter 93A."
+            ),
+            "effective_as_of": "1967-01-01",
+        },
+        {
+            "state": "MA",
+            "statute": "MA Statute of Limitations",
+            "citation": "M.G.L. c. 260 § 2",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Massachusetts' SOL for written contracts and most consumer debt is 6 years. "
+                "The SOL runs from the date the cause of action accrues, typically the date of "
+                "last payment or breach of the credit agreement."
+            ),
+            "effective_as_of": "1836-01-01",
+        },
+        # Minnesota
+        {
+            "state": "MN",
+            "statute": "MN Debt Collection Act",
+            "citation": "Minn. Stat. § 332.31 et seq.",
+            "topic": "debt_collection",
+            "summary": (
+                "Minnesota's Debt Collection Act licenses and regulates debt collectors, "
+                "prohibiting deceptive, abusive, and misleading collection practices. "
+                "Minnesota imposes additional disclosure requirements beyond the FDCPA, "
+                "including specific language requirements for collection notices. "
+                "Violations may result in license revocation, civil penalties, and private "
+                "actions for damages."
+            ),
+            "effective_as_of": "1971-01-01",
+        },
+        {
+            "state": "MN",
+            "statute": "MN Statute of Limitations",
+            "citation": "Minn. Stat. § 541.05",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Minnesota's SOL for written contracts and credit card debt is 6 years. "
+                "The SOL generally begins running from the date of last payment or breach."
+            ),
+            "effective_as_of": "1866-01-01",
+        },
+        # Nevada
+        {
+            "state": "NV",
+            "statute": "NV Consumer Fraud Provisions",
+            "citation": "NRS 598.0903 et seq.",
+            "topic": "consumer_protection",
+            "summary": (
+                "Nevada's consumer protection statutes prohibit deceptive trade practices, "
+                "including deceptive debt collection and credit repair practices. Nevada "
+                "requires debt collection agencies to be licensed. The Nevada AG and the "
+                "Commissioner of Financial Institutions have enforcement authority. "
+                "Consumers may seek actual damages and civil penalties for violations."
+            ),
+            "effective_as_of": "1973-01-01",
+        },
+        {
+            "state": "NV",
+            "statute": "NV Statute of Limitations",
+            "citation": "NRS 11.190",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "Nevada's SOL for written contracts and credit card debt is 6 years. "
+                "The SOL begins running from the date the contract was breached or the "
+                "date of last payment."
+            ),
+            "effective_as_of": "1861-01-01",
+        },
+        # New Jersey
+        {
+            "state": "NJ",
+            "statute": "NJ Consumer Fraud Act",
+            "citation": "N.J.S.A. 56:8-1 et seq.",
+            "topic": "consumer_protection",
+            "summary": (
+                "New Jersey's Consumer Fraud Act (CFA) is one of the strongest consumer "
+                "protection laws in the country. It prohibits unconscionable commercial "
+                "practices, deception, fraud, false pretense, misrepresentation, and "
+                "concealment in connection with the sale or advertisement of merchandise. "
+                "Debt collection and credit repair are covered. Consumers may recover "
+                "treble damages and attorney fees. The NJ AG has broad enforcement powers."
+            ),
+            "effective_as_of": "1960-01-01",
+        },
+        {
+            "state": "NJ",
+            "statute": "NJ Statute of Limitations",
+            "citation": "N.J.S.A. 2A:14-1",
+            "topic": "statute_of_limitations",
+            "summary": (
+                "New Jersey's SOL for written contracts and credit card debt is 6 years. "
+                "The SOL runs from the date the cause of action accrues, typically the "
+                "date of breach or last payment."
+            ),
+            "effective_as_of": "1951-01-01",
         },
         # SCRA
         {

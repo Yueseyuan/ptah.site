@@ -68,7 +68,7 @@ def delete_inquiry(inquiry_id: int, db: Session = Depends(get_db), _user: User =
 
 
 @router.post("/case/{case_id}/analyze")
-def analyze_inquiries(case_id: int, db: Session = Depends(get_db)):
+def analyze_inquiries(case_id: int, db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
     from app.services.inquiry_service import run_inquiry_analysis
     from app.models import Finding
 

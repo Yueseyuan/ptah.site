@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Tradeline, Metro2Finding
+from app.models import Tradeline, Metro2Finding, User
+from app.dependencies import get_current_user
 from app.services.metro2_service import run_metro2_rules
 
 router = APIRouter(prefix="/api/metro2", tags=["metro2"])
@@ -22,7 +23,7 @@ def _out(f: Metro2Finding) -> dict:
 
 
 @router.post("/case/{case_id}/analyze")
-def analyze_case(case_id: int, db: Session = Depends(get_db)):
+def analyze_case(case_id: int, db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
     """Run Metro 2 rules engine against all tradelines for a case.
 
     Deletes any existing Metro2Finding rows for the case, then saves new findings.
@@ -32,29 +33,27 @@ def analyze_case(case_id: int, db: Session = Depends(get_db)):
     if not tradelines:
         raise HTTPException(400, "No tradelines found for this case. Upload and parse credit reports first.")
 
-    # Delete old findings
-    db.query(Metro2Finding).filter(Metro2Finding.case_id == case_id).delete()
-    db.flush()
+    try:
+        db.query(Metro2Finding).filter(Metro2Finding.case_id == case_id).delete()
+        raw_findings = run_metro2_rules(tradelines)
+        saved = []
+        for fd in raw_findings:
+            finding = Metro2Finding(
+                case_id=case_id,
+                tradeline_id=fd.get("tradeline_id"),
+                rule_code=fd.get("rule_code", ""),
+                rule_name=fd.get("rule_name", ""),
+                severity=fd.get("severity", "medium"),
+                description=fd.get("description", ""),
+                fcra_section=fd.get("fcra_section", ""),
+            )
+            db.add(finding)
+            saved.append(finding)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(500, "Metro 2 analysis failed. Database rolled back.")
 
-    # Run rules
-    raw_findings = run_metro2_rules(tradelines)
-
-    # Save findings
-    saved = []
-    for fd in raw_findings:
-        finding = Metro2Finding(
-            case_id=case_id,
-            tradeline_id=fd.get("tradeline_id"),
-            rule_code=fd.get("rule_code", ""),
-            rule_name=fd.get("rule_name", ""),
-            severity=fd.get("severity", "medium"),
-            description=fd.get("description", ""),
-            fcra_section=fd.get("fcra_section", ""),
-        )
-        db.add(finding)
-        saved.append(finding)
-
-    db.commit()
     for f in saved:
         db.refresh(f)
 
@@ -73,7 +72,7 @@ def analyze_case(case_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/case/{case_id}")
-def list_findings(case_id: int, db: Session = Depends(get_db)):
+def list_findings(case_id: int, db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
     """List all Metro2Finding rows for a case, ordered by severity."""
     severity_order = {"high": 0, "medium": 1, "low": 2, "info": 3}
     findings = db.query(Metro2Finding).filter(Metro2Finding.case_id == case_id).all()

@@ -4,8 +4,11 @@ Based on the CDIA Metro 2 Format specification and FCRA/FDCPA regulatory framewo
 Covers: FCRA §§604-625, FDCPA §§1692a-k, 11 U.S.C. §524, Metro 2 CRRG §§1-4.
 All findings require human review — this tool identifies potential issues only.
 """
+import logging
 from datetime import date, datetime
 from typing import Optional
+
+_log = logging.getLogger(__name__)
 
 
 # ── Metro 2 Reference Tables ──────────────────────────────────────────────────
@@ -68,6 +71,11 @@ COMPLIANCE_CONDITION_LABELS = {
     "X7": "Consumer location unknown",
     "X8": "Account in active litigation",
     "X9": "Account belongs to deceased consumer",
+    "XA": "Reaffirmation of debt",
+    "XB": "Reinstatement",
+    "XC": "Adjustment pending",
+    "XD": "Credit grantor cannot locate consumer",
+    "XE": "Account in repayment plan",
 }
 
 # Payment status → expected Metro 2 payment rating
@@ -114,6 +122,14 @@ def _today() -> date:
     return date.today()
 
 
+def _add_years(d: date, years: int) -> date:
+    """Add calendar years to a date, clamping Feb-29 to Feb-28 in non-leap years."""
+    try:
+        return d.replace(year=d.year + years)
+    except ValueError:
+        return d.replace(year=d.year + years, day=28)
+
+
 def _rating_label(r: str) -> str:
     return PAYMENT_RATING_LABELS.get(r.upper(), "unknown")
 
@@ -129,7 +145,7 @@ def _rule_dofd_7yr(tl) -> list:
     if dofd is None:
         return []
     delta = (_today() - dofd).days
-    if delta > 7 * 365:
+    if _today() >= _add_years(dofd, 7):
         return [{
             "tradeline_id": tl.id,
             "rule_code": "DOFD_7YR",
@@ -153,7 +169,7 @@ def _rule_dofd_approaching(tl) -> list:
     dofd = _parse_date(tl.dofd)
     if dofd is None:
         return []
-    cutoff = date(dofd.year + 7, dofd.month, dofd.day)
+    cutoff = _add_years(dofd, 7)
     days_left = (cutoff - _today()).days
     if 0 < days_left <= 180:
         return [{
@@ -454,7 +470,7 @@ def _rule_bankruptcy_10yr(tl) -> list:
     if dofd is None:
         return []
     delta = (_today() - dofd).days
-    if delta > 10 * 365:
+    if _today() >= _add_years(dofd, 10):
         return [{
             "tradeline_id": tl.id,
             "rule_code": "BANKRUPTCY_10YR",
@@ -723,7 +739,7 @@ def _cross_bureau_rules(tradelines: list) -> list[dict]:
     for tl in tradelines:
         name = (tl.creditor_name or "").strip().lower()
         last4 = (tl.account_number_last4 or "").strip()
-        if not name:
+        if not name or not last4:
             continue
         key = f"{name}||{last4}"
         groups.setdefault(key, []).append(tl)
@@ -901,12 +917,12 @@ def run_metro2_rules(tradelines: list) -> list[dict]:
         for rule_fn in _INDIVIDUAL_RULES:
             try:
                 findings.extend(rule_fn(tl))
-            except Exception:
-                pass
+            except Exception as e:
+                _log.warning("Metro2 rule %s failed on tradeline %s: %s", rule_fn.__name__, getattr(tl, 'id', '?'), e)
 
     try:
         findings.extend(_cross_bureau_rules(tradelines))
-    except Exception:
-        pass
+    except Exception as e:
+        _log.warning("Metro2 cross-bureau rules failed: %s", e)
 
     return findings

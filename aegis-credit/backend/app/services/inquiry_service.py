@@ -57,7 +57,7 @@ def run_inquiry_analysis(inquiries):
                             "rule_name": "Duplicate Inquiry",
                             "severity": "medium",
                             "description": (
-                                "Potential duplicate inquiry: {} appears {} times on {}. "
+                                "Potential duplicate inquiry: {} appears {} time(s) on {} within 30 days. "
                                 "Review recommended.".format(
                                     subscriber.title(), n, bureau.title()
                                 )
@@ -70,17 +70,17 @@ def run_inquiry_analysis(inquiries):
 
     # -- INQ-002: Inquiry Conflict (same subscriber on multiple bureaus, different dates)
     try:
-        subscriber_bureaus = defaultdict(dict)
+        subscriber_bureaus: dict[str, dict[str, set]] = defaultdict(lambda: defaultdict(set))
         for inq in inquiries:
             bureau = (inq.get("bureau") or "unknown").lower()
             subscriber = (inq.get("subscriber_name") or "").strip().lower()
             date_str = inq.get("inquiry_date") or ""
             if subscriber and date_str:
-                subscriber_bureaus[subscriber][bureau] = date_str
+                subscriber_bureaus[subscriber][bureau].add(date_str)
 
         for subscriber, bureau_dates in subscriber_bureaus.items():
             if len(bureau_dates) >= 2:
-                unique_dates = set(bureau_dates.values())
+                unique_dates = {d for dates in bureau_dates.values() for d in dates}
                 if len(unique_dates) > 1:
                     findings.append({
                         "rule_code": "INQ-002",

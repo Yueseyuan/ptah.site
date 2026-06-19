@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const portalApi = axios.create({
+export const portalApi = axios.create({
   baseURL: 'http://localhost:8082',
 });
 

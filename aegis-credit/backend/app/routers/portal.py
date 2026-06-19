@@ -3,6 +3,7 @@ import os
 import uuid
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
@@ -362,3 +363,145 @@ def mark_document_reviewed(
     doc.reviewed = True
     db.commit()
     return {"ok": True}
+
+
+# ── Letter Downloads ──────────────────────────────────────────────────────────
+
+def _get_client_and_case(current_user: User, db: Session):
+    """Helper: return (client, case) for the authenticated portal user."""
+    client = db.query(AegisClient).filter(AegisClient.portal_user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(404, "No client profile found")
+    case = db.query(AegisCase).filter(AegisCase.client_id == client.id).order_by(AegisCase.id.desc()).first()
+    if not case:
+        raise HTTPException(404, "No case found")
+    return client, case
+
+
+@router.get("/letters")
+def list_portal_letters(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List letters available for download by the portal client."""
+    from app.models import DisputeRound
+    client, case = _get_client_and_case(current_user, db)
+
+    rounds = db.query(DisputeRound).filter(DisputeRound.case_id == case.id).order_by(
+        DisputeRound.round_number, DisputeRound.id
+    ).all()
+
+    ROUND_TYPE_LABELS = {
+        "bureau":                  "Bureau Dispute Letter",
+        "creditor":                "Creditor Dispute Letter",
+        "debt_collector":          "Debt Collector Letter",
+        "failure_to_investigate":  "Failure to Investigate Letter",
+        "method_of_verification":  "Method of Verification Letter",
+        "full_file_disclosure":    "Full File Disclosure Request",
+        "cease_desist":            "Cease & Desist Letter",
+        "cfpb_complaint":          "CFPB Complaint",
+        "student_loan":            "Student Loan Dispute Letter",
+        "personal_info_dispute":   "Personal Information Dispute",
+    }
+
+    dispute_letters = [
+        {
+            "id": f"dispute_{r.id}",
+            "type": "dispute",
+            "round_id": r.id,
+            "label": ROUND_TYPE_LABELS.get(r.recipient_type or "", "Dispute Letter"),
+            "recipient": r.bureau or r.recipient_name or r.recipient_type,
+            "round_number": r.round_number,
+            "status": r.status,
+            "sent_date": r.sent_date,
+            "download_url": f"/api/portal/letters/dispute/{r.id}",
+        }
+        for r in rounds
+    ]
+
+    static_letters = [
+        {
+            "id": "affidavit",
+            "type": "affidavit",
+            "label": "Affidavit of Truth",
+            "recipient": "All Bureaus / Creditors",
+            "download_url": "/api/portal/letters/affidavit",
+        },
+        {
+            "id": "authorization",
+            "type": "authorization",
+            "label": "Authorization Letter",
+            "recipient": "Cruel & Associates",
+            "download_url": "/api/portal/letters/authorization",
+        },
+    ]
+
+    return {"dispute_letters": dispute_letters, "static_letters": static_letters}
+
+
+@router.get("/letters/affidavit")
+def portal_download_affidavit(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Client: download their Affidavit of Truth."""
+    from app.routers.report_generator import _make_affidavit
+    client, case = _get_client_and_case(current_user, db)
+    today = datetime.now().strftime("%B %d, %Y")
+    content = _make_affidavit(client, case, today)
+    filename = f"Affidavit_{client.last_name}_{client.first_name}_{datetime.now().strftime('%Y%m%d')}.txt"
+    return PlainTextResponse(
+        content,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/letters/authorization")
+def portal_download_authorization(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Client: download their Authorization Letter."""
+    from app.routers.report_generator import _make_authorization_letter
+    client, case = _get_client_and_case(current_user, db)
+    today = datetime.now().strftime("%B %d, %Y")
+    content = _make_authorization_letter(client, today)
+    filename = f"Authorization_{client.last_name}_{client.first_name}_{datetime.now().strftime('%Y%m%d')}.txt"
+    return PlainTextResponse(
+        content,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/letters/dispute/{round_id}")
+def portal_download_dispute_letter(
+    round_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Client: download a specific dispute letter (ownership-verified)."""
+    from app.models import DisputeRound
+    from app.routers.report_generator import _make_dispute_letter
+    client, case = _get_client_and_case(current_user, db)
+
+    round_ = db.query(DisputeRound).filter(
+        DisputeRound.id == round_id,
+        DisputeRound.case_id == case.id,
+    ).first()
+    if not round_:
+        raise HTTPException(404, "Letter not found")
+
+    no_items_ok = (round_.recipient_type or "").lower() in (
+        "full_file_disclosure", "cfpb_complaint", "personal_info_dispute",
+    )
+    if not round_.items and not no_items_ok:
+        raise HTTPException(400, "This letter has no dispute items yet — contact your case manager.")
+
+    today = datetime.now().strftime("%B %d, %Y")
+    content = _make_dispute_letter(round_, client, today)
+    slug = (round_.bureau or round_.recipient_name or round_.recipient_type or "letter").replace(" ", "_").lower()
+    filename = f"Letter_{slug}_Round{round_.round_number}_{datetime.now().strftime('%Y%m%d')}.txt"
+    return PlainTextResponse(
+        content,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

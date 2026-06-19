@@ -129,6 +129,15 @@ export default function PortalDashboard() {
           linkLabel="View Disputes"
         />
         <ActionCard
+          icon="📩"
+          title="My Letters"
+          status="info"
+          statusLabel="Download"
+          description="Download dispute letters, affidavits, and your authorization document prepared for your case."
+          linkHref="/portal/letters"
+          linkLabel="View Letters"
+        />
+        <ActionCard
           icon="📬"
           title="Need Help?"
           status="info"

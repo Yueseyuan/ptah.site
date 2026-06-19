@@ -47,7 +47,7 @@ export default function PersonalInfoPage() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [piForm, setPiForm] = useState({ bureau: 'experian', current_name: '', current_address: '', dob: '', ssn_last4: '', current_employer: '' });
+  const [piForm, setPiForm] = useState({ bureau: 'experian', current_name: '', aliases: '', current_address: '', previous_addresses: '', current_employer: '', previous_employers: '', phone_numbers: '', dob: '', ssn_last4: '' });
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -66,7 +66,7 @@ export default function PersonalInfoPage() {
         await createPersonalInfo({ ...piForm, bureau: b, case_id: caseId });
       }
       setShowForm(false);
-      setPiForm({ bureau: 'experian', current_name: '', current_address: '', dob: '', ssn_last4: '', current_employer: '' });
+      setPiForm({ bureau: 'experian', current_name: '', aliases: '', current_address: '', previous_addresses: '', current_employer: '', previous_employers: '', phone_numbers: '', dob: '', ssn_last4: '' });
       load();
     } catch { setError('Failed to add record.'); }
     finally { setAdding(false); }
@@ -129,10 +129,14 @@ export default function PersonalInfoPage() {
                   </select>
                 </div>
                 <div className="form-group"><label>Name on Report *</label><input required value={piForm.current_name} onChange={e => setPiForm(f => ({ ...f, current_name: e.target.value }))} /></div>
+                <div className="form-group"><label>Aliases / Also Known As</label><input value={piForm.aliases} onChange={e => setPiForm(f => ({ ...f, aliases: e.target.value }))} placeholder="e.g. Randy Sullivan, R Sullivan" /></div>
                 <div className="form-group"><label>Current Address</label><input value={piForm.current_address} onChange={e => setPiForm(f => ({ ...f, current_address: e.target.value }))} /></div>
+                <div className="form-group"><label>Previous Addresses</label><input value={piForm.previous_addresses} onChange={e => setPiForm(f => ({ ...f, previous_addresses: e.target.value }))} placeholder="Separate multiple with semicolon" /></div>
                 <div className="form-group"><label>Date of Birth</label><input type="date" value={piForm.dob} onChange={e => setPiForm(f => ({ ...f, dob: e.target.value }))} /></div>
                 <div className="form-group"><label>SSN Last 4</label><input maxLength={4} value={piForm.ssn_last4} onChange={e => setPiForm(f => ({ ...f, ssn_last4: e.target.value.replace(/\D/g,'').slice(0,4) }))} placeholder="xxxx" /></div>
                 <div className="form-group"><label>Current Employer</label><input value={piForm.current_employer} onChange={e => setPiForm(f => ({ ...f, current_employer: e.target.value }))} /></div>
+                <div className="form-group"><label>Previous Employers</label><input value={piForm.previous_employers} onChange={e => setPiForm(f => ({ ...f, previous_employers: e.target.value }))} placeholder="Separate multiple with semicolon" /></div>
+                <div className="form-group"><label>Phone Numbers</label><input value={piForm.phone_numbers} onChange={e => setPiForm(f => ({ ...f, phone_numbers: e.target.value }))} placeholder="Separate multiple with semicolon" /></div>
               </div>
               <button type="submit" className="btn btn-primary btn-sm" disabled={adding}>{adding ? 'Saving…' : 'Save Record'}</button>
             </form>

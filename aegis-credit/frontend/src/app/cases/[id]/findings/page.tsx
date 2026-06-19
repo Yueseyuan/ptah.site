@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listFindings, generateFindings, updateFinding, approveFinding, listDisputeRounds, addFindingToDispute, bulkUpdateFindings } from '@/lib/api';
+import { listFindings, generateFindings, updateFinding, approveFinding, listDisputeRounds, addFindingToDispute, bulkUpdateFindings, consultAI } from '@/lib/api';
 
 interface Finding { id: number; finding_type: string; severity: string; title: string; description: string; fcra_section: string; requires_human_review: boolean; status: string; tradeline_id?: number; }
 interface Round { id: number; round_number: number; bureau: string; status: string; }
@@ -34,6 +34,9 @@ export default function FindingsPage() {
   const [filterStatus, setFilterStatus] = useState('');
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkWorking, setBulkWorking] = useState(false);
+  const [consultForm, setConsultForm] = useState<{ findingId: number; theory: string; law: string } | null>(null);
+  const [consultResult, setConsultResult] = useState<Record<number, string>>({});
+  const [consulting, setConsulting] = useState(false);
 
   function load() {
     Promise.all([
@@ -74,6 +77,26 @@ export default function FindingsPage() {
     } catch (err: unknown) {
       const e = err as { message?: string };
       setError(e.message || 'Failed to add to dispute.');
+    }
+  }
+
+  async function submitConsult(findingId: number) {
+    if (!consultForm) return;
+    setConsulting(true);
+    try {
+      const r = await consultAI(caseId, {
+        finding_id: findingId,
+        user_theory: consultForm.theory,
+        law_reference: consultForm.law || undefined,
+      });
+      setConsultResult(prev => ({ ...prev, [findingId]: r.analysis }));
+      setConsultForm(null);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { detail?: unknown } }; message?: string };
+      const d = e.response?.data?.detail;
+      setError(typeof d === 'string' ? d : (e.message || 'AI consult failed.'));
+    } finally {
+      setConsulting(false);
     }
   }
 
@@ -223,6 +246,13 @@ export default function FindingsPage() {
                           + Add to Dispute
                         </button>
                       )}
+                      <button
+                        onClick={() => setConsultForm(consultForm?.findingId === f.id ? null : { findingId: f.id, theory: '', law: '' })}
+                        className="btn"
+                        style={{ fontSize: 12, padding: '4px 10px', background: '#f3e8ff', color: '#6b21a8', border: 'none' }}
+                      >
+                        &#129504; AI Consult
+                      </button>
                     </div>
                   </div>
 
@@ -238,6 +268,63 @@ export default function FindingsPage() {
                       </select>
                       <button onClick={submitToDispute} className="btn btn-primary" style={{ fontSize: 12, padding: '4px 10px' }}>Add</button>
                       <button onClick={() => setDisputeForm(null)} className="btn" style={{ fontSize: 12, padding: '4px 10px' }}>Cancel</button>
+                    </div>
+                  )}
+
+                  {/* AI Consult panel */}
+                  {consultForm?.findingId === f.id && (
+                    <div style={{ marginTop: 10, padding: '12px 14px', background: '#faf5ff', borderRadius: 6, border: '1px solid #d8b4fe' }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: '#6b21a8', marginBottom: 8 }}>&#129504; AI Legal Theory Consultation</div>
+                      <div className="form-group" style={{ marginBottom: 8 }}>
+                        <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>Legal Theory / Question *</label>
+                        <textarea
+                          rows={3}
+                          value={consultForm.theory}
+                          onChange={e => setConsultForm(c => c ? { ...c, theory: e.target.value } : c)}
+                          placeholder="Describe your legal theory or question about this finding (e.g., 'This account is past the 7-year reporting limit under FCRA §605(a)')"
+                          style={{ fontSize: 13, width: '100%', padding: '6px 8px', border: '1px solid #d8b4fe', borderRadius: 4, resize: 'vertical' }}
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 10 }}>
+                        <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>Law/Rule Reference (optional)</label>
+                        <input
+                          value={consultForm.law}
+                          onChange={e => setConsultForm(c => c ? { ...c, law: e.target.value } : c)}
+                          placeholder="e.g., FCRA §605(c), HIPAA 45 CFR §164.502"
+                          style={{ fontSize: 13, width: '100%', padding: '6px 8px', border: '1px solid #d8b4fe', borderRadius: 4 }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => submitConsult(f.id)}
+                          disabled={consulting || !consultForm.theory.trim()}
+                          className="btn btn-primary"
+                          style={{ fontSize: 12, padding: '5px 14px', background: '#7c3aed', border: 'none' }}
+                        >
+                          {consulting ? 'Consulting AI…' : 'Consult AI'}
+                        </button>
+                        <button onClick={() => setConsultForm(null)} className="btn" style={{ fontSize: 12, padding: '5px 10px' }}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Consult result */}
+                  {consultResult[f.id] && (
+                    <div style={{ marginTop: 10, padding: '12px 14px', background: '#fdf4ff', borderRadius: 6, border: '1px solid #e9d5ff' }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: '#6b21a8', marginBottom: 8 }}>&#129504; AI Analysis</div>
+                      <div style={{ fontSize: 13, whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'var(--text)', fontFamily: 'inherit' }}>
+                        {consultResult[f.id]}
+                      </div>
+                      <div style={{ marginTop: 10, padding: '6px 10px', background: '#fef9c3', borderRadius: 4, fontSize: 11, color: '#713f12', fontWeight: 500 }}>
+                        &#9888; This analysis is for investigator review only. Not legal advice. No outcome guaranteed.
+                      </div>
+                      <button
+                        onClick={() => setConsultResult(prev => { const next = {...prev}; delete next[f.id]; return next; })}
+                        className="btn"
+                        style={{ fontSize: 11, padding: '3px 8px', marginTop: 8, color: 'var(--text-muted)', border: 'none', background: 'transparent' }}
+                      >
+                        &#215; Dismiss
+                      </button>
                     </div>
                   )}
                 </div>

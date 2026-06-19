@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # Stripe
     STRIPE_SECRET_KEY: str = ""
     STRIPE_PUBLISHABLE_KEY: str = "pk_live_51Tk9NxFLqRbXTdYOYumLBIhxFsIG3d6i5AVAQBRbEju7xMPQI1JY28szDAlv2QWxz4yTh2u2Iq1Zrwv1hMHuR1kk00XcYyvS7S"
-    STRIPE_PRICE_ID: str = ""
+    STRIPE_PRICE_ID: str = "price_1TkA6ZFLqRbXTdYOP1kRMvT5"
     STRIPE_WEBHOOK_SECRET: str = ""
     PORTAL_BASE_URL: str = "https://cruelandassociates.site"
 

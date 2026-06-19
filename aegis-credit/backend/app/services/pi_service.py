@@ -5,16 +5,19 @@ import json
 
 
 def _parse_json_list(value):
-    """Safely parse a JSON list stored as text."""
+    """Parse a list stored as JSON array or semicolon-separated plain text."""
     if not value:
         return []
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
     try:
         parsed = json.loads(value)
         if isinstance(parsed, list):
-            return [str(v) for v in parsed if v]
+            return [str(v).strip() for v in parsed if str(v).strip()]
     except Exception:
         pass
-    return []
+    # Fall back to semicolon-separated plain text
+    return [s.strip() for s in str(value).split(';') if s.strip()]
 
 
 def _extract_last_name(full_name):
@@ -127,6 +130,42 @@ def run_pi_analysis(pi_records):
                 "fcra_section": "FCRA §611",
             })
             triggered_rules.append("PI-003")
+    except Exception:
+        pass
+
+    # -- PI-006: Alias Inconsistency (one bureau has alias others don't)
+    try:
+        bureau_aliases: dict[str, set] = {}
+        for rec in pi_records:
+            bureau = rec.get("bureau", "unknown")
+            aliases = rec.get("aliases")
+            if isinstance(aliases, list):
+                alias_list = [a.strip().lower() for a in aliases if a and a.strip()]
+            else:
+                alias_list = [a.lower() for a in _parse_json_list(aliases)]
+            bureau_aliases[bureau] = set(alias_list)
+
+        all_aliases = set(a for s in bureau_aliases.values() for a in s)
+        for alias in all_aliases:
+            bureaus_with = [b for b, s in bureau_aliases.items() if alias in s]
+            bureaus_without = [b for b, s in bureau_aliases.items() if alias not in s]
+            if bureaus_with and bureaus_without:
+                findings.append({
+                    "rule_code": "PI-006",
+                    "rule_name": "Alias Inconsistency Across Bureaus",
+                    "severity": "medium",
+                    "description": (
+                        "Alias '{}' appears on {} but is missing from {}. "
+                        "Inconsistent alias reporting may indicate a mixed file or "
+                        "selective furnisher reporting under FCRA §623(a)(1).".format(
+                            alias.title(),
+                            ", ".join(bureaus_with),
+                            ", ".join(bureaus_without),
+                        )
+                    ),
+                    "fcra_section": "FCRA §611; FCRA §623(a)(1)",
+                })
+                triggered_rules.append("PI-006")
     except Exception:
         pass
 

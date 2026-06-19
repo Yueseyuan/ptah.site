@@ -31,6 +31,7 @@ from app.routers.collection_review import router as collection_review_router
 from app.routers.analytics import router as analytics_router
 from app.routers.search import router as search_router
 from app.routers.ai_consult import router as ai_consult_router
+from app.routers.portal import router as portal_router
 
 
 def run_migrations():
@@ -74,9 +75,13 @@ if not os.environ.get("TESTING"):
 
 app = FastAPI(title=settings.APP_NAME, version="1.0.0")
 
+_extra_origins = [o.strip() for o in settings.EXTRA_ORIGINS.split(",") if o.strip()]
+_allowed_origins = _extra_origins if _extra_origins else []
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://localhost(:\d+)?",
+    allow_origins=_allowed_origins,
+    allow_origin_regex=r"http://localhost(:\d+)?|https://(www\.)?cruelandassociates\.site",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -108,6 +113,7 @@ app.include_router(collection_review_router)
 app.include_router(analytics_router)
 app.include_router(search_router)
 app.include_router(ai_consult_router)
+app.include_router(portal_router)
 
 
 @app.get("/api/health")

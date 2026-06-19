@@ -19,8 +19,11 @@ class AegisClient(Base):
     ssn_last4 = Column(String)
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
+    # Portal link — the User account this client uses to log into the portal
+    portal_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     cases = relationship("AegisCase", back_populates="client")
     court_records = relationship("CourtRecord", back_populates="client")
+    portal_documents = relationship("ClientDocument", back_populates="client")
 
 
 class AegisCase(Base):
@@ -29,6 +32,7 @@ class AegisCase(Base):
     client_id = Column(Integer, ForeignKey("aegis_clients.id"))
     case_number = Column(String, unique=True, index=True)
     status = Column(String, default="intake")  # intake, active, on_hold, closed
+    portal_status = Column(String, default="pending")  # pending, docs_needed, under_review, active, completed
     goal = Column(Text)
     notes = Column(Text)
     assigned_to = Column(String)
@@ -407,6 +411,24 @@ class StateLaw(Base):
     superseded = Column(Boolean, default=False)
     version_notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
+
+
+class ClientDocument(Base):
+    """Documents uploaded by clients through the portal (credit reports, ID, supporting docs)."""
+    __tablename__ = "client_documents"
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(Integer, ForeignKey("aegis_cases.id"))
+    client_id = Column(Integer, ForeignKey("aegis_clients.id"))
+    # credit_report_experian | credit_report_equifax | credit_report_transunion
+    # drivers_license | proof_of_address | supporting_doc | other
+    doc_type = Column(String)
+    bureau = Column(String, nullable=True)      # populated for credit_report_* types
+    original_filename = Column(String)
+    file_path = Column(String)
+    notes = Column(Text, nullable=True)
+    uploaded_at = Column(DateTime, server_default=func.now())
+    reviewed = Column(Boolean, default=False)   # staff marks reviewed
+    client = relationship("AegisClient", back_populates="portal_documents")
 
 
 class CaseLaw(Base):

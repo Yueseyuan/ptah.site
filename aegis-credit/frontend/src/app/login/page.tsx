@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginUser, setToken, getToken } from '@/lib/api';
+import { setPortalAuth } from '@/lib/portal-api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +22,12 @@ export default function LoginPage() {
     try {
       const data = await loginUser(username, password);
       setToken(data.access_token);
-      router.push('/cases');
+      setPortalAuth(data.access_token, data.role || '');
+      if (data.role === 'client') {
+        router.push('/portal/dashboard');
+      } else {
+        router.push('/cases');
+      }
     } catch {
       setError('Invalid username or password.');
     } finally {

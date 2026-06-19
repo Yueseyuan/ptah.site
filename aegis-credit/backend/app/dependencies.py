@@ -62,3 +62,24 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return current_user
+
+
+def require_staff(current_user: User = Depends(get_current_user)) -> User:
+    """Require a staff role (admin, investigator, reviewer, readonly). Blocks portal clients."""
+    if current_user.role == "client":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff access required")
+    return current_user
+
+
+def get_portal_client(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return the AegisClient linked to the logged-in portal user."""
+    from app.models import AegisClient
+    if current_user.role not in ("client", "admin"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Portal access only")
+    client = db.query(AegisClient).filter(AegisClient.portal_user_id == current_user.id).first()
+    if not client and current_user.role != "admin":
+        raise HTTPException(status_code=404, detail="No client profile linked to this account")
+    return client

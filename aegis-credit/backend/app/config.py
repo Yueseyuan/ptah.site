@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = "change-me-in-production-use-env-var"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 480
+    # Comma-separated extra allowed CORS origins (e.g. https://cruelandassociates.site)
+    EXTRA_ORIGINS: str = ""
 
     class Config:
         env_file = ".env"

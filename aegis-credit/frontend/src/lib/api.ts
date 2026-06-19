@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const _base = typeof window !== 'undefined'
+  ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8082')
+  : 'http://localhost:8082';
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8082',
+  baseURL: _base || 'http://localhost:8082',
 });
 
 // Inject JWT token on every request

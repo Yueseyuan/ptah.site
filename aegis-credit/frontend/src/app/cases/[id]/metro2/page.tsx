@@ -61,28 +61,44 @@ function FindingCard({
 }: {
   f: Metro2Finding;
   rounds: DisputeRound[];
-  onAddToDispute: (findingId: number, roundId: number, reason: string) => Promise<void>;
+  onAddToDispute: (findingId: number, roundIds: number[], reason: string) => Promise<void>;
 }) {
+  const cross = isCrossBureau(f.rule_code);
   const [expanded, setExpanded] = useState(false);
   const [selectedRound, setSelectedRound] = useState<number | ''>('');
+  const [checkedRounds, setCheckedRounds] = useState<Set<number>>(() => new Set(rounds.map(r => r.id)));
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState('');
 
+  function toggleRound(id: number) {
+    setCheckedRounds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
   async function handleAdd() {
-    if (!selectedRound) return;
+    const ids = cross ? Array.from(checkedRounds) : (selectedRound ? [selectedRound as number] : []);
+    if (!ids.length) return;
     setSubmitting(true); setErr('');
     try {
-      await onAddToDispute(f.id, selectedRound as number, customReason || f.description);
+      await onAddToDispute(f.id, ids, customReason || f.description);
       setDone(true);
       setExpanded(false);
-    } catch {
-      setErr('Failed to add to dispute.');
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail
+        || (e as { message?: string })?.message
+        || 'Failed to add to dispute.';
+      setErr(msg);
     } finally {
       setSubmitting(false);
     }
   }
+
+  const canSubmit = cross ? checkedRounds.size > 0 : !!selectedRound;
 
   return (
     <div className="card" style={{ marginBottom: 10, borderLeft: `4px solid ${SEVERITY_BORDER[f.severity] || 'var(--border)'}` }}>
@@ -90,7 +106,7 @@ function FindingCard({
         <strong style={{ fontSize: 14 }}>{f.rule_name}</strong>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <span className={`badge ${SEVERITY_BADGE[f.severity] || 'badge-pending'}`}>{f.severity}</span>
-          {isCrossBureau(f.rule_code) && (
+          {cross && (
             <span style={{ fontSize: 11, background: '#ede9fe', color: '#5b21b6', borderRadius: 4, padding: '2px 6px' }}>cross-bureau</span>
           )}
           {done ? (
@@ -113,22 +129,41 @@ function FindingCard({
 
       {expanded && (
         <div style={{ marginTop: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 6, border: '1px solid #e2e8f0' }}>
-          <div style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Dispute Round *</label>
-            <select
-              value={selectedRound}
-              onChange={e => setSelectedRound(e.target.value ? parseInt(e.target.value) : '')}
-              style={{ width: '100%', fontSize: 13, padding: '4px 8px', borderRadius: 4, border: '1px solid #d1d5db' }}>
-              <option value="">— select a round —</option>
+          {cross ? (
+            <div style={{ marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>
+                Dispute Rounds * <span style={{ fontWeight: 400, color: '#6b7280' }}>(cross-bureau — all affected rounds pre-selected)</span>
+              </label>
               {rounds.map(r => (
-                <option key={r.id} value={r.id}>
-                  Round #{r.round_number}{r.bureau ? ` · ${r.bureau}` : ''}{r.recipient_name ? ` — ${r.recipient_name}` : ''} ({r.status})
-                </option>
+                <label key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, cursor: 'pointer', fontSize: 13 }}>
+                  <input
+                    type="checkbox"
+                    checked={checkedRounds.has(r.id)}
+                    onChange={() => toggleRound(r.id)}
+                    style={{ width: 15, height: 15 }}
+                  />
+                  <span>Round #{r.round_number}{r.bureau ? ` · ${r.bureau}` : ''}{r.recipient_name ? ` — ${r.recipient_name}` : ''} <span style={{ color: '#6b7280', fontSize: 11 }}>({r.status})</span></span>
+                </label>
               ))}
-            </select>
-          </div>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Dispute Round *</label>
+              <select
+                value={selectedRound}
+                onChange={e => setSelectedRound(e.target.value ? parseInt(e.target.value) : '')}
+                style={{ width: '100%', fontSize: 13, padding: '4px 8px', borderRadius: 4, border: '1px solid #d1d5db' }}>
+                <option value="">— select a round —</option>
+                {rounds.map(r => (
+                  <option key={r.id} value={r.id}>
+                    Round #{r.round_number}{r.bureau ? ` · ${r.bureau}` : ''}{r.recipient_name ? ` — ${r.recipient_name}` : ''} ({r.status})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Dispute Reason (optional — defaults to finding description)</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Dispute Reason (optional)</label>
             <textarea
               value={customReason}
               onChange={e => setCustomReason(e.target.value)}
@@ -137,12 +172,9 @@ function FindingCard({
               style={{ width: '100%', fontSize: 12, padding: '4px 8px', borderRadius: 4, border: '1px solid #d1d5db', resize: 'vertical', boxSizing: 'border-box' }}
             />
           </div>
-          {err && <div style={{ fontSize: 12, color: '#dc2626', marginBottom: 6 }}>{err}</div>}
-          <button
-            onClick={handleAdd}
-            disabled={!selectedRound || submitting}
-            className="btn btn-primary btn-sm">
-            {submitting ? 'Adding…' : 'Add to Dispute Round'}
+          {err && <div style={{ fontSize: 12, color: '#dc2626', marginBottom: 6, padding: '4px 8px', background: '#fef2f2', borderRadius: 4 }}>{err}</div>}
+          <button onClick={handleAdd} disabled={!canSubmit || submitting} className="btn btn-primary btn-sm">
+            {submitting ? 'Adding…' : cross ? `Add to ${checkedRounds.size} Round(s)` : 'Add to Dispute Round'}
           </button>
         </div>
       )}
@@ -197,8 +229,10 @@ export default function Metro2Page() {
     } finally { setRunning(false); }
   }
 
-  async function addToDispute(metro2FindingId: number, roundId: number, reason: string) {
-    await metro2FindingToDispute(metro2FindingId, roundId, reason);
+  async function addToDispute(metro2FindingId: number, roundIds: number[], reason: string) {
+    for (const roundId of roundIds) {
+      await metro2FindingToDispute(metro2FindingId, roundId, reason);
+    }
     loadRounds();
   }
 

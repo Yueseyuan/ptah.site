@@ -106,6 +106,10 @@ export const downloadGeneratedReport = (reportId: number) =>
   api.get(`/api/report-generator/${reportId}/download`, { responseType: 'blob' }).then(r => r.data);
 export const downloadDisputeLetter = (roundId: number) =>
   api.get(`/api/report-generator/dispute-letter/${roundId}`, { responseType: 'blob' }).then(r => r.data);
+export const downloadAffidavit = (caseId: number) =>
+  api.get(`/api/report-generator/affidavit/${caseId}`, { responseType: 'blob' }).then(r => r.data);
+export const downloadAuthorization = (caseId: number) =>
+  api.get(`/api/report-generator/authorization/${caseId}`, { responseType: 'blob' }).then(r => r.data);
 
 // Disputes
 export const listDisputeRounds = (caseId: number) => api.get(`/api/disputes/case/${caseId}`).then(r => r.data);

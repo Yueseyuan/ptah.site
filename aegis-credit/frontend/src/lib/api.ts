@@ -127,6 +127,8 @@ export const deleteOutcome = (id: number) => api.delete(`/api/outcomes/${id}`);
 // Metro 2
 export const runMetro2Analysis = (caseId: number) => api.post(`/api/metro2/case/${caseId}/analyze`).then(r => r.data);
 export const listMetro2Findings = (caseId: number) => api.get(`/api/metro2/case/${caseId}`).then(r => r.data);
+export const metro2FindingToDispute = (metro2FindingId: number, roundId: number, disputeReason?: string) =>
+  api.post(`/api/metro2/findings/${metro2FindingId}/to-dispute`, { round_id: roundId, dispute_reason: disputeReason }).then(r => r.data);
 
 // Learning
 export const listLearning = (filters?: { bureau?: string; outcome?: string }) =>

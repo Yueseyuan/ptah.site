@@ -25,6 +25,12 @@ def _make_dispute_letter(round_: DisputeRound, client: AegisClient, today: str) 
     # Determine recipient address block
     if is_bureau and round_.bureau:
         recipient_addr = _BUREAU_ADDRESS.get(round_.bureau.lower(), round_.bureau.upper())
+    elif recipient_type == "cfpb":
+        recipient_addr = "Consumer Financial Protection Bureau\nP.O. Box 27170\nWashington, DC 20038"
+    elif recipient_type == "ftc":
+        recipient_addr = "Federal Trade Commission\nConsumer Response Center\n600 Pennsylvania Avenue NW\nWashington, DC 20580"
+    elif recipient_type == "state_ag":
+        recipient_addr = round_.recipient_address or "State Attorney General Office\n[Your State]"
     elif round_.recipient_name:
         recipient_addr = round_.recipient_name
         if round_.recipient_address:
@@ -82,6 +88,212 @@ def _make_dispute_letter(round_: DisputeRound, client: AegisClient, today: str) 
             "and instruct all credit reporting agencies to delete the account.",
         ]
         compliance = "FDCPA § 809(b), FCRA § 623"
+    elif recipient_type == "cfpb":
+        re_line = f"RE: Formal Complaint — Bureau/Furnisher Failed to Correct Inaccurate Information"
+        authority_line = "    Pursuant to FCRA §§ 611, 623"
+        body_intro = [
+            "I am filing this formal complaint with the Consumer Financial Protection Bureau",
+            "because a prior dispute submitted directly to the credit bureau and/or furnisher",
+            "was ignored or resulted in an insufficient investigation. The inaccurate information",
+            "described below continues to appear on my credit report in violation of FCRA §§ 611",
+            "and 623. I am escalating this matter to the Bureau and requesting federal",
+            "investigation and enforcement action.",
+        ]
+        close_demands = [
+            "I respectfully request that the CFPB:",
+            "  1. Investigate the failure of the credit bureau and/or furnisher to comply with FCRA.",
+            "  2. Direct the responsible parties to correct or delete the inaccurate information.",
+            "  3. Take appropriate enforcement action under its supervisory authority.",
+            "",
+            "I have enclosed copies of my prior dispute correspondence and any responses received.",
+        ]
+        compliance = "FCRA §§ 611, 623"
+    elif recipient_type == "ftc":
+        re_line = f"RE: FTC Complaint — Unfair or Deceptive Acts Under FCRA"
+        authority_line = "    Pursuant to FTC Act § 5 and FCRA"
+        body_intro = [
+            "I am submitting this complaint to the Federal Trade Commission regarding unfair",
+            "or deceptive acts and practices in connection with my consumer credit report.",
+            "The parties identified below have engaged in conduct that violates both the",
+            "Fair Credit Reporting Act (FCRA) and the FTC Act § 5, which prohibits unfair",
+            "or deceptive acts or practices in or affecting commerce.",
+        ]
+        close_demands = [
+            "I request that the FTC:",
+            "  1. Investigate the unfair and deceptive practices described above.",
+            "  2. Take enforcement action against the responsible parties.",
+            "  3. Require corrective action to remedy the harm caused to my credit profile.",
+        ]
+        compliance = "FTC Act § 5, FCRA"
+    elif recipient_type == "state_ag":
+        re_line = f"RE: Consumer Protection Complaint — Credit Reporting Violations"
+        authority_line = "    Pursuant to State UDAP Laws and FCRA"
+        body_intro = [
+            "I am submitting this complaint to the State Attorney General's office regarding",
+            "violations of state consumer protection laws (UDAP statutes) and the federal",
+            "Fair Credit Reporting Act (FCRA) committed by the parties identified below.",
+            "These violations have caused material harm to my credit standing and financial",
+            "opportunities.",
+        ]
+        close_demands = [
+            "I respectfully request that the Attorney General's office:",
+            "  1. Investigate the consumer protection violations described above.",
+            "  2. Take appropriate enforcement action under state UDAP statutes and the FCRA.",
+            "  3. Require the responsible parties to correct the inaccurate information",
+            "     and remedy all harm caused to my consumer credit report.",
+        ]
+        compliance = "State UDAP, FCRA"
+    elif recipient_type == "medical_provider":
+        re_line = f"RE: Dispute of Medical Debt and HIPAA Privacy Violation"
+        authority_line = "    Pursuant to FCRA § 605(a)(6), HIPAA 45 CFR § 164.502, and CFPB Medical Debt Rules (2022)"
+        body_intro = [
+            "I am writing to formally dispute a medical debt appearing on my credit report",
+            "and to notify you of a potential HIPAA privacy violation. Under FCRA § 605(a)(6),",
+            "medical debt that has been paid, settled, or is less than $500 is subject to",
+            "special restrictions on credit reporting. Additionally, under HIPAA 45 CFR § 164.502",
+            "and the CFPB's 2022 medical debt guidance, the sharing of protected health",
+            "information (PHI) with consumer reporting agencies without proper authorization",
+            "may constitute a HIPAA violation.",
+            "",
+            "I dispute the medical debt identified below AND assert that if any PHI was shared",
+            "with a credit reporting agency without my written authorization, such disclosure",
+            "constitutes a violation of HIPAA and applicable CFPB rules.",
+        ]
+        close_demands = [
+            "I demand that you:",
+            "  1. Cease all collection activity on this disputed medical debt.",
+            "  2. Immediately instruct all credit reporting agencies to delete this account.",
+            "  3. Provide documentation of any authorization obtained before sharing PHI",
+            "     with consumer reporting agencies.",
+            "  4. Confirm in writing that this account has been removed from all credit reports.",
+            "",
+            "Failure to comply may result in complaints to the CFPB, HHS Office for Civil",
+            "Rights (for HIPAA violations), and civil action under applicable law.",
+        ]
+        compliance = "FCRA § 605(a)(6), HIPAA 45 CFR § 164.502, CFPB Medical Debt Rules (2022)"
+    elif recipient_type == "student_loan_servicer":
+        re_line = f"RE: Dispute of Student Loan Servicing Error and Inaccurate Credit Reporting"
+        authority_line = "    Pursuant to FCRA § 623, Higher Education Act § 455, and CFPB Servicer Guidance"
+        body_intro = [
+            "I am writing to formally dispute inaccurate information regarding my student loan(s)",
+            "that you have reported to consumer reporting agencies. Under FCRA § 623, furnishers",
+            "of information have a duty to report complete and accurate data. Under the Higher",
+            "Education Act § 455 and applicable CFPB servicer guidance, you are required to",
+            "accurately report payment history, forbearance and deferment periods, and account",
+            "balances.",
+            "",
+            "The information currently reported is inaccurate because it reflects incorrect",
+            "payment history, improperly reported forbearance or deferment periods, and/or an",
+            "incorrect balance.",
+        ]
+        close_demands = [
+            "I demand that you:",
+            "  1. Investigate and correct the inaccurate information identified above.",
+            "  2. Report the corrected information to all consumer reporting agencies (Experian,",
+            "     Equifax, TransUnion, and Innovis) within 30 days.",
+            "  3. Provide written confirmation of the corrections made.",
+            "",
+            "Under FCRA § 623(b), you must complete your investigation within 30 days of",
+            "receipt of this dispute and notify the applicable credit reporting agencies of",
+            "any corrections.",
+        ]
+        compliance = "FCRA § 623, Higher Education Act § 455"
+    elif recipient_type == "auto_lender":
+        re_line = f"RE: Dispute of Wrongful/Improper Repossession and Deficiency Balance"
+        authority_line = "    Pursuant to UCC Article 9 §§ 609-614, FDCPA § 809(b), and FCRA § 623"
+        body_intro = [
+            "I am writing to formally dispute a repossession and/or deficiency balance reported",
+            "on my consumer credit report. Under UCC Article 9 §§ 609-614, a creditor must",
+            "follow strict procedural requirements before repossessing collateral, including",
+            "providing proper notice and conducting a commercially reasonable sale. Failure to",
+            "comply with these requirements may render the repossession wrongful and the",
+            "deficiency balance unenforceable.",
+            "",
+            "I dispute the repossession reported below as wrongful or procedurally defective.",
+            "Additionally, I dispute the deficiency balance as unverified and potentially",
+            "improper under applicable law. Under FDCPA § 809(b), I request full validation",
+            "of any deficiency balance claimed.",
+        ]
+        close_demands = [
+            "I demand that you provide:",
+            "  1. Proof of proper pre-repossession notice as required by UCC Article 9 and",
+            "     applicable state law.",
+            "  2. Documentation that the vehicle was sold in a commercially reasonable manner",
+            "     (UCC Article 9 § 610).",
+            "  3. A complete accounting of the deficiency balance, including sale proceeds,",
+            "     all fees, and the calculation methodology.",
+            "  4. Correction of all inaccurate information reported to credit bureaus under",
+            "     FCRA § 623.",
+            "",
+            "If you cannot provide the above documentation, I demand deletion of this account",
+            "from all consumer credit reports.",
+        ]
+        compliance = "UCC Article 9 §§ 609-614, FDCPA § 809(b), FCRA § 623"
+    elif recipient_type == "intent_to_sue":
+        re_line = f"RE: Notice of Intent to File Civil Lawsuit — FCRA Violations"
+        authority_line = "    Pursuant to FCRA § 616 (Willful Noncompliance) and § 617 (Negligent Noncompliance)"
+        body_intro = [
+            "NOTICE IS HEREBY GIVEN that I intend to file a civil lawsuit against you for",
+            "violations of the Fair Credit Reporting Act (FCRA), specifically under:",
+            "",
+            "  • FCRA § 616 — Civil liability for willful noncompliance (statutory damages",
+            "    of $100-$1,000 per violation, punitive damages, and attorney's fees)",
+            "  • FCRA § 617 — Civil liability for negligent noncompliance (actual damages",
+            "    and attorney's fees)",
+            "",
+            "The willfulness standard under Safeco Ins. Co. v. Burr, 551 U.S. 47 (2007)",
+            "includes reckless disregard for the requirements of the FCRA, which your",
+            "conduct as described below satisfies.",
+            "",
+            "The violations identified below have caused actual damages including but not",
+            "limited to: denial of credit, increased interest rates, damage to reputation,",
+            "emotional distress, and lost opportunities.",
+        ]
+        close_demands = [
+            "DEMAND FOR CURE:",
+            "You have TEN (10) DAYS from receipt of this letter to:",
+            "  1. Correct all inaccurate information in your records.",
+            "  2. Notify all consumer reporting agencies of the required corrections.",
+            "  3. Provide written confirmation of all corrections made.",
+            "",
+            "Failure to cure these violations within 10 days will result in the filing of",
+            "a civil complaint in the appropriate federal or state court. I reserve all",
+            "rights and remedies available under the FCRA and applicable law.",
+            "",
+            "PLEASE GOVERN YOURSELF ACCORDINGLY.",
+        ]
+        compliance = "FCRA §§ 616, 617; Safeco Ins. Co. v. Burr (2007)"
+    elif recipient_type == "pay_for_delete":
+        re_line = f"RE: Settlement Offer — Pay for Delete Agreement"
+        authority_line = "    Pursuant to FCRA § 623"
+        body_intro = [
+            "I am writing to propose a settlement offer regarding the account(s) identified",
+            "below. This offer is made WITHOUT any admission of the validity of the debt",
+            "and is subject to the following terms.",
+            "",
+            "IMPORTANT: This offer is contingent upon your written agreement to completely",
+            "delete this account from ALL consumer reporting agencies (Experian, Equifax,",
+            "TransUnion, and Innovis) within 30 days of receipt of payment. Under FCRA § 623,",
+            "furnishers have the ability and obligation to update or delete information they",
+            "have reported.",
+            "",
+            "NO PAYMENT WILL BE MADE until I receive a signed written agreement confirming",
+            "the delete-for-payment terms. Any payment made without such agreement shall",
+            "NOT constitute an admission of the debt's validity.",
+        ]
+        close_demands = [
+            "Settlement Terms:",
+            "  1. Upon your written agreement to delete this account from ALL credit bureaus,",
+            "     I will remit the agreed payment amount within [X] business days.",
+            "  2. Within 30 days of receiving payment, you agree to delete all records of",
+            "     this account from Experian, Equifax, TransUnion, and Innovis.",
+            "  3. You agree not to sell or transfer this debt to any third party.",
+            "  4. This payment is NOT an admission of debt validity.",
+            "",
+            "Please respond in writing with your acceptance or counter-proposal within",
+            "15 days. I look forward to resolving this matter.",
+        ]
+        compliance = "FCRA § 623"
     else:  # creditor or debt_buyer
         re_line = f"RE: Dispute of Inaccurate Account Information — Round {round_.round_number}"
         authority_line = "    Pursuant to FCRA § 623"

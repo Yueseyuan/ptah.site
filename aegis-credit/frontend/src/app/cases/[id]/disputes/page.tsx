@@ -14,6 +14,14 @@ const RECIPIENT_TYPES = [
   { value: 'creditor', label: 'Original Creditor' },
   { value: 'collection_agency', label: 'Collection Agency' },
   { value: 'debt_buyer', label: 'Debt Buyer' },
+  { value: 'cfpb', label: 'CFPB (Escalation)' },
+  { value: 'ftc', label: 'FTC Complaint' },
+  { value: 'state_ag', label: 'State Attorney General' },
+  { value: 'medical_provider', label: 'Medical Provider (HIPAA)' },
+  { value: 'student_loan_servicer', label: 'Student Loan Servicer' },
+  { value: 'auto_lender', label: 'Auto Lender / Repo Dispute' },
+  { value: 'intent_to_sue', label: 'Intent to Sue (Pre-Litigation)' },
+  { value: 'pay_for_delete', label: 'Pay-for-Delete Offer' },
 ];
 const STATUSES = ['draft', 'preparing', 'sent', 'response_received', 'escalated', 'closed'];
 
@@ -143,6 +151,12 @@ export default function DisputesPage() {
                     <select value={roundForm.bureau} onChange={e => setRoundForm(f => ({ ...f, bureau: e.target.value }))}>
                       {BUREAUS.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
+                  </div>
+                ) : ['cfpb', 'ftc', 'state_ag'].includes(roundForm.recipient_type) ? (
+                  <div className="form-group" style={{ gridColumn: '1/-1' }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, padding: '8px 10px', background: 'var(--bg)', borderRadius: 4, border: '1px solid var(--border)' }}>
+                      Address is pre-filled in the letter for {RECIPIENT_TYPES.find(r => r.value === roundForm.recipient_type)?.label}.
+                    </p>
                   </div>
                 ) : (
                   <>

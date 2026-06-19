@@ -226,6 +226,10 @@ export const exportTradelinesCsv = (caseId: number) =>
 export const analyzeAll = (caseId: number) =>
   api.post(`/api/cases/${caseId}/analyze-all`).then(r => r.data);
 
+// AI Consultation
+export const consultAI = (caseId: number, data: { finding_id?: number; user_theory: string; law_reference?: string; context?: string }) =>
+  api.post(`/api/ai-consult/case/${caseId}`, data).then(r => r.data);
+
 // Bulk update findings status
 export const bulkUpdateFindings = (ids: number[], status: string) =>
   api.post('/api/findings/bulk-update', { ids, status }).then(r => r.data);

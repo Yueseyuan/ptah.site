@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { listPersonalInfo, createPersonalInfo, deletePersonalInfo, analyzePersonalInfo } from '@/lib/api';
+import { listPersonalInfo, createPersonalInfo, deletePersonalInfo, analyzePersonalInfo, listDisputeRoundsForCase, addFindingToDispute } from '@/lib/api';
 
 interface PIRecord {
   id: number;
@@ -28,6 +28,14 @@ interface PIFinding {
   fcra_section: string;
 }
 
+interface DisputeRound {
+  id: number;
+  round_number: number;
+  bureau: string | null;
+  recipient_name: string | null;
+  status: string;
+}
+
 const SEV_COLOR: Record<string, { bg: string; text: string }> = {
   high: { bg: '#fee2e2', text: '#991b1b' },
   medium: { bg: '#fef3c7', text: '#92400e' },
@@ -39,11 +47,88 @@ function parseSafe(val: string | null | undefined): string[] {
   try { const p = JSON.parse(val); return Array.isArray(p) ? p : []; } catch { return []; }
 }
 
+function PIFindingCard({
+  f,
+  rounds,
+}: {
+  f: PIFinding;
+  rounds: DisputeRound[];
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [selectedRound, setSelectedRound] = useState<number | ''>('');
+  const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState('');
+
+  const colors = SEV_COLOR[f.severity] || { bg: '#f3f4f6', text: '#374151' };
+
+  async function handleAdd() {
+    if (!selectedRound || !f.id) return;
+    setSubmitting(true); setErr('');
+    try {
+      await addFindingToDispute(f.id, selectedRound as number, f.description, f.fcra_section);
+      setDone(true);
+      setExpanded(false);
+    } catch {
+      setErr('Failed to add to dispute.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ borderLeft: `4px solid ${colors.text}` }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ background: '#1e40af', color: '#fff', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700, fontFamily: 'monospace' }}>{f.rule_code}</span>
+          <span style={{ background: colors.bg, color: colors.text, borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>{f.severity}</span>
+          <span style={{ fontWeight: 600, fontSize: 14 }}>{f.rule_name}</span>
+        </div>
+        {f.id && (
+          done ? (
+            <span style={{ fontSize: 11, background: '#d1fae5', color: '#065f46', borderRadius: 4, padding: '2px 8px', fontWeight: 600 }}>✓ Added to dispute</span>
+          ) : rounds.length > 0 ? (
+            <button
+              onClick={() => setExpanded(s => !s)}
+              style={{ fontSize: 11, background: expanded ? '#e0e7ff' : '#f0fdf4', color: expanded ? '#3730a3' : '#166534', border: '1px solid currentColor', borderRadius: 4, padding: '2px 8px', cursor: 'pointer', fontWeight: 600 }}>
+              {expanded ? 'Cancel' : '+ Dispute'}
+            </button>
+          ) : null
+        )}
+      </div>
+      <p style={{ margin: '0 0 6px', fontSize: 13, color: '#374151' }}>{f.description}</p>
+      {f.fcra_section && <p style={{ margin: 0, fontSize: 11, color: '#6b7280' }}>FCRA Reference: {f.fcra_section}</p>}
+
+      {expanded && (
+        <div style={{ marginTop: 10, padding: '10px 12px', background: '#f8fafc', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 4 }}>Dispute Round *</label>
+          <select
+            value={selectedRound}
+            onChange={e => setSelectedRound(e.target.value ? parseInt(e.target.value) : '')}
+            style={{ width: '100%', fontSize: 13, padding: '4px 8px', borderRadius: 4, border: '1px solid #d1d5db', marginBottom: 8 }}>
+            <option value="">— select a round —</option>
+            {rounds.map(r => (
+              <option key={r.id} value={r.id}>
+                Round #{r.round_number}{r.bureau ? ` · ${r.bureau}` : ''}{r.recipient_name ? ` — ${r.recipient_name}` : ''} ({r.status})
+              </option>
+            ))}
+          </select>
+          {err && <div style={{ fontSize: 12, color: '#dc2626', marginBottom: 6 }}>{err}</div>}
+          <button onClick={handleAdd} disabled={!selectedRound || submitting} className="btn btn-primary btn-sm">
+            {submitting ? 'Adding…' : 'Add to Dispute Round'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PersonalInfoPage() {
   const { id } = useParams<{ id: string }>();
   const caseId = parseInt(id);
   const [records, setRecords] = useState<PIRecord[]>([]);
   const [findings, setFindings] = useState<PIFinding[]>([]);
+  const [disputeRounds, setDisputeRounds] = useState<DisputeRound[]>([]);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -52,7 +137,10 @@ export default function PersonalInfoPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  function load() { listPersonalInfo(caseId).then(setRecords).finally(() => setLoading(false)); }
+  function load() {
+    listPersonalInfo(caseId).then(setRecords).finally(() => setLoading(false));
+    listDisputeRoundsForCase(caseId).then(setDisputeRounds).catch(() => {});
+  }
   useEffect(() => { load(); }, [caseId]);
 
   async function addRecord(e: React.FormEvent) {
@@ -196,22 +284,18 @@ export default function PersonalInfoPage() {
 
         {findings.length > 0 && (
           <>
-            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>PI Analysis Findings</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>PI Analysis Findings</h2>
+              {disputeRounds.length === 0 && (
+                <span style={{ fontSize: 12, color: '#6b7280' }}>
+                  Create a <a href={`/cases/${caseId}/disputes`} style={{ color: '#1e40af' }}>dispute round</a> to add findings to disputes
+                </span>
+              )}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {findings.map((f, i) => {
-                const colors = SEV_COLOR[f.severity] || { bg: '#f3f4f6', text: '#374151' };
-                return (
-                  <div key={i} className="card" style={{ borderLeft: `4px solid ${colors.text}` }}>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                      <span style={{ background: '#1e40af', color: '#fff', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700, fontFamily: 'monospace' }}>{f.rule_code}</span>
-                      <span style={{ background: colors.bg, color: colors.text, borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>{f.severity}</span>
-                      <span style={{ fontWeight: 600, fontSize: 14 }}>{f.rule_name}</span>
-                    </div>
-                    <p style={{ margin: '0 0 6px', fontSize: 13, color: '#374151' }}>{f.description}</p>
-                    {f.fcra_section && <p style={{ margin: 0, fontSize: 11, color: '#6b7280' }}>FCRA Reference: {f.fcra_section}</p>}
-                  </div>
-                );
-              })}
+              {findings.map((f, i) => (
+                <PIFindingCard key={f.id ?? i} f={f} rounds={disputeRounds} />
+              ))}
             </div>
           </>
         )}

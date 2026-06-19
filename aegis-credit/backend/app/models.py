@@ -316,6 +316,11 @@ class User(Base):
     role = Column(String, default="investigator")   # admin, investigator, reviewer, readonly
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
+    # Stripe billing
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True)
+    subscription_status = Column(String, nullable=True)  # active, past_due, canceled, trialing
+    subscription_period_end = Column(DateTime, nullable=True)
     organization = relationship("Organization", back_populates="users")
 
 

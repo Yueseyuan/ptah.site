@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { portalMe } from '@/lib/portal-api';
+import { portalMe, billingStatus } from '@/lib/portal-api';
 
 interface PortalData {
   user: { username: string; email: string };
@@ -34,12 +34,16 @@ const DOC_CHECKLIST = [
 
 export default function PortalDashboard() {
   const [data, setData] = useState<PortalData | null>(null);
+  const [subStatus, setSubStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    portalMe()
-      .then(setData)
+    Promise.all([portalMe(), billingStatus()])
+      .then(([me, billing]) => {
+        setData(me);
+        setSubStatus(billing.subscription_status);
+      })
       .catch(() => setError('Failed to load your account. Please try again.'))
       .finally(() => setLoading(false));
   }, []);
@@ -90,6 +94,35 @@ export default function PortalDashboard() {
               {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString() : '—'}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Subscription banner if not active */}
+      {subStatus !== 'active' && subStatus !== 'trialing' && (
+        <div style={{
+          background: subStatus === 'past_due' ? '#fef9c3' : '#0a2540',
+          border: subStatus === 'past_due' ? '1px solid #fde68a' : 'none',
+          borderRadius: 12, padding: '18px 24px', marginBottom: 24,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: subStatus === 'past_due' ? '#92400e' : '#fff', marginBottom: 3 }}>
+              {subStatus === 'past_due' ? 'Payment Required' : 'Activate Your Case'}
+            </div>
+            <div style={{ fontSize: 13, color: subStatus === 'past_due' ? '#a16207' : '#94a3b8' }}>
+              {subStatus === 'past_due'
+                ? 'Your last payment failed. Update your payment method to keep your case active.'
+                : 'Subscribe to the monthly retainer to begin dispute preparation — $149/month.'}
+            </div>
+          </div>
+          <a href="/portal/billing" style={{
+            background: subStatus === 'past_due' ? '#92400e' : '#fff',
+            color: subStatus === 'past_due' ? '#fff' : '#0a2540',
+            padding: '9px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+            textDecoration: 'none', flexShrink: 0, marginLeft: 16,
+          }}>
+            {subStatus === 'past_due' ? 'Update Payment' : 'Subscribe →'}
+          </a>
         </div>
       )}
 

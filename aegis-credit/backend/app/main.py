@@ -32,6 +32,7 @@ from app.routers.analytics import router as analytics_router
 from app.routers.search import router as search_router
 from app.routers.ai_consult import router as ai_consult_router
 from app.routers.portal import router as portal_router
+from app.routers.billing import router as billing_router
 
 
 def run_migrations():
@@ -114,6 +115,7 @@ app.include_router(analytics_router)
 app.include_router(search_router)
 app.include_router(ai_consult_router)
 app.include_router(portal_router)
+app.include_router(billing_router)
 
 
 @app.get("/api/health")

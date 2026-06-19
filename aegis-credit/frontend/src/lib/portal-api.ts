@@ -88,3 +88,12 @@ export const portalUploadDocument = (formData: FormData) =>
 
 export const portalDisputes = () =>
   portalApi.get('/api/portal/disputes').then(r => r.data);
+
+export const billingStatus = () =>
+  portalApi.get('/api/portal/billing/status').then(r => r.data);
+
+export const createCheckoutSession = () =>
+  portalApi.post('/api/portal/billing/create-checkout').then(r => r.data);
+
+export const createCustomerPortalSession = () =>
+  portalApi.post('/api/portal/billing/customer-portal').then(r => r.data);

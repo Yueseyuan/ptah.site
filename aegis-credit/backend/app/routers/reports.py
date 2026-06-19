@@ -13,6 +13,21 @@ from app.config import settings
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 BUREAUS = ["experian", "equifax", "transunion", "innovis"]
+
+
+def _parse_money(value) -> float | None:
+    """Strip currency symbols/commas and convert to float. Returns None if unparseable."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = str(value).strip().replace('$', '').replace(',', '').strip()
+    if not s or s.lower() in ('none', 'n/a', '-', ''):
+        return None
+    try:
+        return float(s)
+    except (ValueError, TypeError):
+        return None
 UPLOAD_BUREAUS = BUREAUS + ["all"]
 
 
@@ -54,14 +69,14 @@ def _save_tradelines(db: Session, case_id: int, report: CreditReport, tradelines
             account_type=td.get("account_type", "other"),
             open_date=td.get("open_date", ""),
             close_date=td.get("close_date", ""),
-            balance=td.get("balance"),
-            credit_limit=td.get("credit_limit"),
+            balance=_parse_money(td.get("balance")),
+            credit_limit=_parse_money(td.get("credit_limit")),
             payment_status=td.get("payment_status", "unknown"),
             payment_history=td.get("payment_history", ""),
             derogatory=td.get("derogatory", False),
-            high_balance=td.get("high_balance"),
-            past_due_amount=td.get("past_due_amount"),
-            scheduled_payment_amount=td.get("scheduled_payment_amount"),
+            high_balance=_parse_money(td.get("high_balance")),
+            past_due_amount=_parse_money(td.get("past_due_amount")),
+            scheduled_payment_amount=_parse_money(td.get("scheduled_payment_amount")),
             payment_rating=td.get("payment_rating", ""),
             compliance_condition_code=td.get("compliance_condition_code", ""),
             consumer_information_indicator=td.get("consumer_information_indicator", ""),

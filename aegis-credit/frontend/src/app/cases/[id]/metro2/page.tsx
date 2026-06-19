@@ -166,14 +166,16 @@ export default function Metro2Page() {
   const [view, setView] = useState<'severity' | 'category'>('severity');
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
 
+  function loadRounds() {
+    listDisputeRoundsForCase(caseId).then(setDisputeRounds).catch(() => {});
+  }
+
   function load() {
-    Promise.all([
-      listMetro2Findings(caseId),
-      listDisputeRoundsForCase(caseId),
-    ]).then(([f, r]) => {
-      setFindings(f);
-      setDisputeRounds(r);
-    }).catch(() => {}).finally(() => setLoading(false));
+    listMetro2Findings(caseId)
+      .then(setFindings)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+    loadRounds();
   }
 
   useEffect(() => { load(); }, [caseId]);
@@ -197,8 +199,7 @@ export default function Metro2Page() {
 
   async function addToDispute(metro2FindingId: number, roundId: number, reason: string) {
     await metro2FindingToDispute(metro2FindingId, roundId, reason);
-    // Refresh dispute rounds in case item counts changed
-    listDisputeRoundsForCase(caseId).then(setDisputeRounds).catch(() => {});
+    loadRounds();
   }
 
   const filtered = filterSeverity === 'all' ? findings : findings.filter(f => f.severity === filterSeverity);

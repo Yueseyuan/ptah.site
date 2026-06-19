@@ -59,7 +59,12 @@ export default function PersonalInfoPage() {
     e.preventDefault();
     setAdding(true); setError('');
     try {
-      await createPersonalInfo({ ...piForm, case_id: caseId });
+      const bureausToCreate = piForm.bureau === 'all'
+        ? ['experian', 'equifax', 'transunion', 'innovis']
+        : [piForm.bureau];
+      for (const b of bureausToCreate) {
+        await createPersonalInfo({ ...piForm, bureau: b, case_id: caseId });
+      }
       setShowForm(false);
       setPiForm({ bureau: 'experian', current_name: '', current_address: '', dob: '', ssn_last4: '', current_employer: '' });
       load();
@@ -119,6 +124,7 @@ export default function PersonalInfoPage() {
               <div className="grid-2">
                 <div className="form-group"><label>Bureau *</label>
                   <select value={piForm.bureau} onChange={e => setPiForm(f => ({ ...f, bureau: e.target.value }))}>
+                    <option value="all">All Bureaus</option>
                     {['experian','equifax','transunion','innovis'].map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>

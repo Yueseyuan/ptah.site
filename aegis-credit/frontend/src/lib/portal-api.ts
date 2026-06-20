@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const BACKEND_URL = 'https://ptahsite-production.up.railway.app';
-
 export const portalApi = axios.create({
-  baseURL: BACKEND_URL,
+  baseURL: '',
 });
 
 portalApi.interceptors.request.use((config) => {

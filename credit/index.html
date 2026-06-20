@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cruel & Associates | Free Credit Score & Monitoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <span class="nav-logo-main">Cruel & Associates</span>
+      <span class="nav-logo-sub">Credit Monitor</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <div class="nav-ctas">
+      <a href="login.html" class="btn btn-secondary btn-sm">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Get Free Score</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow" style="color:#60a5fa;">Free • Instant • Accurate</p>
+        <h1>Know Your Score.<br><span>Protect Your Future.</span></h1>
+        <p class="subhead">Get your free credit score from all 3 bureaus, real-time monitoring, and personalized tips to build stronger credit — all in one place.</p>
+        <div class="hero-badges">
+          <span class="badge badge-green">✓ No credit card required</span>
+          <span class="badge">🔒 Bank-level security</span>
+          <span class="badge">⚡ Results in 60 seconds</span>
+        </div>
+        <div class="hero-ctas">
+          <a href="signup.html" class="btn btn-white btn-lg">Get My Free Score →</a>
+          <a href="#how-it-works" class="btn btn-sm" style="color:rgba(255,255,255,0.7);border:1.5px solid rgba(255,255,255,0.25);padding:12px 24px;border-radius:8px;">See How It Works</a>
+        </div>
+        <p class="hero-note">Checking your score won't affect your credit. 100% free, always.</p>
+      </div>
+      <div>
+        <div class="score-card">
+          <div class="score-card-header">
+            <span class="score-card-title">Your Credit Report</span>
+            <span class="score-card-date">June 13, 2026</span>
+          </div>
+          <div class="gauge-wrap" id="hero-gauge">
+            <!-- gauge injected by JS -->
+            <div class="gauge-score">
+              <div class="gauge-number" style="color:#22c55e;">742</div>
+              <div class="gauge-label">Credit Score</div>
+              <div class="gauge-rating">Very Good</div>
+            </div>
+          </div>
+          <div class="bureaus">
+            <div class="bureau">
+              <div class="bureau-name">Equifax</div>
+              <div class="bureau-score" style="color:#e23c00;">736</div>
+            </div>
+            <div class="bureau">
+              <div class="bureau-name">Experian</div>
+              <div class="bureau-score" style="color:#003cb4;">748</div>
+            </div>
+            <div class="bureau">
+              <div class="bureau-name">TransUnion</div>
+              <div class="bureau-score" style="color:#00639c;">742</div>
+            </div>
+          </div>
+          <div class="score-factors" style="margin-top:20px;">
+            <div class="factor">
+              <span class="factor-label">Payment History</span>
+              <div class="factor-bar"><div class="factor-fill" style="width:97%;background:#22c55e;"></div></div>
+              <span class="factor-val" style="color:#22c55e;">97%</span>
+            </div>
+            <div class="factor">
+              <span class="factor-label">Utilization</span>
+              <div class="factor-bar"><div class="factor-fill" style="width:22%;background:#22c55e;"></div></div>
+              <span class="factor-val" style="color:#22c55e;">22%</span>
+            </div>
+            <div class="factor">
+              <span class="factor-label">Credit Age</span>
+              <div class="factor-bar"><div class="factor-fill" style="width:68%;background:#eab308;"></div></div>
+              <span class="factor-val" style="color:#eab308;">68%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Bureau logos ── -->
+<div class="logos-strip">
+  <div class="container">
+    <div class="logos-inner">
+      <span class="logos-label">Powered by data from</span>
+      <div class="bureau-logo">
+        <div class="bureau-logo-dot" style="background:#e23c00;">E</div>
+        <span>Equifax</span>
+      </div>
+      <div class="bureau-logo">
+        <div class="bureau-logo-dot" style="background:#003cb4;">E</div>
+        <span>Experian</span>
+      </div>
+      <div class="bureau-logo">
+        <div class="bureau-logo-dot" style="background:#00639c;">T</div>
+        <span>TransUnion</span>
+      </div>
+      <div class="bureau-logo" style="margin-left:20px;">
+        <span>🔒 256-bit Encryption</span>
+      </div>
+      <div class="bureau-logo">
+        <span>🛡 FCRA Compliant</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Features ── -->
+<section class="section" id="features">
+  <div class="container">
+    <div style="text-align:center;max-width:600px;margin:0 auto;">
+      <p class="eyebrow">Everything You Need</p>
+      <h2>Complete Credit Intelligence</h2>
+      <p class="subhead" style="text-align:center;">One dashboard. All three bureaus. Real-time alerts when anything changes.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>3-Bureau Scores</h3>
+        <p>See your scores from Equifax, Experian, and TransUnion side by side. Know exactly where you stand with every lender.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Real-Time Monitoring</h3>
+        <p>Get instant alerts the moment anything changes on your credit report — new accounts, inquiries, or suspicious activity.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Score Simulator</h3>
+        <p>See how financial decisions — paying off a card, opening a new account — will affect your score before you make them.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡</div>
+        <h3>Identity Protection</h3>
+        <p>Dark web monitoring, SSN alerts, and $1M identity theft insurance on premium plans keep you protected 24/7.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💡</div>
+        <h3>Personalized Tips</h3>
+        <p>AI-powered recommendations tailored to your credit profile — know exactly what to do to hit your target score.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3>Full Credit Reports</h3>
+        <p>Dispute errors directly from your dashboard. We walk you through the process step by step with every bureau.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ── -->
+<section class="section section how-bg" id="how-it-works">
+  <div class="container">
+    <div style="text-align:center;max-width:560px;margin:0 auto;">
+      <p class="eyebrow">Simple Process</p>
+      <h2>Your Score in 3 Steps</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create Your Account</h3>
+        <p>Sign up free in under 60 seconds. We only need your name, email, and last 4 digits of your SSN to verify your identity.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Verify Your Identity</h3>
+        <p>Answer a few security questions to pull your reports securely from all three bureaus. This is a soft inquiry — it won't affect your score.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>See Your Full Report</h3>
+        <p>Access your complete dashboard: all three bureau scores, credit factors, alerts, and personalized recommendations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pricing ── -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div style="text-align:center;max-width:560px;margin:0 auto;">
+      <p class="eyebrow">Transparent Pricing</p>
+      <h2>Start Free. Upgrade Anytime.</h2>
+      <p class="subhead" style="text-align:center;">No hidden fees. Cancel anytime. Your free score is always free.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="price-card">
+        <div class="price-name">Free</div>
+        <div class="price-amount">
+          <span class="price-dollar">$0</span>
+          <span class="price-period">/ month</span>
+        </div>
+        <p class="price-sub">Perfect for checking and tracking your score.</p>
+        <ul class="price-features">
+          <li>Single bureau score (monthly)</li>
+          <li>Basic credit factors breakdown</li>
+          <li>Score history (3 months)</li>
+          <li class="off">3-bureau monitoring</li>
+          <li class="off">Real-time alerts</li>
+          <li class="off">Identity protection</li>
+        </ul>
+        <a href="signup.html" class="btn btn-secondary" style="width:100%;justify-content:center;">Get Started Free</a>
+      </div>
+      <!-- Plus (Featured) -->
+      <div class="price-card featured">
+        <div class="price-popular">Most Popular</div>
+        <div class="price-name">Plus</div>
+        <div class="price-amount">
+          <span class="price-dollar">$19</span>
+          <span class="price-period">/ month</span>
+        </div>
+        <p class="price-sub">Full 3-bureau monitoring and real-time alerts.</p>
+        <ul class="price-features">
+          <li>3-bureau scores (daily updates)</li>
+          <li>Real-time credit monitoring</li>
+          <li>Full credit reports</li>
+          <li>Score simulator</li>
+          <li>Email & SMS alerts</li>
+          <li class="off">Identity theft insurance</li>
+        </ul>
+        <a href="signup.html" class="btn btn-primary" style="width:100%;justify-content:center;">Start 7-Day Free Trial</a>
+      </div>
+      <!-- Premier -->
+      <div class="price-card">
+        <div class="price-name">Premier</div>
+        <div class="price-amount">
+          <span class="price-dollar">$39</span>
+          <span class="price-period">/ month</span>
+        </div>
+        <p class="price-sub">Full protection with identity theft insurance.</p>
+        <ul class="price-features">
+          <li>Everything in Plus</li>
+          <li>Dark web monitoring</li>
+          <li>SSN & identity alerts</li>
+          <li>$1M identity theft insurance</li>
+          <li>Credit dispute assistance</li>
+          <li>Family coverage (up to 4)</li>
+        </ul>
+        <a href="signup.html" class="btn btn-secondary" style="width:100%;justify-content:center;">Start 7-Day Free Trial</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Testimonials ── -->
+<section class="section testimonials-bg">
+  <div class="container">
+    <div style="text-align:center;max-width:560px;margin:0 auto;">
+      <p class="eyebrow" style="color:#60a5fa;">Real Results</p>
+      <h2>Members Who Leveled Up</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testi">
+        <div class="testi-stars">★★★★★</div>
+        <p>"I went from 601 to 748 in 8 months following the tips. I qualified for a mortgage I thought was years away."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">DW</div>
+          <div>
+            <div class="testi-name">Darnell W.</div>
+            <div class="testi-loc">Atlanta, GA</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="testi-stars">★★★★★</div>
+        <p>"The real-time alerts caught a fraudulent account before it tanked my score. Saved me months of headaches."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">SM</div>
+          <div>
+            <div class="testi-name">Sofia M.</div>
+            <div class="testi-loc">Houston, TX</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi">
+        <div class="testi-stars">★★★★★</div>
+        <p>"Finally I can see all three bureaus in one place. The score simulator helped me decide when to apply for my car loan."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">RP</div>
+          <div>
+            <div class="testi-name">Raj P.</div>
+            <div class="testi-loc">Chicago, IL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-banner">
+  <div class="container">
+    <h2>Your Credit Journey Starts Today</h2>
+    <p>Join thousands of members taking control of their financial future.</p>
+    <div class="cta-banner-btns">
+      <a href="signup.html" class="btn btn-white btn-lg">Get My Free Score →</a>
+    </div>
+    <p style="margin-top:20px;opacity:0.6;font-size:13px;">Free forever · No credit card · Soft inquiry only</p>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo-main">Cruel & Associates</div>
+        <div class="footer-logo-sub">Credit Monitor</div>
+        <p class="footer-desc">Empowering individuals to understand, monitor, and improve their credit health with clarity and confidence.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="signup.html">Get Free Score</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">FCRA Notice</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Cruel & Associates. All rights reserved.</span>
+      <span>FCRA compliant · Scores provided for educational purposes</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+  // Inject hero gauge
+  const heroGauge = document.getElementById('hero-gauge');
+  if (heroGauge) heroGauge.innerHTML = buildGaugeSVG(742, 200) +
+    `<div class="gauge-score">
+      <div class="gauge-number" style="color:#22c55e;">742</div>
+      <div class="gauge-label">Credit Score</div>
+      <div class="gauge-rating">Very Good</div>
+    </div>`;
+
+  // Redirect to dashboard if already logged in
+  if (Auth.isLoggedIn()) {
+    document.querySelector('.nav-ctas').innerHTML =
+      `<a href="dashboard.html" class="btn btn-primary btn-sm">My Dashboard →</a>`;
+  }
+</script>
+</body>
+</html>

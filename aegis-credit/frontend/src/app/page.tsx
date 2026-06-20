@@ -26,7 +26,7 @@ export default function HomePage() {
           <a href="/portal/login" style={{
             padding: '8px 20px', border: '1px solid rgba(201,168,76,0.4)',
             color: '#c9a84c', borderRadius: 4, fontSize: 13, fontWeight: 600,
-            textDecoration: 'none',
+            textDecoration: 'none', transition: 'all 0.15s',
           }}>
             Client Login
           </a>

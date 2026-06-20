@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_NAME: str = "Aegis Credit Investigator"
-    DEV_NO_AUTH: bool = True
+    DEV_NO_AUTH: bool = False
     DATABASE_URL: str = "sqlite:///./aegis.db"
     ANTHROPIC_API_KEY: str = ""
     UPLOAD_DIR: str = "uploads"

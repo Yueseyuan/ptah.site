@@ -11,13 +11,13 @@ _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
-    """Hash a plain-text password using bcrypt."""
-    return _pwd_context.hash(password)
+    """Hash a plain-text password using bcrypt (72-byte limit)."""
+    return _pwd_context.hash(password[:72])
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plain-text password against a bcrypt hash."""
-    return _pwd_context.verify(plain, hashed)
+    """Verify a plain-text password against a bcrypt hash (72-byte limit)."""
+    return _pwd_context.verify(plain[:72], hashed)
 
 
 def create_access_token(data: dict) -> str:

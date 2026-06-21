@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import { listCases, listClients } from '@/lib/api';
+import { listCases, listClients, listPendingPortalCases } from '@/lib/api';
 
 interface Case {
   id: number;
@@ -23,11 +23,16 @@ const STATUS_COLORS: Record<string, string> = {
 export default function DashboardPage() {
   const [cases, setCases] = useState<Case[]>([]);
   const [clientCount, setClientCount] = useState(0);
+  const [pendingIntake, setPendingIntake] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([listCases(), listClients()])
-      .then(([c, cl]) => { setCases(c); setClientCount(cl.length); })
+    Promise.all([listCases(), listClients(), listPendingPortalCases().catch(() => [])])
+      .then(([c, cl, intake]) => {
+        setCases(c);
+        setClientCount(cl.length);
+        setPendingIntake((intake as {portal_status: string}[]).filter(i => i.portal_status === 'pending').length);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -85,6 +90,15 @@ export default function DashboardPage() {
                 <div className="label">Total Cases</div>
                 <div className="value">{cases.length}</div>
               </div>
+              {pendingIntake > 0 && (
+                <Link href="/admin/portal" style={{ textDecoration: 'none' }}>
+                  <div className="stat-card" style={{ borderColor: '#f59e0b', cursor: 'pointer' }}>
+                    <div className="label" style={{ color: '#92400e' }}>Portal Intake</div>
+                    <div className="value" style={{ color: '#d97706' }}>{pendingIntake}</div>
+                    <div style={{ fontSize: 10, color: '#92400e', marginTop: 2 }}>pending review →</div>
+                  </div>
+                </Link>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>

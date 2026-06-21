@@ -13,13 +13,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// On 401, clear token and redirect to login
+// On 401 or 403-with-client-role, clear token and redirect to login
 api.interceptors.response.use(
   (r) => r,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('aegis_token');
-      window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      const status = error.response?.status;
+      const role = localStorage.getItem('aegis_role');
+      if (status === 401 || (status === 403 && role === 'client')) {
+        localStorage.removeItem('aegis_token');
+        localStorage.removeItem('aegis_role');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

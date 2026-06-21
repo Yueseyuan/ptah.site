@@ -23,6 +23,11 @@ export default function HomePage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <a href="/login" style={{
+            fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5,
+          }}>
+            Staff
+          </a>
           <a href="/portal/login" style={{
             padding: '8px 20px', border: '1px solid rgba(201,168,76,0.4)',
             color: '#c9a84c', borderRadius: 4, fontSize: 13, fontWeight: 600,
@@ -293,9 +298,10 @@ export default function HomePage() {
           <div style={{ fontSize: 16, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>CRUEL & ASSOCIATES</div>
           <div style={{ fontSize: 11, color: '#4a5060', marginTop: 4 }}>Consumer Rights Consulting · (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site</div>
         </div>
-        <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#64748b' }}>
+        <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#64748b', flexWrap: 'wrap', alignItems: 'center' }}>
           <a href="/portal/login" style={{ color: '#64748b', textDecoration: 'none' }}>Client Portal</a>
           <a href="/portal/register" style={{ color: '#c9a84c', textDecoration: 'none', fontWeight: 600 }}>Get Started</a>
+          <a href="/login" style={{ color: '#374151', textDecoration: 'none', fontSize: 11, opacity: 0.5 }}>Staff</a>
         </div>
       </footer>
     </div>

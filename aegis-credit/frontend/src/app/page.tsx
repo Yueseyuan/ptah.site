@@ -120,7 +120,101 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Services */}
+      {/* Divisions */}
+      <section style={{ padding: '80px 48px', background: '#07090f' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 16 }}>
+          Our Services
+        </div>
+        <h2 style={{ fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 800, marginBottom: 16, maxWidth: 600 }}>
+          Three Ways We Put Money Back in Your Pocket
+        </h2>
+        <p style={{ color: '#64748b', fontSize: 16, marginBottom: 48, maxWidth: 540 }}>
+          Whether it's bad credit, an unpaid judgment, or surplus funds from a foreclosure — we know how to recover what's yours.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+          {/* Credit Repair */}
+          <div style={{
+            background: '#0c1018', border: '1px solid rgba(201,168,76,0.25)',
+            borderRadius: 10, padding: '36px 32px',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 18 }}>📑</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 10 }}>
+              Division I
+            </div>
+            <h3 style={{ fontSize: 22, fontWeight: 800, color: '#e8eaf0', marginBottom: 14, lineHeight: 1.2 }}>
+              Credit Repair &amp; Consumer Rights
+            </h3>
+            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, marginBottom: 28, flex: 1 }}>
+              FCRA &amp; FDCPA dispute correspondence — bureau letters, debt collector cease &amp; desist, CFPB complaints, and affidavits of truth. Flat monthly retainer, no hourly billing.
+            </p>
+            <a href="/portal/register" style={{
+              display: 'inline-block', padding: '12px 24px',
+              background: '#c9a84c', color: '#07090f',
+              fontWeight: 800, fontSize: 14, borderRadius: 5,
+              textDecoration: 'none', textAlign: 'center',
+            }}>
+              Start Your Case →
+            </a>
+          </div>
+
+          {/* Judgment Recovery */}
+          <div style={{
+            background: '#0c1018', border: '1px solid rgba(201,168,76,0.15)',
+            borderRadius: 10, padding: '36px 32px',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 18 }}>⚖️</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 10 }}>
+              Division II
+            </div>
+            <h3 style={{ fontSize: 22, fontWeight: 800, color: '#e8eaf0', marginBottom: 14, lineHeight: 1.2 }}>
+              Judgment Recovery
+            </h3>
+            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, marginBottom: 28, flex: 1 }}>
+              Won a lawsuit but never got paid? We locate assets, file enforcement actions, and collect on dormant civil judgments — at no upfront cost. We only get paid when you do.
+            </p>
+            <a href="mailto:yueseyuan.cruel@cruelandassociates.site?subject=Judgment Recovery Inquiry" style={{
+              display: 'inline-block', padding: '12px 24px',
+              background: 'transparent', color: '#c9a84c',
+              border: '1px solid rgba(201,168,76,0.4)',
+              fontWeight: 700, fontSize: 14, borderRadius: 5,
+              textDecoration: 'none', textAlign: 'center',
+            }}>
+              Contact Us →
+            </a>
+          </div>
+
+          {/* Overages */}
+          <div style={{
+            background: '#0c1018', border: '1px solid rgba(201,168,76,0.15)',
+            borderRadius: 10, padding: '36px 32px',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 18 }}>🏠</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 10 }}>
+              Division III
+            </div>
+            <h3 style={{ fontSize: 22, fontWeight: 800, color: '#e8eaf0', marginBottom: 14, lineHeight: 1.2 }}>
+              Foreclosure Overages &amp; Surplus Funds
+            </h3>
+            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, marginBottom: 28, flex: 1 }}>
+              When a foreclosed property sells for more than the debt owed, the surplus belongs to the former owner — not the bank. We track down and recover those overage funds on your behalf.
+            </p>
+            <a href="mailto:yueseyuan.cruel@cruelandassociates.site?subject=Surplus Funds Inquiry" style={{
+              display: 'inline-block', padding: '12px 24px',
+              background: 'transparent', color: '#c9a84c',
+              border: '1px solid rgba(201,168,76,0.4)',
+              fontWeight: 700, fontSize: 14, borderRadius: 5,
+              textDecoration: 'none', textAlign: 'center',
+            }}>
+              Contact Us →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Credit Repair Details */}
       <section style={{ padding: '80px 48px', background: '#0c1018' }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 16 }}>
           What We Do

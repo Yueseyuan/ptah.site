@@ -79,6 +79,54 @@ export default function PortalDocumentsPage() {
         </p>
       </div>
 
+      {/* Get Your Credit Reports */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0a2540, #1a3a60)',
+        border: '1px solid #1e3a5f', borderRadius: 12,
+        padding: '20px 24px', marginBottom: 24, color: '#fff',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{ fontSize: 28, flexShrink: 0 }}>📊</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>
+              Need to pull your credit reports?
+            </div>
+            <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.6, marginBottom: 14 }}>
+              Use the link below to get all three bureau reports (Experian, Equifax &amp; TransUnion)
+              through our partner — then download and upload them here. You&apos;ll need all three
+              for us to begin your dispute process.
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <a
+                href="https://app.myfreescorenow.com/enroll/B01B3951"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: '#c9a84c', color: '#07090f', fontWeight: 700,
+                  fontSize: 13, padding: '8px 18px', borderRadius: 6,
+                  textDecoration: 'none', display: 'inline-block',
+                }}
+              >
+                Get My Free Credit Reports →
+              </a>
+              <a
+                href="https://app.myfreescorenow.com/enroll/B02B3951"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: 'transparent', color: '#ccd6f6', fontWeight: 600,
+                  fontSize: 13, padding: '8px 18px', borderRadius: 6,
+                  textDecoration: 'none', display: 'inline-block',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                }}
+              >
+                Alternate Link
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Upload Form */}
       <div style={{
         background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
@@ -220,9 +268,8 @@ export default function PortalDocumentsPage() {
         background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 10,
         padding: '12px 16px', marginTop: 16, fontSize: 12, color: '#0c4a6e', lineHeight: 1.6,
       }}>
-        <strong>Tip:</strong> For best results, upload all three credit bureau reports
-        (Experian, Equifax, TransUnion) plus a government-issued photo ID. You can obtain
-        free reports at AnnualCreditReport.com.
+        <strong>Tip:</strong> Upload all three credit bureau reports (Experian, Equifax, TransUnion)
+        plus a government-issued photo ID. Use the link above to pull all three reports at once.
       </div>
     </div>
   );

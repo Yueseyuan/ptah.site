@@ -210,14 +210,34 @@ export default function PortalDashboard() {
             </div>
           </div>
         ))}
-        <div style={{ marginTop: 14 }}>
-          <a href="/portal/documents" style={{
-            display: 'inline-block', background: '#0a2540', color: '#fff',
-            padding: '9px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-            textDecoration: 'none',
-          }}>
-            Upload Documents
-          </a>
+        <div style={{ marginTop: 16, padding: '14px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0a2540', marginBottom: 6 }}>
+            Don&apos;t have your credit reports yet?
+          </div>
+          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10 }}>
+            Pull all three bureaus at once through our partner, then upload them here.
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <a
+              href="https://app.myfreescorenow.com/enroll/B01B3951"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-block', background: '#0a2540', color: '#fff',
+                padding: '8px 16px', borderRadius: 7, fontSize: 12, fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              Get My Free Credit Reports →
+            </a>
+            <a href="/portal/documents" style={{
+              display: 'inline-block', background: 'transparent', color: '#1d4ed8',
+              padding: '8px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600,
+              textDecoration: 'none', border: '1px solid #bfdbfe',
+            }}>
+              Upload Documents
+            </a>
+          </div>
         </div>
       </div>
     </div>

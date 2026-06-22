@@ -96,6 +96,9 @@ export default function LoginPage() {
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
+          <div style={{ marginTop: 14, textAlign: 'center', fontSize: 12, color: 'var(--muted)' }}>
+            First time? <a href="/register" style={{ color: 'var(--primary)' }}>Create admin account</a>
+          </div>
         </div>
 
         <div className="disclosure-banner" style={{ marginTop: 16, textAlign: 'center', fontSize: 11 }}>

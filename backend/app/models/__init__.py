@@ -1,3 +1,10 @@
+from app.models.prompt import (
+    PromptEvaluation, PromptRiskPolicy, PromptRun, PromptRunStatus, PromptTemplate, PromptType, PromptVersion,
+)
+from app.models.skill import Skill, SkillCategory, SkillRiskPolicy, SkillRun, SkillRunStatus, SkillVersion
+from app.models.tool import (
+    ToolDefinition, ToolPermission, ToolRiskPolicy, ToolRun, ToolRunStatus, ToolType, ToolVersion,
+)
 from app.models.agent import (
     Agent, AgentCapability, AgentCapabilityType,
     AgentRiskPolicy, AgentRun, AgentRunEvent, AgentRunStatus, AgentVersion,

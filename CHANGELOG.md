@@ -1,5 +1,21 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 9 Workflow Engine + Orchestrator
+
+### Added
+- `app/models/workflow.py` — Workflow, WorkflowStep, WorkflowRun, WorkflowRunEvent + WorkflowStatus/RunStatus/StepType/StepStatus enums
+- `app/models/orchestrator.py` — OrchestratorTask, TaskAssignment, TaskDependency, OrchestratorRun, OrchestratorDecision, OrchestratorPlan, TaskBranch, BranchRun, ResultMerge + status/merge enums
+- `alembic/versions/…_create_workflow_orchestrator_tables.py` — migration (13 tables, 20+ indexes)
+- `app/schemas/workflow.py` — full schema set for Workflow subsystem
+- `app/schemas/orchestrator.py` — full schema set for Orchestrator subsystem
+- `app/api/v1/endpoints/workflows.py` — CRUD + steps (order shift) + runs + run events
+- `app/api/v1/endpoints/orchestrator.py` — tasks + assignments + dependencies + branches + branch runs + merges + runs + decisions + plans (with approve endpoint)
+- `tests/test_workflow_orchestrator.py` — 15 tests
+
+### Changed
+- `app/api/v1/router.py` — includes workflows/orchestrator routers
+- `app/models/__init__.py` — exports all Phase 9 models
+
 ## [Unreleased] — Phase 8 Memory + Context + Knowledge
 
 ### Added

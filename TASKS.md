@@ -115,13 +115,24 @@
 - [x] 24 tests; 134 total passing
 - [x] Phase 8 commit
 
-## Phase 9 — Workflow Engine + Orchestrator (Pending)
+## Phase 9 — Workflow Engine + Orchestrator (Complete)
 
-- [ ] Workflow, WorkflowStep, WorkflowRun, WorkflowRunEvent
-- [ ] OrchestratorTask, TaskAssignment, TaskDependency
-- [ ] OrchestratorRun, OrchestratorDecision, OrchestratorPlan
-- [ ] TaskBranch, BranchRun, BranchResult, ResultMerge
-- [ ] Task planner + agent assignment + risk routing
+- [x] Workflow, WorkflowStep (order shift on collision), WorkflowRun, WorkflowRunEvent models
+- [x] OrchestratorTask, TaskAssignment, TaskDependency models
+- [x] OrchestratorRun, OrchestratorDecision, OrchestratorPlan (approve endpoint) models
+- [x] TaskBranch, BranchRun, ResultMerge models
+- [x] Alembic migration (13 tables, 20+ indexes)
+- [x] Workflows: CRUD + steps + runs + run events
+- [x] Orchestrator: tasks + assignments + dependencies + branches + branch runs + merges + runs + decisions + plans
+- [x] 15 tests; 149 total passing
+- [x] Phase 9 commit
+
+## Phase 10 — Repo Review Pipeline (Pending)
+
+- [ ] RepoReview, ReviewStage, ReviewStageResult, ReviewClassification models
+- [ ] 5-stage review (license, security, dependency, capability, integration)
+- [ ] 4-way classification (Use Directly / Modify First / Reference Only / Do Not Use)
+- [ ] Review report generation endpoint
 - [ ] Tests
 
 ## Upcoming Phases

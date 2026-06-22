@@ -1,5 +1,24 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 11 Next.js Frontend
+
+### Added
+- `frontend/` — Next.js 16 + React 19 + TypeScript + Tailwind CSS scaffold (create-next-app)
+- `frontend/lib/api.ts` — typed API client with auth injection + all module API methods
+- `frontend/lib/auth.ts` — localStorage token management
+- `frontend/components/ui/` — Button, Card, Badge, Input/Textarea components (dark design system)
+- `frontend/components/sidebar.tsx` — collapsible navigation with active-link highlighting
+- `frontend/app/(dashboard)/layout.tsx` — auth-gated dashboard shell with route protection
+- `frontend/app/(dashboard)/dashboard/page.tsx` — live stats grid + model provider health
+- `frontend/app/(dashboard)/agents/page.tsx` — agent CRUD + inline run panel
+- `frontend/app/(dashboard)/memory/page.tsx` — memory entries with search + collection filter
+- `frontend/app/(dashboard)/knowledge/page.tsx` — knowledge nodes with type filter chips
+- `frontend/app/(dashboard)/workflows/page.tsx` — split-panel workflow builder + step manager
+- `frontend/app/(dashboard)/repo-reviews/page.tsx` — split-panel review viewer + 5-stage pipeline
+- `frontend/app/(dashboard)/settings/page.tsx` — provider health + model list + env config hints
+- `frontend/app/login/page.tsx` + `frontend/app/register/page.tsx` — auth forms
+- Production build: 13 routes, TypeScript clean
+
 ## [Unreleased] — Phase 10 Repo Review Pipeline
 
 ### Added

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const portalApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8082',
+  baseURL: '',
 });
 
 portalApi.interceptors.request.use((config) => {
@@ -91,6 +91,12 @@ export const portalDisputes = () =>
 
 export const billingStatus = () =>
   portalApi.get('/api/portal/billing/status').then(r => r.data);
+
+export const forgotPassword = (email: string) =>
+  portalApi.post('/api/portal/forgot-password', { email }).then(r => r.data);
+
+export const resetPassword = (token: string, new_password: string) =>
+  portalApi.post('/api/portal/reset-password', { token, new_password }).then(r => r.data);
 
 export const createCheckoutSession = () =>
   portalApi.post('/api/portal/billing/create-checkout').then(r => r.data);

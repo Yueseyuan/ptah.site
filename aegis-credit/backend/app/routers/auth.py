@@ -7,8 +7,8 @@ from typing import Optional
 
 from app.database import get_db
 from app.models import User
-from app.services.auth_service import hash_password, verify_password, create_access_token
-from app.dependencies import get_current_user, require_admin
+from app.services.auth_service import hash_password, verify_password, create_access_token, decode_access_token
+from app.dependencies import get_current_user, require_admin, oauth2_scheme
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -61,22 +61,39 @@ def _out(u: User) -> dict:
 def register(
     data: UserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    token: Optional[str] = Depends(oauth2_scheme),
 ):
-    """Register a new user.  Requires admin role UNLESS no users exist yet (bootstrap)."""
-    user_count = db.query(User).count()
-    if user_count > 0 and current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required to create users")
+    """Register a new user.
+
+    Bootstrap path: if NO admin user exists, the first registration is granted
+    admin role with no token required — this lets the owner create the first
+    admin account even when portal clients already exist.
+
+    Normal path: requires a valid admin JWT.
+    """
+    admin_count = db.query(User).filter(User.role == "admin").count()
+
+    if admin_count == 0:
+        # Bootstrap: grant admin role to whoever registers first as staff
+        role = "admin"
+    else:
+        # Existing admins present — require a valid admin token
+        if not token:
+            raise HTTPException(status_code=401, detail="Authentication required")
+        payload = decode_access_token(token)
+        if not payload:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        username: str = payload.get("sub", "")
+        caller = db.query(User).filter(User.username == username).first()
+        if not caller or caller.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required to create users")
+        role = data.role or "investigator"
 
     if db.query(User).filter(User.username == data.username).first():
         raise HTTPException(status_code=400, detail="Username already taken")
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    role = data.role or "investigator"
-    # First user is always admin
-    if user_count == 0:
-        role = "admin"
 
     user = User(
         username=data.username,

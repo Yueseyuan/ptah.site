@@ -2,7 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginUser, setToken, getToken } from '@/lib/api';
-import { setPortalAuth } from '@/lib/portal-api';
+import { setPortalAuth, getPortalRole, clearPortalAuth } from '@/lib/portal-api';
+
+const STAFF_ROLES = ['admin', 'investigator', 'reviewer', 'readonly'];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,7 +14,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (getToken()) router.replace('/cases');
+    const token = getToken();
+    const role = getPortalRole();
+    // Only auto-redirect if the stored token belongs to a staff role.
+    // A client-role token (from portal registration) should NOT skip the login form.
+    if (token && role && STAFF_ROLES.includes(role)) {
+      router.replace('/cases');
+    } else if (token && (!role || !STAFF_ROLES.includes(role))) {
+      // Clear a stale client token so the login form is usable.
+      clearPortalAuth();
+    }
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -85,6 +96,9 @@ export default function LoginPage() {
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
+          <div style={{ marginTop: 14, textAlign: 'center', fontSize: 12, color: 'var(--muted)' }}>
+            First time? <a href="/register" style={{ color: 'var(--primary)' }}>Create admin account</a>
+          </div>
         </div>
 
         <div className="disclosure-banner" style={{ marginTop: 16, textAlign: 'center', fontSize: 11 }}>

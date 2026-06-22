@@ -31,6 +31,7 @@ const NAV_SECTIONS = [
   {
     section: 'Administration',
     items: [
+      { href: '/admin/portal', label: 'Portal Intake', icon: '📥' },
       { href: '/organizations', label: 'Organizations', icon: '🏢' },
       { href: '/admin/users', label: 'User Management', icon: '👤' },
       { href: '/admin/legal-updates', label: 'Legal Updates', icon: '📝' },

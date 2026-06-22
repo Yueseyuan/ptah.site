@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getPortalToken, getPortalRole, clearPortalAuth } from '@/lib/portal-api';
 
-const PUBLIC_PATHS = ['/portal/login', '/portal/register'];
+const STAFF_ROLES = ['admin', 'investigator', 'reviewer', 'readonly'];
+
+const PUBLIC_PATHS = ['/portal/login', '/portal/register', '/portal/forgot-password', '/portal/reset-password'];
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -17,6 +19,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
     if (!token && !isPublic) {
       router.replace('/portal/login');
+      return;
+    }
+    // Staff token landed on the portal — clear it so they can log in as a client.
+    if (token && role && STAFF_ROLES.includes(role) && isPublic) {
+      clearPortalAuth();
+      setReady(true);
       return;
     }
     if (token && role === 'client' && isPublic) {

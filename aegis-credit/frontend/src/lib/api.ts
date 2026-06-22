@@ -13,13 +13,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// On 401, clear token and redirect to login
+// On 401 or 403-with-client-role, clear token and redirect to login
 api.interceptors.response.use(
   (r) => r,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('aegis_token');
-      window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      const status = error.response?.status;
+      const role = localStorage.getItem('aegis_role');
+      if (status === 401 || (status === 403 && role === 'client')) {
+        localStorage.removeItem('aegis_token');
+        localStorage.removeItem('aegis_role');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -153,6 +158,13 @@ export const updateUser = (id: number, data: Record<string, unknown>) => api.pat
 export const listCaseAudit = (caseId: number) => api.get(`/api/audit/case/${caseId}`).then(r => r.data);
 export const listAllAudit = () => api.get('/api/audit/').then(r => r.data);
 
+// Portal intake (staff view)
+export const listPendingPortalCases = () => api.get('/api/portal/admin/pending').then(r => r.data);
+export const updatePortalCaseStatus = (caseId: number, portal_status: string) =>
+  api.patch(`/api/portal/admin/case/${caseId}/status`, null, { params: { portal_status } }).then(r => r.data);
+export const markDocumentReviewed = (docId: number) =>
+  api.patch(`/api/portal/admin/documents/${docId}/reviewed`).then(r => r.data);
+
 // Organizations
 export const listOrganizations = () => api.get('/api/organizations/').then(r => r.data);
 export const getOrganization = (id: number) => api.get(`/api/organizations/${id}`).then(r => r.data);
@@ -212,7 +224,7 @@ export const globalSearch = (q: string) => api.get('/api/search/', { params: { q
 // Case Export
 export const exportCase = (caseId: number) => api.get(`/api/cases/${caseId}/export`).then(r => r.data);
 
-// Finding → Dispute linking
+// Finding -> Dispute linking
 export const addFindingToDispute = (findingId: number, roundId: number, disputeReason?: string, fcraBasis?: string) =>
   api.post('/api/disputes/add-finding', { finding_id: findingId, round_id: roundId, dispute_reason: disputeReason, fcra_basis: fcraBasis }).then(r => r.data);
 export const listDisputeRoundsForCase = (caseId: number) =>

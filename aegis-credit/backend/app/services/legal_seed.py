@@ -640,6 +640,182 @@ def seed_federal_laws(db):
             "category": "lending",
             "source_url": "https://www.consumerfinance.gov/data-research/hmda/",
         },
+        # ── FDCPA §1692a(2) — "Communication" includes credit reporting ────────
+        {
+            "short_name": "FDCPA",
+            "title": "Fair Debt Collection Practices Act",
+            "citation": "15 U.S.C. § 1692 et seq.",
+            "section": "§1692a(2)",
+            "summary": (
+                "Defines 'communication' as 'the conveying of information regarding a debt directly "
+                "or indirectly to any person through any medium.' The phrase 'any medium' is "
+                "intentionally broad. Courts have interpreted this to include credit reporting — "
+                "a debt collector who places or updates a tradeline on a consumer's credit report "
+                "is making a 'communication' within the meaning of the FDCPA and is therefore "
+                "subject to all FDCPA communication restrictions (§1692c, §1692e, §1692f). "
+                "Note: the statute does not name credit reporting explicitly; the application "
+                "is a judicial interpretation of 'any medium,' not black-letter text. "
+                "Practical use: argue that a collector's credit reporting constitutes a "
+                "communication and must comply with all FDCPA substantive requirements."
+            ),
+            "effective_date": "1978-03-20",
+            "category": "debt_collection",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-debt-collection-practices-act",
+        },
+        # ── FCRA §1681a(2)(A)(i) — Transaction/experience exclusion ──────────
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§1681a(2)(A)(i)",
+            "summary": (
+                "Excludes from the definition of 'consumer report' any report containing "
+                "information solely as to transactions or experiences between the consumer "
+                "and the person making the report. In practice, this means: a bank reporting "
+                "its own direct payment history with a borrower (late payments, charge-offs) "
+                "to itself or its affiliates is NOT making a consumer report. "
+                "However, this exclusion is inapplicable to debt buyers and third-party collectors "
+                "because they have no direct transaction or experience with the consumer — they "
+                "received the information from the original creditor. When a debt collector "
+                "reports to a CRA, that reporting IS a consumer report subject to full FCRA "
+                "requirements. The exclusion does not explicitly 'disappear' under the statute; "
+                "rather, the collector simply cannot claim it because the transaction/experience "
+                "was never theirs. Use this argument to challenge debt buyers reporting tradelines "
+                "as if they have first-hand transaction authority."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        # ── FCRA §1681c — Original delinquency date / re-aging prohibition ───
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§1681c",
+            "summary": (
+                "Governs which information may be included in consumer reports and when it must "
+                "be deleted. Most adverse information must be deleted after 7 years. "
+                "Critical furnisher obligation: under §1681c(a)(5) and (c), furnishers must "
+                "report the Date of First Delinquency (DOFD) — the date the account first became "
+                "delinquent and was never subsequently brought current — within 90 days of "
+                "furnishing derogatory information. Furnishers may NOT re-age a debt by resetting "
+                "the DOFD when the debt is sold or transferred to a collector. The 7-year clock "
+                "runs from the original DOFD, not from the date of sale to the collector. "
+                "Note: §605(c) defines WHEN the 7-year reporting period begins (180 days after "
+                "DOFD), but §1681c is the operative provision requiring the DOFD to be accurately "
+                "reported. Re-aging — resetting the DOFD to extend reportability — is a per se "
+                "FCRA violation. Each re-aged account is a separate actionable violation."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        # ── FCRA §1681e(b) — CRA accuracy / willful vs negligent ─────────────
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§1681e(b)",
+            "summary": (
+                "Requires consumer reporting agencies to follow reasonable procedures to "
+                "assure maximum possible accuracy of consumer report information. "
+                "This is the primary accuracy provision used to sue CRAs directly. "
+                "Two standards of liability apply: "
+                "(1) NEGLIGENT noncompliance (§1617/§617): actual damages + attorney fees only — "
+                "no statutory or punitive damages. Consumer must prove real harm. "
+                "(2) WILLFUL noncompliance (§1616/§616): statutory damages of $100–$1,000 per "
+                "violation (no actual harm required) + punitive damages + attorney fees. "
+                "Willful includes reckless disregard of FCRA rights (Safeco v. Burr, 551 U.S. 47). "
+                "Note: 'wanton' is not a statutory term but is sometimes used colloquially to "
+                "describe willful/reckless conduct. Courts in the Fourth, Fifth, and D.C. Circuits "
+                "hold that 'maximum possible accuracy' requires information that is not merely "
+                "technically correct but also not misleading or incomplete in context."
+            ),
+            "effective_date": "1971-04-25",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        # ── FCRA §1681s-2(b) — Furnisher liability after CRA dispute notice ──
+        {
+            "short_name": "FCRA",
+            "title": "Fair Credit Reporting Act",
+            "citation": "15 U.S.C. § 1681 et seq.",
+            "section": "§1681s-2(b)",
+            "summary": (
+                "Imposes mandatory investigation duties on furnishers after they receive "
+                "notice of a dispute from a CRA. Upon receiving CRA dispute notice, the "
+                "furnisher MUST: (1) investigate the disputed information, (2) review all "
+                "relevant information provided by the CRA, (3) report results back to the CRA, "
+                "and (4) if inaccurate or unverifiable, correct or delete the information. "
+                "Consumers have a PRIVATE RIGHT OF ACTION against furnishers who violate "
+                "§1681s-2(b). Critical limitation: the dispute must route THROUGH the CRA "
+                "first — a consumer cannot sue a furnisher directly under §1681s-2(b) based "
+                "solely on a direct-to-furnisher dispute. The furnisher's §1681s-2(b) duty "
+                "is triggered only when the CRA transmits notice of the indirect dispute. "
+                "Failure to conduct a genuine investigation (as opposed to a rubber-stamp "
+                "verification) is actionable. Courts distinguish between investigation of "
+                "the accuracy of the information vs. mere confirmation that the data was "
+                "transmitted correctly."
+            ),
+            "effective_date": "1996-09-30",
+            "category": "credit_reporting",
+            "source_url": "https://www.ftc.gov/legal-library/browse/statutes/fair-credit-reporting-act",
+        },
+        # ── GLBA §6801(a) & §6802(a) — Nonpublic PI protection ───────────────
+        {
+            "short_name": "GLBA",
+            "title": "Gramm-Leach-Bliley Act",
+            "citation": "15 U.S.C. § 6801 et seq.",
+            "section": "§6801(a) & §6802(a)",
+            "summary": (
+                "§6801(a) establishes the policy of Congress to protect the security and "
+                "confidentiality of customers' nonpublic personal information (NPI) held by "
+                "financial institutions. §6802(a) prohibits financial institutions from disclosing "
+                "NPI to nonaffiliated third parties unless the institution provides privacy notice "
+                "and the consumer has not opted out. "
+                "Application to debt collection: when an original creditor sells a debt to a "
+                "collector, it is disclosing the consumer's NPI (SSN, account history, payment "
+                "records) to a nonaffiliated third party. This disclosure may violate §6802(a) "
+                "unless proper notice was given and the consumer did not opt out. "
+                "IMPORTANT NUANCE: §6802 contains statutory exceptions — including for "
+                "processing transactions, servicing accounts, and complying with other laws. "
+                "Creditors may argue the debt sale falls within an exception. The argument is "
+                "strongest when: (1) no privacy notice was ever provided, (2) the consumer "
+                "never had an opt-out opportunity, or (3) the NPI was shared beyond what the "
+                "original transaction required. Use with §1692g debt validation to create a "
+                "paper trail of the collector's acquisition of NPI."
+            ),
+            "effective_date": "2001-07-01",
+            "category": "privacy",
+            "source_url": "https://www.ftc.gov/business-guidance/privacy-security/gramm-leach-bliley-act",
+        },
+        # ── Metro 2 FAQ 69 — DE Special Comment Code ──────────────────────────
+        {
+            "short_name": "Metro 2",
+            "title": "Metro 2 Credit Reporting Resource Guide (CRRG)",
+            "citation": "CDIA Metro 2 Format (Credit Reporting Resource Guide)",
+            "section": "FAQ 69 — Special Comment Code DE",
+            "summary": (
+                "CDIA and the Metro 2 Task Force approved Special Comment Code 'DE' = "
+                "'Debt Extinguished Under State Law' (FAQ 69, approved October 2019). "
+                "Furnishers may use this code when a debt has been legally extinguished — "
+                "not merely time-barred — under applicable state law. "
+                "CRITICAL DISTINCTION: Most states only bar enforcement of time-barred debts "
+                "(the debt still exists, the collector just cannot sue). The 'DE' code applies "
+                "only in states where the statute of limitations actually EXTINGUISHES the debt "
+                "itself. States currently qualifying include: Mississippi, Wisconsin, and "
+                "North Carolina (for purchased debts only). "
+                "Furnishers settling debts should consult counsel before using 'DE' because: "
+                "(1) it signals complete extinguishment, creating potential estoppel issues, "
+                "and (2) plaintiffs' counsel may find state common-law claims even where the "
+                "FDCPA does not apply. Misuse of 'DE' in a non-extinguishment state is itself "
+                "a Metro 2 non-compliance violation and potential FCRA §1681s-2(a) inaccuracy."
+            ),
+            "effective_date": "2019-10-09",
+            "category": "credit_reporting",
+            "source_url": "https://www.cdiaonline.org/cdia-statements/2019/10/09/metro-2update-new-special-comment-code-for-accounts-included-in-debt-extinguishment/",
+        },
     ]
 
     existing = set()

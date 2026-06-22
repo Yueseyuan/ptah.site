@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_NAME: str = "Aegis Credit Investigator"
-    DEV_NO_AUTH: bool = True
+    DEV_NO_AUTH: bool = False
     DATABASE_URL: str = "sqlite:///./aegis.db"
     ANTHROPIC_API_KEY: str = ""
     UPLOAD_DIR: str = "uploads"
@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     STRIPE_PRICE_ID: str = "price_1TkA6ZFLqRbXTdYOP1kRMvT5"
     STRIPE_WEBHOOK_SECRET: str = ""
     PORTAL_BASE_URL: str = "https://cruelandassociates.site"
+    # Email / SMTP — set in Railway to enable password-reset emails
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = "noreply@cruelandassociates.site"
 
     class Config:
         env_file = ".env"

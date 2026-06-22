@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
     agents, approval, audit, auth, context, health, knowledge, memory,
-    models, orchestrator, prompts, skills, tools, workflows,
+    models, orchestrator, prompts, repo_review, skills, tools, workflows,
 )
 
 api_router = APIRouter()
@@ -19,3 +19,4 @@ api_router.include_router(context.router, prefix="/context", tags=["context"])
 api_router.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])
 api_router.include_router(workflows.router, prefix="/workflows", tags=["workflows"])
 api_router.include_router(orchestrator.router, prefix="/orchestrator", tags=["orchestrator"])
+api_router.include_router(repo_review.router, prefix="/repo-reviews", tags=["repo-reviews"])

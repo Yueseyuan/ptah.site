@@ -21,6 +21,10 @@ from app.models.memory import (
     ContentType, MemoryCollection, MemoryEntry, MemoryEntryTag,
     MemoryLink, MemoryLinkType, MemoryTag, MemoryVersion,
 )
+from app.models.repo_review import (
+    RepoClassification, RepoReview, ReviewFinding, ReviewReport,
+    ReviewStage, ReviewStatus, StageType, StageVerdict,
+)
 from app.models.orchestrator import (
     BranchRun, BranchStatus, MergeStrategy, OrchestratorDecision, OrchestratorPlan,
     OrchestratorRun, OrchestratorRunStatus, OrchestratorTask, ResultMerge,

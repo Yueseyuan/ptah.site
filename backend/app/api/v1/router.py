@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import agents, approval, audit, auth, health, models, prompts, skills, tools
+from app.api.v1.endpoints import agents, approval, audit, auth, context, health, knowledge, memory, models, prompts, skills, tools
 
 api_router = APIRouter()
 api_router.include_router(health.router, prefix="/health", tags=["health"])
@@ -11,3 +11,6 @@ api_router.include_router(agents.router, prefix="/agents", tags=["agents"])
 api_router.include_router(skills.router, prefix="/skills", tags=["skills"])
 api_router.include_router(prompts.router, prefix="/prompts", tags=["prompts"])
 api_router.include_router(tools.router, prefix="/tools", tags=["tools"])
+api_router.include_router(memory.router, prefix="/memory", tags=["memory"])
+api_router.include_router(context.router, prefix="/context", tags=["context"])
+api_router.include_router(knowledge.router, prefix="/knowledge", tags=["knowledge"])

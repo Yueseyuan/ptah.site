@@ -103,12 +103,25 @@
 - [x] 23 registry tests; 110 total passing
 - [x] Phase 7 commit
 
-## Phase 8 — Memory + Context + Knowledge (Pending)
+## Phase 8 — Memory + Context + Knowledge (Complete)
 
-- [ ] MemoryEntry, MemoryCollection, MemoryTag, MemoryLink, MemoryVersion
-- [ ] ContextPackage, ContextSource, ContextRebuildRun, ProjectState, DecisionRecord
-- [ ] KnowledgeNode, KnowledgeEdge, KnowledgeSnapshot
-- [ ] Search + retrieval endpoints
+- [x] MemoryCollection, MemoryTag, MemoryEntry, MemoryEntryTag, MemoryLink, MemoryVersion models
+- [x] ContextPackage, ContextSource, ContextRebuildRun, ProjectState, DecisionRecord models
+- [x] KnowledgeNode, KnowledgeEdge, KnowledgeSnapshot models
+- [x] Alembic migration (18 new tables, 20+ indexes)
+- [x] Memory: collections, tags, entries + search + versioning + tagging + links
+- [x] Context: packages, sources, rebuild runs, project states, decision records (ADR)
+- [x] Knowledge: nodes (typed), edges, snapshots (auto node/edge counts), search
+- [x] 24 tests; 134 total passing
+- [x] Phase 8 commit
+
+## Phase 9 — Workflow Engine + Orchestrator (Pending)
+
+- [ ] Workflow, WorkflowStep, WorkflowRun, WorkflowRunEvent
+- [ ] OrchestratorTask, TaskAssignment, TaskDependency
+- [ ] OrchestratorRun, OrchestratorDecision, OrchestratorPlan
+- [ ] TaskBranch, BranchRun, BranchResult, ResultMerge
+- [ ] Task planner + agent assignment + risk routing
 - [ ] Tests
 
 ## Upcoming Phases

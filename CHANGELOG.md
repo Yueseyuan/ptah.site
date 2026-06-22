@@ -1,5 +1,18 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 6 Agent Registry
+
+### Added
+- `app/models/agent.py` — 6 models + 2 enums (AgentCapabilityType × 9, AgentRunStatus × 5)
+- `alembic/versions/…_create_agent_tables.py` — migration (6 tables, 9 indexes)
+- `app/schemas/agent.py` — full schema set (Create/Update/Out for all models)
+- `app/api/v1/endpoints/agents.py` — 14 endpoints across CRUD/versions/capabilities/runs/policies
+- `tests/test_agents.py` — 21 tests
+
+### Changed
+- `app/models/__init__.py` — exports all agent models
+- `app/api/v1/router.py` — includes agents router at `/agents`
+
 ## [Unreleased] — Phase 5 Model Backends
 
 ### Added

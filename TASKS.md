@@ -76,12 +76,26 @@
 - [x] 22 provider tests (mocked httpx); 66 total passing
 - [x] Phase 5 commit
 
-## Phase 6 — Agent Registry (Pending)
+## Phase 6 — Agent Registry (Complete)
 
-- [ ] Agent, AgentVersion, AgentCapability models
-- [ ] AgentRun, AgentRunEvent, AgentRiskPolicy models
-- [ ] 9 capability types enum
-- [ ] CRUD endpoints
+- [x] Agent, AgentVersion, AgentCapability, AgentRun, AgentRunEvent, AgentRiskPolicy models
+- [x] AgentCapabilityType (9 types) + AgentRunStatus enums
+- [x] Alembic migration (6 tables, 9 indexes)
+- [x] Full CRUD: create/list/get/update/deactivate agent
+- [x] Version management: create/list, is_current swap
+- [x] Capability management: add (idempotent)/list/remove
+- [x] Run management: create/list/get-with-events
+- [x] Risk policies per agent (create/list)
+- [x] Audit events logged on agent create/run
+- [x] 21 agent tests; 87 total passing
+- [x] Phase 6 commit
+
+## Phase 7 — Skill + Prompt + Tool Registries (Pending)
+
+- [ ] Skill, SkillVersion, SkillCategory, SkillRun, SkillRiskPolicy
+- [ ] PromptTemplate, PromptVersion, PromptRun, PromptEvaluation, PromptRiskPolicy
+- [ ] ToolDefinition, ToolVersion, ToolRun, ToolPermission, ToolRiskPolicy
+- [ ] CRUD + run endpoints for all three
 - [ ] Tests
 
 ## Upcoming Phases

@@ -1,5 +1,21 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 3 Audit Logs
+
+### Added
+- `app/models/audit.py` — AuditLog model + AuditEventType enum (9 event types)
+- `alembic/versions/…_create_audit_logs_table.py` — migration with 3 indexes
+- `app/services/audit.py` — `log_event()` service (adds entry to session, caller commits)
+- `app/schemas/audit.py` — AuditLogOut, AuditLogList Pydantic schemas
+- `app/api/v1/endpoints/audit.py` — GET /api/v1/audit (admin-only, paginated, filterable)
+- `tests/test_audit.py` — 11 tests covering service, endpoint, and login auto-logging
+
+### Changed
+- `app/models/__init__.py` — exports AuditEventType, AuditLog
+- `app/core/dependencies.py` — adds `get_current_admin` dependency
+- `app/api/v1/router.py` — includes audit router at `/audit`
+- `app/api/v1/endpoints/auth.py` — logs LOGIN event + commit on successful login
+
 ## [Unreleased] — Phase 2 Auth
 
 ### Added

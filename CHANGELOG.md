@@ -1,5 +1,19 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 5 Model Backends
+
+### Added
+- `app/providers/base.py` — ModelProvider Protocol, Message, ModelInfo, CompletionResult
+- `app/providers/ollama.py` — OllamaProvider (native /api/chat, health, list, complete, stream)
+- `app/providers/openai_compat.py` — OpenAICompatProvider + LlamaCpp/LMStudio/LocalAI/VLLM/OpenAI subclasses
+- `app/providers/anthropic.py` — AnthropicProvider (cloud /v1/messages, static model list)
+- `app/providers/registry.py` — ProviderRegistry; auto-builds from config at startup
+- `app/api/v1/endpoints/models.py` — 3 endpoints: providers list, provider detail, flat model list
+- `tests/test_models.py` — 22 tests covering all providers + endpoints (mocked httpx)
+
+### Changed
+- `app/api/v1/router.py` — includes models router at `/models`
+
 ## [Unreleased] — Phase 4 Approval System
 
 ### Added

@@ -66,10 +66,14 @@ export default function ClientDetailPage() {
             <p>Client #{client.id} · Added {new Date(client.created_at).toLocaleDateString()}</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-outline btn-sm" onClick={() => { if (!editing) setEditForm({ first_name: client.first_name, last_name: client.last_name, email: client.email, phone: client.phone, address: client.address, city: client.city, state: client.state, zip_code: client.zip_code, dob: client.dob, ssn_last4: client.ssn_last4, notes: client.notes }); setEditing(e => !e); setError(''); }}>
+            <button
+              type="button"
+              onClick={() => { if (!editing) setEditForm({ first_name: client.first_name, last_name: client.last_name, email: client.email, phone: client.phone, address: client.address, city: client.city, state: client.state, zip_code: client.zip_code, dob: client.dob, ssn_last4: client.ssn_last4, notes: client.notes }); setEditing(e => !e); setError(''); }}
+              style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', color: '#1e2d5a', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            >
               {editing ? 'Cancel' : 'Edit Client'}
             </button>
-            <Link href="/clients" className="btn btn-outline btn-sm">← Clients</Link>
+            <Link href="/clients" style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', color: '#1e2d5a', fontSize: 13, fontWeight: 500, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>← Clients</Link>
           </div>
         </div>
 

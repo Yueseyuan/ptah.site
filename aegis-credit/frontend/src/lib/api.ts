@@ -159,7 +159,7 @@ export const listCaseAudit = (caseId: number) => api.get(`/api/audit/case/${case
 export const listAllAudit = () => api.get('/api/audit/').then(r => r.data);
 
 // Portal intake (staff view)
-export const listPendingPortalCases = () => api.get('/api/portal/admin/pending').then(r => r.data);
+export const listPendingPortalCases = (status = 'pending') => api.get('/api/portal/admin/pending', { params: { status } }).then(r => r.data);
 export const updatePortalCaseStatus = (caseId: number, portal_status: string) =>
   api.patch(`/api/portal/admin/case/${caseId}/status`, null, { params: { portal_status } }).then(r => r.data);
 export const markDocumentReviewed = (docId: number) =>

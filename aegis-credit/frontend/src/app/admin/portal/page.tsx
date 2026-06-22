@@ -8,6 +8,7 @@ interface PortalIntake {
   case_id: number;
   case_number: string;
   portal_status: string;
+  client_id: number | null;
   client_name: string;
   client_email: string;
   client_state: string;
@@ -32,11 +33,11 @@ export default function PortalIntakePage() {
   const [cases, setCases] = useState<PortalIntake[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<number | null>(null);
-  const [filter, setFilter] = useState('pending');
+  const [filter, setFilter] = useState('all');
 
   function load() {
     setLoading(true);
-    listPendingPortalCases().then(setCases).finally(() => setLoading(false));
+    listPendingPortalCases('all').then(setCases).finally(() => setLoading(false));
   }
 
   useEffect(() => { load(); }, []);
@@ -78,7 +79,7 @@ export default function PortalIntakePage() {
                 cursor: 'pointer',
               }}
             >
-              {'label' in opt ? opt.label : opt.value} {opt.value !== 'all' && `(${cases.filter(c => c.portal_status === opt.value).length})`}
+              {opt.label} ({opt.value === 'all' ? cases.length : cases.filter(c => c.portal_status === opt.value).length})
             </button>
           ))}
         </div>
@@ -103,7 +104,12 @@ export default function PortalIntakePage() {
                 {visible.map(c => (
                   <tr key={c.case_id}>
                     <td style={{ fontWeight: 600 }}>
-                      <div>{c.client_name}</div>
+                      <div>
+                        {c.client_id
+                          ? <Link href={`/clients/${c.client_id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{c.client_name}</Link>
+                          : c.client_name
+                        }
+                      </div>
                       <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 400 }}>{c.client_email}</div>
                     </td>
                     <td><code style={{ fontSize: 12 }}>{c.case_number}</code></td>
@@ -144,8 +150,13 @@ export default function PortalIntakePage() {
                             <option key={o.value} value={o.value}>{o.label}</option>
                           ))}
                         </select>
+                        {c.client_id && (
+                          <Link href={`/clients/${c.client_id}`} className="btn btn-outline btn-sm">
+                            Client
+                          </Link>
+                        )}
                         <Link href={`/cases/${c.case_id}`} className="btn btn-outline btn-sm">
-                          Open Case
+                          Case
                         </Link>
                       </div>
                     </td>

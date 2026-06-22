@@ -299,16 +299,20 @@ def portal_disputes(
     ]
 
 
-# Staff endpoint — list pending portal intake cases
+# Staff endpoint — list portal intake cases
 @router.get("/admin/pending")
 def pending_portal_cases(
+    status: str = "pending",
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Staff: list all cases created via portal that are pending review."""
+    """Staff: list cases created via portal. Pass status=all for every portal case."""
     if current_user.role not in ("admin", "investigator", "reviewer"):
         raise HTTPException(403, "Staff access required")
-    cases = db.query(AegisCase).filter(AegisCase.portal_status == "pending").order_by(AegisCase.created_at.desc()).all()
+    q = db.query(AegisCase).filter(AegisCase.portal_status.isnot(None))
+    if status != "all":
+        q = q.filter(AegisCase.portal_status == status)
+    cases = q.order_by(AegisCase.created_at.desc()).all()
     results = []
     for case in cases:
         client = db.query(AegisClient).filter(AegisClient.id == case.client_id).first()
@@ -317,6 +321,7 @@ def pending_portal_cases(
             "case_id": case.id,
             "case_number": case.case_number,
             "portal_status": case.portal_status,
+            "client_id": client.id if client else None,
             "client_name": f"{client.first_name} {client.last_name}" if client else "Unknown",
             "client_email": client.email if client else "",
             "client_state": client.state if client else "",

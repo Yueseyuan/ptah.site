@@ -5,7 +5,7 @@ import { getPortalToken, getPortalRole, clearPortalAuth } from '@/lib/portal-api
 
 const STAFF_ROLES = ['admin', 'investigator', 'reviewer', 'readonly'];
 
-const PUBLIC_PATHS = ['/portal/login', '/portal/register'];
+const PUBLIC_PATHS = ['/portal/login', '/portal/register', '/portal/forgot-password', '/portal/reset-password'];
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();

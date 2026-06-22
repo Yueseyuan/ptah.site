@@ -94,7 +94,12 @@ export default function PortalLoginPage() {
             </button>
           </form>
 
-          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#64748b' }}>
+          <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#64748b' }}>
+            <a href="/portal/forgot-password" style={{ color: '#64748b', textDecoration: 'none' }}>
+              Forgot your password?
+            </a>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: '#64748b' }}>
             New client?{' '}
             <a href="/portal/register" style={{ color: '#1d4ed8', fontWeight: 600, textDecoration: 'none' }}>
               Create an account

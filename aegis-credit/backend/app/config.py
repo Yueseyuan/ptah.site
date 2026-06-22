@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     STRIPE_PRICE_ID: str = "price_1TkA6ZFLqRbXTdYOP1kRMvT5"
     STRIPE_WEBHOOK_SECRET: str = ""
     PORTAL_BASE_URL: str = "https://cruelandassociates.site"
+    # Email / SMTP — set in Railway to enable password-reset emails
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM: str = "noreply@cruelandassociates.site"
 
     class Config:
         env_file = ".env"

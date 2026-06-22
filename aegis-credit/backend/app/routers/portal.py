@@ -1,7 +1,8 @@
 """Client portal router — self-service endpoints for portal clients."""
 import os
+import secrets
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
@@ -9,7 +10,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AegisClient, AegisCase, ClientDocument, User
+from app.models import AegisClient, AegisCase, ClientDocument, User, PasswordResetToken
 from app.dependencies import get_current_user, get_portal_client
 from app.config import settings
 from app.services.auth_service import hash_password, create_access_token
@@ -505,3 +506,73 @@ def portal_download_dispute_letter(
         content,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ── Password Reset ────────────────────────────────────────────────────────────
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/forgot-password")
+def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Public: request a password reset link. Always returns 200 to prevent email enumeration."""
+    from app.services.email_service import send_password_reset_email
+
+    user = db.query(User).filter(User.email == data.email).first()
+    if user and user.is_active:
+        db.query(PasswordResetToken).filter(
+            PasswordResetToken.user_id == user.id,
+            PasswordResetToken.used == False,  # noqa: E712
+        ).delete()
+        db.flush()
+
+        raw_token = secrets.token_urlsafe(32)
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token=raw_token,
+            expires_at=datetime.utcnow() + timedelta(hours=1),
+        )
+        db.add(reset_token)
+        db.commit()
+
+        reset_url = f"{settings.PORTAL_BASE_URL}/portal/reset-password?token={raw_token}"
+        client = db.query(AegisClient).filter(AegisClient.portal_user_id == user.id).first()
+        first_name = client.first_name if client else ""
+        try:
+            send_password_reset_email(user.email, reset_url, first_name)
+        except Exception as e:
+            print(f"[PASSWORD RESET EMAIL ERROR] {e}")
+
+    return {"ok": True, "message": "If that email is registered, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Public: consume a reset token and set a new password."""
+    if len(data.new_password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
+
+    record = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == data.token,
+        PasswordResetToken.used == False,  # noqa: E712
+    ).first()
+
+    if not record:
+        raise HTTPException(400, "Invalid or already-used reset link")
+    if datetime.utcnow() > record.expires_at:
+        raise HTTPException(400, "Reset link has expired. Please request a new one.")
+
+    user = db.query(User).filter(User.id == record.user_id).first()
+    if not user or not user.is_active:
+        raise HTTPException(400, "Account not found or inactive")
+
+    user.hashed_password = hash_password(data.new_password)
+    record.used = True
+    db.commit()
+    return {"ok": True, "message": "Password updated. You can now log in with your new password."}

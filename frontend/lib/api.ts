@@ -328,3 +328,23 @@ export const agencyApi = {
   status: () => api.get<AgencyStatus>("/agency/status"),
   seed: () => api.post<AgencySeedResult>("/agency/seed"),
 };
+
+// skills.sh
+export interface SkillCatalogEntry {
+  slug: string;
+  category: string;
+  label: string;
+}
+
+export interface SkillFetchResult {
+  slug: string;
+  content: string;
+  length: number;
+}
+
+export const skillsShApi = {
+  catalog: () => api.get<SkillCatalogEntry[]>("/skills/sh/catalog"),
+  fetch: (slug: string, bustCache = false) =>
+    api.get<SkillFetchResult>(`/skills/sh/fetch?slug=${encodeURIComponent(slug)}${bustCache ? "&bust_cache=true" : ""}`),
+  clearCache: () => api.delete("/skills/sh/cache"),
+};

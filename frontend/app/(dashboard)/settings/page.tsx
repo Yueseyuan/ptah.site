@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { modelsApi, claritasApi, mediaApi, agencyApi, ClaritasStatus, ClaritasSeedResult, MediaStatus, MediaSeedResult, AgencyStatus, AgencySeedResult, Provider, ModelInfo } from "@/lib/api";
+import { modelsApi, claritasApi, mediaApi, agencyApi, skillsShApi, ClaritasStatus, ClaritasSeedResult, MediaStatus, MediaSeedResult, AgencyStatus, AgencySeedResult, SkillCatalogEntry, Provider, ModelInfo } from "@/lib/api";
 import { isTauri, tauriBackend, tauriDatabase, DatabaseInfo } from "@/lib/tauri";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal, WifiOff, Image, Music, Video, Box, Sparkles, Users } from "lucide-react";
+import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal, WifiOff, Image, Music, Video, Box, Sparkles, Users, BookOpen, Check, X } from "lucide-react";
 
 const MEDIA_AGENT_ICONS: Record<string, React.ReactNode> = {
   "Image Creator": <Image size={13} />,
@@ -110,6 +110,109 @@ function MediaAgentsPanel() {
         {error != null && <p className="mt-2 text-xs text-red-400">{error}</p>}
         {allInstalled && result == null && (
           <p className="text-xs text-[--text-secondary]">All media agents installed.</p>
+        )}
+      </Card>
+    </section>
+  );
+}
+
+const SKILL_CATEGORY_COLORS: Record<string, string> = {
+  python: "text-yellow-400",
+  typescript: "text-blue-400",
+  react: "text-cyan-400",
+  database: "text-green-400",
+  tools: "text-purple-400",
+  architecture: "text-orange-400",
+  security: "text-red-400",
+  testing: "text-pink-400",
+  go: "text-teal-400",
+  rust: "text-amber-400",
+};
+
+function SkillsShPanel() {
+  const [catalog, setCatalog] = useState<SkillCatalogEntry[]>([]);
+  const [testing, setTesting] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{ slug: string; ok: boolean; chars?: number } | null>(null);
+
+  useEffect(() => {
+    skillsShApi.catalog().then(setCatalog).catch(() => {});
+  }, []);
+
+  async function handleTest(slug: string) {
+    setTesting(slug);
+    setTestResult(null);
+    try {
+      const r = await skillsShApi.fetch(slug);
+      setTestResult({ slug, ok: true, chars: r.length });
+    } catch {
+      setTestResult({ slug, ok: false });
+    } finally {
+      setTesting(null);
+    }
+  }
+
+  const byCategory = catalog.reduce<Record<string, SkillCatalogEntry[]>>((acc, s) => {
+    (acc[s.category] ??= []).push(s);
+    return acc;
+  }, {});
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold text-[--text-muted] uppercase tracking-wide mb-3 flex items-center gap-2">
+        <BookOpen size={13} /> skills.sh — Agent Skill Modules
+      </h2>
+
+      <Card>
+        <p className="text-sm font-medium text-[--text-primary] mb-1">skills.sh Integration</p>
+        <p className="text-xs text-[--text-secondary] leading-relaxed mb-4">
+          Skill modules are SKILL.md files fetched from the{" "}
+          <code className="bg-[--surface-2] px-1 rounded">skills.sh</code> public registry and injected
+          into an agent&apos;s system prompt at run time. Add a{" "}
+          <code className="bg-[--surface-2] px-1 rounded">skills</code> array to an agent&apos;s version
+          config to activate them.
+        </p>
+
+        <div className="border border-[--border] rounded-lg p-3 mb-4">
+          <p className="text-[10px] font-medium text-[--text-primary] mb-2">Agent version config example</p>
+          <pre className="text-[10px] text-[--text-muted] font-mono leading-relaxed">{`{
+  "division": "engineering",
+  "skills": ["python-patterns", "fastapi-patterns"]
+}`}</pre>
+        </div>
+
+        {Object.entries(byCategory).map(([cat, skills]) => (
+          <div key={cat} className="mb-4">
+            <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1.5 ${SKILL_CATEGORY_COLORS[cat] ?? "text-[--text-muted]"}`}>
+              {cat}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {skills.map((s) => (
+                <button
+                  key={s.slug}
+                  onClick={() => handleTest(s.slug)}
+                  disabled={testing === s.slug}
+                  className="flex items-center gap-1 text-[10px] text-[--text-secondary] bg-[--surface-2] hover:bg-[--surface] border border-[--border] px-2 py-0.5 rounded transition-colors disabled:opacity-50"
+                >
+                  {testing === s.slug ? (
+                    <span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin inline-block" />
+                  ) : testResult?.slug === s.slug ? (
+                    testResult.ok
+                      ? <Check size={10} className="text-green-400" />
+                      : <X size={10} className="text-red-400" />
+                  ) : null}
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {testResult && (
+          <p className={`text-xs mt-2 ${testResult.ok ? "text-green-400" : "text-red-400"}`}>
+            {testResult.ok
+              ? `✓ ${testResult.slug} fetched (${testResult.chars?.toLocaleString()} chars)`
+              : `✗ Could not fetch ${testResult.slug} — check network or slug`}
+          </p>
         )}
       </Card>
     </section>
@@ -540,6 +643,8 @@ export default function SettingsPage() {
       <MediaAgentsPanel />
 
       <AgencyPanel />
+
+      <SkillsShPanel />
 
       <FreeCCPanel />
 

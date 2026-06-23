@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -134,6 +134,59 @@ async def create_risk_policy(skill_id: int, body: SkillRiskPolicyCreate, db: Asy
     await db.commit()
     await db.refresh(policy)
     return policy
+
+
+# ---------------------------------------------------------------------------
+# skills.sh registry integration
+# ---------------------------------------------------------------------------
+
+# Curated catalog — slugs that map to SKILL.md files on skills.sh
+_SKILL_CATALOG = [
+    {"slug": "python-patterns", "category": "python", "label": "Python Patterns"},
+    {"slug": "python-testing", "category": "python", "label": "Python Testing"},
+    {"slug": "fastapi-patterns", "category": "python", "label": "FastAPI Patterns"},
+    {"slug": "typescript-patterns", "category": "typescript", "label": "TypeScript Patterns"},
+    {"slug": "react-patterns", "category": "react", "label": "React Patterns"},
+    {"slug": "nextjs-patterns", "category": "react", "label": "Next.js Patterns"},
+    {"slug": "sql-patterns", "category": "database", "label": "SQL Patterns"},
+    {"slug": "postgres-patterns", "category": "database", "label": "PostgreSQL Patterns"},
+    {"slug": "git-workflow", "category": "tools", "label": "Git Workflow"},
+    {"slug": "docker-patterns", "category": "tools", "label": "Docker Patterns"},
+    {"slug": "rest-api-design", "category": "architecture", "label": "REST API Design"},
+    {"slug": "security-patterns", "category": "security", "label": "Security Patterns"},
+    {"slug": "testing-patterns", "category": "testing", "label": "Testing Patterns"},
+    {"slug": "go-patterns", "category": "go", "label": "Go Patterns"},
+    {"slug": "rust-patterns", "category": "rust", "label": "Rust Patterns"},
+]
+
+
+@router.get("/sh/catalog")
+async def skillssh_catalog(_: User = Depends(get_current_user)) -> list[dict]:
+    """Return the curated skills.sh catalog."""
+    return _SKILL_CATALOG
+
+
+@router.get("/sh/fetch")
+async def skillssh_fetch(
+    slug: str = Query(..., description="Skill slug or full URL"),
+    bust_cache: bool = Query(False),
+    _: User = Depends(get_current_user),
+) -> dict:
+    """Fetch a SKILL.md from skills.sh and cache it locally."""
+    from app.services.skill_loader import fetch_skill
+    try:
+        content = await fetch_skill(slug, bust_cache=bust_cache)
+        return {"slug": slug, "content": content, "length": len(content)}
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc))
+
+
+@router.delete("/sh/cache", status_code=status.HTTP_200_OK)
+async def skillssh_clear_cache(_: User = Depends(get_current_user)) -> dict:
+    """Clear the local skills.sh disk cache."""
+    from app.services.skill_loader import clear_skill_cache
+    removed = clear_skill_cache()
+    return {"removed": removed}
 
 
 # ---------------------------------------------------------------------------

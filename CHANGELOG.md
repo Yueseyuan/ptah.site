@@ -1,5 +1,18 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 10 Repo Review Pipeline
+
+### Added
+- `app/models/repo_review.py` — RepoReview, ReviewStage, ReviewFinding, ReviewReport + ReviewStatus/StageType/StageVerdict/RepoClassification enums
+- `alembic/versions/…_create_repo_review_tables.py` — migration (4 tables, 7 indexes)
+- `app/schemas/repo_review.py` — full schema set with 4-way classification
+- `app/api/v1/endpoints/repo_review.py` — CRUD + 5-stage pipeline + per-stage findings + report generation (409 on dup)
+- `tests/test_repo_review.py` — 11 tests
+
+### Changed
+- `app/api/v1/router.py` — includes repo-reviews router
+- `app/models/__init__.py` — exports all Phase 10 models
+
 ## [Unreleased] — Phase 9 Workflow Engine + Orchestrator
 
 ### Added

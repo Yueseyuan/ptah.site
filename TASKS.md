@@ -127,13 +127,28 @@
 - [x] 15 tests; 149 total passing
 - [x] Phase 9 commit
 
-## Phase 10 — Repo Review Pipeline (Pending)
+## Phase 10 — Repo Review Pipeline (Complete)
 
-- [ ] RepoReview, ReviewStage, ReviewStageResult, ReviewClassification models
-- [ ] 5-stage review (license, security, dependency, capability, integration)
-- [ ] 4-way classification (Use Directly / Modify First / Reference Only / Do Not Use)
-- [ ] Review report generation endpoint
-- [ ] Tests
+- [x] RepoReview, ReviewStage, ReviewFinding, ReviewReport models
+- [x] 5-stage pipeline (license → security → dependency → capability → integration), returned in order
+- [x] 4-way classification (use_directly / modify_first / reference_only / do_not_use)
+- [x] Findings with severity/category/file_path/line_number/remediation
+- [x] Report generation endpoint (409 on duplicate) with stage_scores, recommendations, blockers
+- [x] Stage-ordered listing, per-stage findings, cross-review findings with severity filter
+- [x] Alembic migration (4 tables)
+- [x] 11 tests; 160 total passing (all green)
+- [x] Phase 10 commit
+
+## Phase 11 — Next.js Frontend (Pending)
+
+- [ ] Next.js project scaffold (app router)
+- [ ] Auth pages (login / register)
+- [ ] Dashboard shell
+- [ ] Agents module UI
+- [ ] Memory / Knowledge UI
+- [ ] Workflow builder UI
+- [ ] Repo Review UI
+- [ ] Settings (model backends)
 
 ## Upcoming Phases
 

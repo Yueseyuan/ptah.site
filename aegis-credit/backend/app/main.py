@@ -74,6 +74,12 @@ if not os.environ.get("TESTING"):
     run_migrations()
     run_seeds()
 
+# Startup diagnostics — visible in Railway deploy logs
+print(f"[CONFIG] DATABASE_URL: {settings.DATABASE_URL[:35]}...")
+print(f"[CONFIG] ANTHROPIC_API_KEY: {'SET (' + str(len(settings.ANTHROPIC_API_KEY)) + ' chars)' if settings.ANTHROPIC_API_KEY else 'MISSING — reports will fail'}")
+print(f"[CONFIG] STRIPE_SECRET_KEY: {'SET' if settings.STRIPE_SECRET_KEY else 'MISSING — billing will fail'}")
+print(f"[CONFIG] JWT_SECRET_KEY: {'SET (custom)' if settings.JWT_SECRET_KEY not in ('change-me-in-production-use-env-var', '') else 'MISSING — using insecure default'}")
+
 app = FastAPI(title=settings.APP_NAME, version="1.0.0")
 
 _extra_origins = [o.strip() for o in settings.EXTRA_ORIGINS.split(",") if o.strip()]
@@ -120,4 +126,11 @@ app.include_router(billing_router)
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "app": settings.APP_NAME, "version": "1.0.0"}
+    return {
+        "status": "ok",
+        "app": settings.APP_NAME,
+        "version": "1.0.0",
+        "anthropic_key": "SET" if settings.ANTHROPIC_API_KEY else "MISSING",
+        "stripe_key": "SET" if settings.STRIPE_SECRET_KEY else "MISSING",
+        "database": settings.DATABASE_URL[:30] + "...",
+    }

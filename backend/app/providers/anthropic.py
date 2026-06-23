@@ -16,10 +16,10 @@ class AnthropicProvider:
 
     name = "anthropic"
 
-    def __init__(self, api_key: str, client: httpx.AsyncClient | None = None):
+    def __init__(self, api_key: str, base_url: str = "https://api.anthropic.com", client: httpx.AsyncClient | None = None):
         self._api_key = api_key
         self._client = client or httpx.AsyncClient(
-            base_url="https://api.anthropic.com",
+            base_url=base_url,
             headers={
                 "x-api-key": api_key,
                 "anthropic-version": "2023-06-01",

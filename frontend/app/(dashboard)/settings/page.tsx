@@ -6,7 +6,102 @@ import { isTauri, tauriBackend, tauriDatabase, DatabaseInfo } from "@/lib/tauri"
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal } from "lucide-react";
+import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal, Wifi, WifiOff, ExternalLink } from "lucide-react";
+
+const FCC_PORT = 8003;
+const FCC_BASE = `http://localhost:${FCC_PORT}`;
+
+function FreeCCPanel() {
+  const [online, setOnline] = useState<boolean | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  async function checkProxy() {
+    setChecking(true);
+    try {
+      const res = await fetch(`${FCC_BASE}/health`, { signal: AbortSignal.timeout(3000) });
+      setOnline(res.ok);
+    } catch {
+      setOnline(false);
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  useEffect(() => { checkProxy(); }, []);
+
+  const statusColor = online === null ? "bg-[--text-muted]" : online ? "bg-green-400 shadow-[0_0_8px_#4ade80]" : "bg-red-400";
+  const statusLabel = online === null ? "checking…" : online ? "connected" : "not running";
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold text-[--text-muted] uppercase tracking-wide mb-3 flex items-center gap-2">
+        {online ? <Wifi size={13} /> : <WifiOff size={13} />} Free AI Proxy
+      </h2>
+
+      <Card>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusColor}`} />
+              <p className="text-sm font-medium text-[--text-primary]">free-claude-code proxy</p>
+              <span className="text-xs text-[--text-muted]">port {FCC_PORT} · {statusLabel}</span>
+            </div>
+            <p className="text-xs text-[--text-secondary] leading-relaxed">
+              Routes Anthropic API calls to free providers — Gemini, NVIDIA NIM, and OpenRouter free tier.
+              Zero subscriptions, zero usage limits.
+            </p>
+          </div>
+          <button
+            onClick={checkProxy}
+            disabled={checking}
+            className="ml-4 text-xs text-[--text-muted] hover:text-[--text-secondary] transition-colors shrink-0 disabled:opacity-50"
+          >
+            {checking ? "…" : "refresh"}
+          </button>
+        </div>
+
+        {!online && (
+          <div className="border border-[--border] rounded-lg p-3 mb-3 space-y-2">
+            <p className="text-xs font-medium text-[--text-primary] mb-2">Setup (Windows)</p>
+            <div className="space-y-1.5">
+              {[
+                { step: "1", label: "Install", code: "irm https://github.com/Alishahryar1/free-claude-code/blob/main/scripts/install.ps1?raw=1 | iex" },
+                { step: "2", label: "Start proxy", code: `fcc-server --port ${FCC_PORT}` },
+                { step: "3", label: "In backend .env", code: `ANTHROPIC_BASE_URL=http://localhost:${FCC_PORT}` },
+                { step: "4", label: "Restart backend", code: "uvicorn app.main:app --port 8083" },
+              ].map(({ step, label, code }) => (
+                <div key={step} className="flex items-start gap-2">
+                  <span className="text-[10px] font-bold text-[--text-muted] w-4 shrink-0 mt-0.5">{step}.</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] text-[--text-muted] block mb-0.5">{label}</span>
+                    <code className="text-[10px] text-[--text-secondary] bg-[--surface-2] px-1.5 py-0.5 rounded block break-all">{code}</code>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {online && (
+          <div className="flex gap-2">
+            <a
+              href={`${FCC_BASE}/admin`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-[--text-secondary] hover:text-[--text-primary] transition-colors"
+            >
+              <ExternalLink size={11} /> Configure providers
+            </a>
+          </div>
+        )}
+
+        <p className="text-[10px] text-[--text-muted] mt-3 pt-3 border-t border-[--border]">
+          When running, set <code className="bg-[--surface-2] px-1 rounded">ANTHROPIC_BASE_URL=http://localhost:{FCC_PORT}</code> in your backend <code className="bg-[--surface-2] px-1 rounded">.env</code> and restart.
+        </p>
+      </Card>
+    </section>
+  );
+}
 
 // Icons matched to each CL4R1T4S agent
 const AGENT_ICONS: Record<string, React.ReactNode> = {
@@ -288,6 +383,8 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-[--text-primary]">Settings</h1>
         <p className="text-sm text-[--text-secondary] mt-1">Model provider configuration</p>
       </div>
+
+      <FreeCCPanel />
 
       <ClaritasPanel />
 

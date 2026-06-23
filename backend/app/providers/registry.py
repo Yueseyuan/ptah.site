@@ -54,5 +54,8 @@ def _build_registry() -> ProviderRegistry:
     if settings.openai_api_key:
         registry.register(OpenAIProvider(settings.openai_api_key))
     if settings.anthropic_api_key:
-        registry.register(AnthropicProvider(settings.anthropic_api_key))
+        registry.register(AnthropicProvider(settings.anthropic_api_key, settings.anthropic_base_url))
+    # free-claude-code proxy: no real API key needed, proxy runs on localhost:8082
+    elif settings.anthropic_base_url != "https://api.anthropic.com":
+        registry.register(AnthropicProvider("freecc", settings.anthropic_base_url))
     return registry

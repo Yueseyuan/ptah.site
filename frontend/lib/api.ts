@@ -111,6 +111,13 @@ export const modelsApi = {
   listModels: () => api.get<ModelInfo[]>("/models"),
 };
 
+// Chief
+export const chiefApi = {
+  run: (goal: string) => api.post<ChiefRunResult>("/chief/run", { goal }),
+  listRuns: () => api.get<ChiefRunSummary[]>("/chief/runs"),
+  getRun: (id: number) => api.get<ChiefRunSummary>(`/chief/runs/${id}`),
+};
+
 // Types
 export interface Agent {
   id: number;
@@ -241,4 +248,31 @@ export interface ModelInfo {
   name: string;
   provider: string;
   context_length: number;
+}
+
+export interface ChiefSubtask {
+  title: string;
+  description: string;
+  agent_name: string;
+  agent_run_id: number | null;
+  output: string | null;
+}
+
+export interface ChiefRunResult {
+  run_id: number | null;
+  subtasks: ChiefSubtask[];
+  merged_output: string | null;
+  error: string | null;
+}
+
+export interface ChiefRunSummary {
+  id: number;
+  name: string;
+  status: string;
+  input: Record<string, unknown> | null;
+  output: Record<string, unknown> | null;
+  error: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
 }

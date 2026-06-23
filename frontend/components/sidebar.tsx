@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bot, Brain, GitBranch, Home, LogOut,
+  Bot, Brain, Crown, GitBranch, Home, LogOut,
   Network, Settings, Star
 } from "lucide-react";
 import { clearToken } from "@/lib/auth";
 
 const nav = [
+  { href: "/chief", icon: Crown, label: "Chief" },
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/agents", icon: Bot, label: "Agents" },
   { href: "/memory", icon: Brain, label: "Memory" },

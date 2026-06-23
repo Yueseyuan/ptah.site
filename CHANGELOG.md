@@ -1,5 +1,23 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 7 Skill + Prompt + Tool Registries
+
+### Added
+- `app/models/skill.py` — Skill, SkillVersion, SkillCategory, SkillRun, SkillRiskPolicy + SkillRunStatus enum
+- `app/models/prompt.py` — PromptTemplate, PromptVersion, PromptRun, PromptEvaluation, PromptRiskPolicy + PromptType/PromptRunStatus enums
+- `app/models/tool.py` — ToolDefinition, ToolVersion, ToolRun, ToolPermission, ToolRiskPolicy + ToolType/ToolRunStatus enums
+- `alembic/versions/…_create_skill_prompt_tool_tables.py` — migration (15 tables)
+- `app/schemas/skill.py` — full schema set for Skill registry (Category/Skill/Version/Run/RiskPolicy)
+- `app/schemas/prompt.py` — full schema set for Prompt registry (Template/Version/Run/Evaluation/RiskPolicy)
+- `app/schemas/tool.py` — full schema set for Tool registry (Tool/Version/Run/Permission/RiskPolicy)
+- `app/api/v1/endpoints/skills.py` — categories CRUD + skills CRUD/versions/runs/risk-policies
+- `app/api/v1/endpoints/prompts.py` — templates CRUD/versions/runs/evaluations/risk-policies
+- `app/api/v1/endpoints/tools.py` — tools CRUD/versions/runs/permissions/risk-policies
+- `tests/test_registries.py` — 23 tests covering all three registries
+
+### Changed
+- `app/api/v1/router.py` — includes skills/prompts/tools routers
+
 ## [Unreleased] — Phase 6 Agent Registry
 
 ### Added

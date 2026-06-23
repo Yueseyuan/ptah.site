@@ -90,12 +90,25 @@
 - [x] 21 agent tests; 87 total passing
 - [x] Phase 6 commit
 
-## Phase 7 — Skill + Prompt + Tool Registries (Pending)
+## Phase 7 — Skill + Prompt + Tool Registries (Complete)
 
-- [ ] Skill, SkillVersion, SkillCategory, SkillRun, SkillRiskPolicy
-- [ ] PromptTemplate, PromptVersion, PromptRun, PromptEvaluation, PromptRiskPolicy
-- [ ] ToolDefinition, ToolVersion, ToolRun, ToolPermission, ToolRiskPolicy
-- [ ] CRUD + run endpoints for all three
+- [x] Skill, SkillVersion, SkillCategory, SkillRun, SkillRiskPolicy models
+- [x] PromptTemplate, PromptVersion, PromptRun, PromptEvaluation, PromptRiskPolicy models
+- [x] ToolDefinition, ToolVersion, ToolRun, ToolPermission, ToolRiskPolicy models
+- [x] Alembic migration (15 tables)
+- [x] Full CRUD + versions + runs + risk-policies for all three registries
+- [x] Prompt evaluations (score, notes, tags)
+- [x] Tool permissions (user-scoped or is_public)
+- [x] Skill categories (create/list)
+- [x] 23 registry tests; 110 total passing
+- [x] Phase 7 commit
+
+## Phase 8 — Memory + Context + Knowledge (Pending)
+
+- [ ] MemoryEntry, MemoryCollection, MemoryTag, MemoryLink, MemoryVersion
+- [ ] ContextPackage, ContextSource, ContextRebuildRun, ProjectState, DecisionRecord
+- [ ] KnowledgeNode, KnowledgeEdge, KnowledgeSnapshot
+- [ ] Search + retrieval endpoints
 - [ ] Tests
 
 ## Upcoming Phases

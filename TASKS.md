@@ -62,17 +62,26 @@
 - [x] 18 approval tests; 44 total passing
 - [x] Phase 4 commit
 
-## Phase 5 — Model Backends (Pending)
+## Phase 5 — Model Backends (Complete)
 
-- [ ] Provider abstraction interface (ModelProvider protocol)
-- [ ] Ollama backend
-- [ ] llama.cpp backend
-- [ ] LM Studio backend
-- [ ] LocalAI backend
-- [ ] vLLM backend
-- [ ] OpenAI backend (optional cloud)
-- [ ] Anthropic backend (optional cloud)
-- [ ] Backend health checks + model listing endpoint
+- [x] ModelProvider Protocol + Message, ModelInfo, CompletionResult dataclasses
+- [x] OllamaProvider (native /api/chat API)
+- [x] OpenAICompatProvider base + LlamaCpp, LMStudio, LocalAI, VLLM, OpenAI subclasses
+- [x] AnthropicProvider (cloud, /v1/messages)
+- [x] Streaming support (stream() on all providers)
+- [x] ProviderRegistry (loads from config, get/all/names)
+- [x] GET /api/v1/models/providers — health + model count per provider
+- [x] GET /api/v1/models/providers/{name} — detail + model list
+- [x] GET /api/v1/models — flat list across healthy providers
+- [x] 22 provider tests (mocked httpx); 66 total passing
+- [x] Phase 5 commit
+
+## Phase 6 — Agent Registry (Pending)
+
+- [ ] Agent, AgentVersion, AgentCapability models
+- [ ] AgentRun, AgentRunEvent, AgentRiskPolicy models
+- [ ] 9 capability types enum
+- [ ] CRUD endpoints
 - [ ] Tests
 
 ## Upcoming Phases

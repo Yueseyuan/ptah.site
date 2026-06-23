@@ -15,15 +15,16 @@ build/
 venv/
 
 # APEX data (local only — never commit)
-apex_data/database/
-apex_data/files/
-apex_data/memory/
-apex_data/exports/
-apex_data/audit/
-apex_data/logs/
-apex_data/backups/
-apex_data/models/
-apex_data/repositories/
+**/apex_data/database/
+**/apex_data/files/
+**/apex_data/memory/
+**/apex_data/exports/
+**/apex_data/audit/
+**/apex_data/logs/
+**/apex_data/backups/
+**/apex_data/models/
+**/apex_data/repositories/
+*.db
 
 # Node / Next.js
 node_modules/

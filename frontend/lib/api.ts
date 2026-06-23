@@ -276,3 +276,20 @@ export interface ChiefRunSummary {
   finished_at: string | null;
   created_at: string;
 }
+
+// CL4R1T4S Agent Templates
+export interface ClaritasStatus {
+  available: number;
+  installed: number;
+}
+
+export interface ClaritasSeedResult {
+  seeded: number;
+  skipped: number;
+  agents: string[];
+}
+
+export const claritasApi = {
+  status: () => api.get<ClaritasStatus>("/claritas/status"),
+  seed: () => api.post<ClaritasSeedResult>("/claritas/seed"),
+};

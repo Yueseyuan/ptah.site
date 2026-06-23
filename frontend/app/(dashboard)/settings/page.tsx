@@ -1,12 +1,130 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { modelsApi, Provider, ModelInfo } from "@/lib/api";
+import { modelsApi, claritasApi, ClaritasStatus, ClaritasSeedResult, Provider, ModelInfo } from "@/lib/api";
 import { isTauri, tauriBackend, tauriDatabase, DatabaseInfo } from "@/lib/tauri";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload } from "lucide-react";
+import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal } from "lucide-react";
+
+// Icons matched to each CL4R1T4S agent
+const AGENT_ICONS: Record<string, React.ReactNode> = {
+  "Devin": <Crown size={13} />,
+  "Cursor": <Code size={13} />,
+  "Perplexity Research": <Search size={13} />,
+  "Manus": <Zap size={13} />,
+  "v0 UI Builder": <Layers size={13} />,
+  "Claude Code": <Terminal size={13} />,
+};
+
+function ClaritasPanel() {
+  const [status, setStatus] = useState<ClaritasStatus | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [result, setResult] = useState<ClaritasSeedResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadStatus() {
+    try {
+      const s = await claritasApi.status();
+      setStatus(s);
+    } catch {
+      // silently ignore — backend may not be running yet
+    }
+  }
+
+  useEffect(() => { loadStatus(); }, []);
+
+  async function handleSeed() {
+    setSeeding(true);
+    setError(null);
+    setResult(null);
+    try {
+      const r = await claritasApi.seed();
+      setResult(r);
+      await loadStatus();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Seed failed");
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  const allInstalled = status != null && status.installed >= status.available;
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold text-[--text-muted] uppercase tracking-wide mb-3 flex items-center gap-2">
+        <Crown size={13} /> CL4R1T4S Agent Templates
+      </h2>
+
+      <Card>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[--text-primary] mb-1">Pre-built AI Agents</p>
+            <p className="text-xs text-[--text-secondary] leading-relaxed">
+              Install 6 pre-built agents powered by system prompts from the CL4R1T4S library.
+              These agents run locally via Ollama — no subscriptions or usage limits.
+            </p>
+          </div>
+          {status != null && (
+            <Badge variant={allInstalled ? "success" : "default"} className="ml-4 shrink-0">
+              {status.installed} / {status.available} installed
+            </Badge>
+          )}
+        </div>
+
+        {/* Agent list */}
+        <div className="grid grid-cols-2 gap-1.5 mb-4">
+          {Object.entries(AGENT_ICONS).map(([name, icon]) => (
+            <div key={name} className="flex items-center gap-1.5 text-xs text-[--text-muted]">
+              <span className="text-[--text-muted]">{icon}</span>
+              {name}
+            </div>
+          ))}
+        </div>
+
+        {/* Seed button */}
+        {!allInstalled && (
+          <Button size="sm" onClick={handleSeed} loading={seeding} disabled={seeding}>
+            Install All Agents
+          </Button>
+        )}
+
+        {/* Results */}
+        {result != null && (
+          <div className="mt-3">
+            {result.skipped === 6 ? (
+              <p className="text-xs text-[--text-secondary]">All templates already installed.</p>
+            ) : (
+              <div>
+                <p className="text-xs text-[--text-secondary] mb-2">
+                  Installed {result.seeded} agent{result.seeded !== 1 ? "s" : ""}
+                  {result.skipped > 0 ? `, skipped ${result.skipped} already present` : ""}.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.agents.map((name) => (
+                    <Badge key={name} variant="success" className="text-[10px]">
+                      {name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {error != null && (
+          <p className="mt-2 text-xs text-red-400">{error}</p>
+        )}
+
+        {allInstalled && result == null && (
+          <p className="text-xs text-[--text-secondary]">All templates already installed.</p>
+        )}
+      </Card>
+    </section>
+  );
+}
 
 function DesktopPanel() {
   const [backendStatus, setBackendStatus] = useState<string>("checking…");
@@ -170,6 +288,8 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-[--text-primary]">Settings</h1>
         <p className="text-sm text-[--text-secondary] mt-1">Model provider configuration</p>
       </div>
+
+      <ClaritasPanel />
 
       {desktop && <DesktopPanel />}
 

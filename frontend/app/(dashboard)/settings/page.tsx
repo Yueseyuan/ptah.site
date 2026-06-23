@@ -126,8 +126,14 @@ function FreeCCPanel() {
   async function checkProxy() {
     setChecking(true);
     try {
-      const res = await fetch(`${FCC_BASE}/health`, { signal: AbortSignal.timeout(3000) });
-      setOnline(res.ok);
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 3000);
+      try {
+        const res = await fetch(`${FCC_BASE}/health`, { signal: controller.signal });
+        setOnline(res.ok);
+      } finally {
+        clearTimeout(tid);
+      }
     } catch {
       setOnline(false);
     } finally {
@@ -135,7 +141,7 @@ function FreeCCPanel() {
     }
   }
 
-  useEffect(() => { checkProxy(); }, []);
+  useEffect(() => { checkProxy().catch(() => setOnline(false)); }, []);
 
   const statusColor = online === null ? "bg-[--text-muted]" : online ? "bg-green-400 shadow-[0_0_8px_#4ade80]" : "bg-red-400";
   const statusLabel = online === null ? "checking…" : online ? "connected" : "not running";

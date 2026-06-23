@@ -139,16 +139,30 @@
 - [x] 11 tests; 160 total passing (all green)
 - [x] Phase 10 commit
 
-## Phase 11 — Next.js Frontend (Pending)
+## Phase 11 — Next.js Frontend (Complete)
 
-- [ ] Next.js project scaffold (app router)
-- [ ] Auth pages (login / register)
-- [ ] Dashboard shell
-- [ ] Agents module UI
-- [ ] Memory / Knowledge UI
-- [ ] Workflow builder UI
-- [ ] Repo Review UI
-- [ ] Settings (model backends)
+- [x] Next.js 16 + React 19 + TypeScript + Tailwind project scaffold
+- [x] Global CSS with dark luxury design system (CSS custom properties)
+- [x] API client lib (typed, auth header injection, 204 handling)
+- [x] Auth token lib (localStorage, isAuthenticated)
+- [x] Login + Register pages (form validation, error display)
+- [x] Dashboard layout with auth guard + sidebar navigation
+- [x] Dashboard home (live stats, model provider health)
+- [x] Agents module (CRUD, inline run panel with JSON input)
+- [x] Memory module (create/search/filter by collection + type)
+- [x] Knowledge module (typed nodes, type filter chips, search)
+- [x] Workflows module (split panel: list + step builder + run)
+- [x] Repo Reviews module (split panel: list + 5-stage pipeline view)
+- [x] Settings module (provider health, model list, env hints)
+- [x] Production build passing (13 routes, TypeScript clean)
+- [x] Phase 11 commit
+
+## Phase 12 — Tauri Desktop App (Pending)
+
+- [ ] Tauri v2 wrapper around Next.js frontend
+- [ ] Local backend process management
+- [ ] SQLite backup/export tool
+- [ ] Auto-update support
 
 ## Upcoming Phases
 

@@ -75,6 +75,9 @@ if not os.environ.get("TESTING"):
     run_seeds()
 
 # Startup diagnostics — visible in Railway deploy logs
+print(f"[ENV-RAW] ANTHROPIC_API_KEY in os.environ: {'YES' if os.environ.get('ANTHROPIC_API_KEY') else 'NO'}")
+print(f"[ENV-RAW] STRIPE_SECRET_KEY in os.environ: {'YES' if os.environ.get('STRIPE_SECRET_KEY') else 'NO'}")
+print(f"[ENV-RAW] DATABASE_URL in os.environ: {os.environ.get('DATABASE_URL', 'NOT SET')[:40]}")
 print(f"[CONFIG] DATABASE_URL: {settings.DATABASE_URL[:35]}...")
 print(f"[CONFIG] ANTHROPIC_API_KEY: {'SET (' + str(len(settings.ANTHROPIC_API_KEY)) + ' chars)' if settings.ANTHROPIC_API_KEY else 'MISSING — reports will fail'}")
 print(f"[CONFIG] STRIPE_SECRET_KEY: {'SET' if settings.STRIPE_SECRET_KEY else 'MISSING — billing will fail'}")

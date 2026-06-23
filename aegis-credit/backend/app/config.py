@@ -1,8 +1,15 @@
+import os
 import warnings
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
     APP_NAME: str = "Aegis Credit Investigator"
     DEV_NO_AUTH: bool = False
     DATABASE_URL: str = "sqlite:///./aegis.db"
@@ -12,7 +19,6 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = "change-me-in-production-use-env-var"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 480
-    # Comma-separated extra allowed CORS origins (e.g. https://cruelandassociates.site)
     EXTRA_ORIGINS: str = ""
     # Stripe
     STRIPE_SECRET_KEY: str = ""
@@ -20,18 +26,35 @@ class Settings(BaseSettings):
     STRIPE_PRICE_ID: str = "price_1TkA6ZFLqRbXTdYOP1kRMvT5"
     STRIPE_WEBHOOK_SECRET: str = ""
     PORTAL_BASE_URL: str = "https://cruelandassociates.site"
-    # Email / SMTP — set in Railway to enable password-reset emails
+    # Email / SMTP
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = "noreply@cruelandassociates.site"
 
-    class Config:
-        env_file = ".env"
+
+# Fall back to direct os.environ reads for critical keys if pydantic-settings
+# fails to load them (observed with certain Railway + pydantic-settings v2 combos).
+def _env(key: str, default: str = "") -> str:
+    return os.environ.get(key, default)
 
 
 settings = Settings()
+
+# Patch: if pydantic-settings returned the default for a critical key but os.environ has it, use os.environ.
+if not settings.ANTHROPIC_API_KEY:
+    settings.ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY")
+if not settings.STRIPE_SECRET_KEY:
+    settings.STRIPE_SECRET_KEY = _env("STRIPE_SECRET_KEY")
+if settings.DATABASE_URL == "sqlite:///./aegis.db":
+    db_from_env = _env("DATABASE_URL")
+    if db_from_env:
+        settings.DATABASE_URL = db_from_env
+if settings.JWT_SECRET_KEY == "change-me-in-production-use-env-var":
+    jwt_from_env = _env("JWT_SECRET_KEY")
+    if jwt_from_env:
+        settings.JWT_SECRET_KEY = jwt_from_env
 
 
 def _validate_settings(s):

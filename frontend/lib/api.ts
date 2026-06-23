@@ -277,6 +277,23 @@ export interface ChiefRunSummary {
   created_at: string;
 }
 
+// Media Agents
+export interface MediaStatus {
+  available: number;
+  installed: number;
+}
+
+export interface MediaSeedResult {
+  seeded: number;
+  skipped: number;
+  agents: string[];
+}
+
+export const mediaApi = {
+  status: () => api.get<MediaStatus>("/media/status"),
+  seed: () => api.post<MediaSeedResult>("/media/seed"),
+};
+
 // CL4R1T4S Agent Templates
 export interface ClaritasStatus {
   available: number;

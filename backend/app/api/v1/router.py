@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
-    agents, approval, audit, auth, chief, claritas, context, health, knowledge, memory,
+    agents, approval, audit, auth, chief, claritas, context, health, knowledge, media, memory,
     models, orchestrator, prompts, repo_review, skills, tools, workflows,
 )
 
@@ -22,3 +22,4 @@ api_router.include_router(workflows.router, prefix="/workflows", tags=["workflow
 api_router.include_router(orchestrator.router, prefix="/orchestrator", tags=["orchestrator"])
 api_router.include_router(repo_review.router, prefix="/repo-reviews", tags=["repo-reviews"])
 api_router.include_router(claritas.router, prefix="/claritas", tags=["claritas"])
+api_router.include_router(media.router, prefix="/media", tags=["media"])

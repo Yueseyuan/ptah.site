@@ -1,12 +1,120 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { modelsApi, claritasApi, ClaritasStatus, ClaritasSeedResult, Provider, ModelInfo } from "@/lib/api";
+import { modelsApi, claritasApi, mediaApi, ClaritasStatus, ClaritasSeedResult, MediaStatus, MediaSeedResult, Provider, ModelInfo } from "@/lib/api";
 import { isTauri, tauriBackend, tauriDatabase, DatabaseInfo } from "@/lib/tauri";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal, Wifi, WifiOff, ExternalLink } from "lucide-react";
+import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal, Wifi, WifiOff, ExternalLink, Image, Music, Video, Box, Sparkles } from "lucide-react";
+
+const MEDIA_AGENT_ICONS: Record<string, React.ReactNode> = {
+  "Image Creator": <Image size={13} />,
+  "Audio Producer": <Music size={13} />,
+  "Video Creator": <Video size={13} />,
+  "3D Modeler": <Box size={13} />,
+  "Image Enhancer": <Sparkles size={13} />,
+};
+
+function MediaAgentsPanel() {
+  const [status, setStatus] = useState<MediaStatus | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [result, setResult] = useState<MediaSeedResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadStatus() {
+    try {
+      const s = await mediaApi.status();
+      setStatus(s);
+    } catch {
+      // backend may not be running yet
+    }
+  }
+
+  useEffect(() => { loadStatus(); }, []);
+
+  async function handleSeed() {
+    setSeeding(true);
+    setError(null);
+    setResult(null);
+    try {
+      const r = await mediaApi.seed();
+      setResult(r);
+      await loadStatus();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Seed failed");
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  const allInstalled = status != null && status.installed >= status.available;
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold text-[--text-muted] uppercase tracking-wide mb-3 flex items-center gap-2">
+        <Image size={13} /> Media Generation Agents
+      </h2>
+
+      <Card>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[--text-primary] mb-1">HuggingFace Media Suite</p>
+            <p className="text-xs text-[--text-secondary] leading-relaxed">
+              5 pre-built agents for image, audio, video, and 3D generation — all free via HuggingFace Inference API.
+              Requires <code className="bg-[--surface-2] px-1 rounded">HUGGINGFACE_API_TOKEN</code> in your backend <code className="bg-[--surface-2] px-1 rounded">.env</code>.
+            </p>
+          </div>
+          {status != null && (
+            <Badge variant={allInstalled ? "success" : "default"} className="ml-4 shrink-0">
+              {status.installed} / {status.available} installed
+            </Badge>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-1.5 mb-4">
+          {Object.entries(MEDIA_AGENT_ICONS).map(([name, icon]) => (
+            <div key={name} className="flex items-center gap-1.5 text-xs text-[--text-muted]">
+              <span className="text-[--text-muted]">{icon}</span>
+              {name}
+            </div>
+          ))}
+        </div>
+
+        {!allInstalled && (
+          <Button size="sm" onClick={handleSeed} loading={seeding} disabled={seeding}>
+            Install Media Agents
+          </Button>
+        )}
+
+        {result != null && (
+          <div className="mt-3">
+            {result.skipped === 5 ? (
+              <p className="text-xs text-[--text-secondary]">All media agents already installed.</p>
+            ) : (
+              <div>
+                <p className="text-xs text-[--text-secondary] mb-2">
+                  Installed {result.seeded} agent{result.seeded !== 1 ? "s" : ""}
+                  {result.skipped > 0 ? `, skipped ${result.skipped} already present` : ""}.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {result.agents.map((name) => (
+                    <Badge key={name} variant="success" className="text-[10px]">{name}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {error != null && <p className="mt-2 text-xs text-red-400">{error}</p>}
+        {allInstalled && result == null && (
+          <p className="text-xs text-[--text-secondary]">All media agents installed.</p>
+        )}
+      </Card>
+    </section>
+  );
+}
 
 const FCC_PORT = 8003;
 const FCC_BASE = `http://localhost:${FCC_PORT}`;
@@ -383,6 +491,8 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-[--text-primary]">Settings</h1>
         <p className="text-sm text-[--text-secondary] mt-1">Model provider configuration</p>
       </div>
+
+      <MediaAgentsPanel />
 
       <FreeCCPanel />
 

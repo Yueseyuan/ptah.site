@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     # Model backends
     openai_api_key: str = ""
     anthropic_api_key: str = ""
+    huggingface_api_token: str = ""
     # Set to http://localhost:8003 to route via free-claude-code proxy
     anthropic_base_url: str = "https://api.anthropic.com"
     ollama_base_url: str = "http://localhost:11434"

@@ -11,6 +11,60 @@ from app.providers.registry import get_registry
 from app.services.audit import log_event
 
 
+async def _execute_media_run(run: AgentRun, agent: Agent, version: AgentVersion | None, db: AsyncSession) -> AgentRun:
+    """Execute a media generation agent run via HuggingFace Inference API."""
+    from app.config import settings
+    from app.providers.huggingface_media import HuggingFaceMediaProvider
+
+    if not settings.huggingface_api_token:
+        run.status = AgentRunStatus.FAILED
+        run.error = "HuggingFace API token not configured. Add HUGGINGFACE_API_TOKEN to your .env file."
+        run.finished_at = datetime.now(timezone.utc)
+        await db.commit()
+        await db.refresh(run)
+        return run
+
+    run.status = AgentRunStatus.RUNNING
+    run.started_at = datetime.now(timezone.utc)
+    run.model_provider = "huggingface_media"
+    await db.commit()
+
+    prompt = ""
+    if run.input:
+        prompt = run.input.get("goal") or run.input.get("task") or run.input.get("prompt") or str(run.input)
+
+    media_type = "image"
+    if version and version.config:
+        media_type = version.config.get("media_type", "image")
+
+    provider = HuggingFaceMediaProvider(settings.huggingface_api_token)
+    try:
+        if media_type == "audio":
+            result = await provider.generate_audio(prompt)
+        elif media_type == "video":
+            result = await provider.generate_video(prompt)
+        elif media_type == "upscale":
+            result = await provider.upscale_image(prompt)
+        else:
+            result = await provider.generate_image(prompt)
+
+        run.status = AgentRunStatus.COMPLETED
+        run.output = result
+        run.finished_at = datetime.now(timezone.utc)
+
+        db.add(AgentRunEvent(run_id=run.id, event_type="completion", data={"status": "completed", "media_type": media_type}))
+        await log_event(db, AuditEventType.AGENT_RUN, resource_type="agent_run", resource_id=str(run.id), detail={"status": "completed", "agent_id": agent.id})
+    except Exception as exc:
+        run.status = AgentRunStatus.FAILED
+        run.error = str(exc)
+        run.finished_at = datetime.now(timezone.utc)
+        db.add(AgentRunEvent(run_id=run.id, event_type="error", data={"error": str(exc)}))
+
+    await db.commit()
+    await db.refresh(run)
+    return run
+
+
 async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
     """Load a pending AgentRun, call the LLM, and persist the result."""
     run = (await db.execute(select(AgentRun).where(AgentRun.id == run_id))).scalar_one_or_none()
@@ -35,8 +89,12 @@ async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
             )
         )).scalar_one_or_none()
 
-    # Resolve provider and model
+    # Media agents take a dedicated path
     provider_name = run.model_provider or (version.model_provider if version else None)
+    if provider_name == "huggingface_media":
+        return await _execute_media_run(run, agent, version, db)
+
+    # Resolve provider and model
     model_id = run.model_id or (version.model_id if version else None)
     system_prompt = version.system_prompt if version else None
 

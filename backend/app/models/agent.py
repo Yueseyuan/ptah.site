@@ -18,6 +18,10 @@ class AgentCapabilityType(str, enum.Enum):
     BUSINESS = "business"
     REVIEW = "review"
     RISK_REVIEW = "risk_review"
+    IMAGE_GEN = "image_gen"
+    AUDIO_GEN = "audio_gen"
+    VIDEO_GEN = "video_gen"
+    MODEL_3D = "model_3d"
 
 
 class AgentRunStatus(str, enum.Enum):

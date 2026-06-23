@@ -51,6 +51,9 @@ def _build_registry() -> ProviderRegistry:
     registry.register(LMStudioProvider(settings.lmstudio_base_url))
     registry.register(LocalAIProvider(settings.localai_base_url))
     registry.register(VLLMProvider(settings.vllm_base_url))
+    if settings.huggingface_api_token:
+        from app.providers.huggingface_media import HuggingFaceMediaProvider
+        registry.register(HuggingFaceMediaProvider(settings.huggingface_api_token))
     if settings.openai_api_key:
         registry.register(OpenAIProvider(settings.openai_api_key))
     if settings.anthropic_api_key:

@@ -1,5 +1,18 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 4 Approval System
+
+### Added
+- `app/models/approval.py` — ApprovalRequest, ApprovalDecision, RiskPolicy, ActionPolicy + ApprovalStatus enum
+- `alembic/versions/…_create_approval_tables.py` — migration (4 tables, 4 indexes)
+- `app/schemas/approval.py` — all Pydantic schemas for requests, decisions, policies
+- `app/api/v1/endpoints/approval.py` — full CRUD: request/approve/reject/list/get + policy endpoints
+- `tests/test_approval.py` — 18 tests covering all flows, level enforcement, expiry, policy CRUD
+
+### Changed
+- `app/models/__init__.py` — exports all approval models
+- `app/api/v1/router.py` — includes approval router at `/approvals`
+
 ## [Unreleased] — Phase 3 Audit Logs
 
 ### Added

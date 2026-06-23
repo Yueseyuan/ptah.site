@@ -45,17 +45,34 @@
 - [x] Phase 3 tests passing (26 total)
 - [x] Phase 3 commit
 
-## Phase 4 — Approval System (Pending)
+## Phase 4 — Approval System (Complete)
 
-- [ ] ApprovalRequest model (level 0-3, status, requester, approver)
-- [ ] ApprovalDecision model
-- [ ] RiskPolicy model (per resource type)
-- [ ] ActionPolicy model
-- [ ] POST /approvals/request
-- [ ] POST /approvals/{id}/approve
-- [ ] POST /approvals/{id}/reject
-- [ ] GET /approvals (list with filters)
-- [ ] Auto-expire timed-out requests
+- [x] ApprovalRequest model (levels 0-3, status, expires_at, payload, reason)
+- [x] ApprovalDecision model (verdict, decided_by, note)
+- [x] RiskPolicy model (resource_type, action_type → required_level)
+- [x] ActionPolicy model (timeout_minutes per action_type)
+- [x] Level 0 → AUTO_APPROVED immediately on create
+- [x] POST /api/v1/approvals/request
+- [x] POST /api/v1/approvals/{id}/approve (Level 3 admin-only)
+- [x] POST /api/v1/approvals/{id}/reject
+- [x] GET /api/v1/approvals (admin, filterable by status/level)
+- [x] GET /api/v1/approvals/{id} (requester or admin)
+- [x] POST /api/v1/approvals/policies/risk + GET
+- [x] POST /api/v1/approvals/policies/action + GET
+- [x] 18 approval tests; 44 total passing
+- [x] Phase 4 commit
+
+## Phase 5 — Model Backends (Pending)
+
+- [ ] Provider abstraction interface (ModelProvider protocol)
+- [ ] Ollama backend
+- [ ] llama.cpp backend
+- [ ] LM Studio backend
+- [ ] LocalAI backend
+- [ ] vLLM backend
+- [ ] OpenAI backend (optional cloud)
+- [ ] Anthropic backend (optional cloud)
+- [ ] Backend health checks + model listing endpoint
 - [ ] Tests
 
 ## Upcoming Phases

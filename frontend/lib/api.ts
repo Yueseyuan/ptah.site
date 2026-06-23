@@ -310,3 +310,21 @@ export const claritasApi = {
   status: () => api.get<ClaritasStatus>("/claritas/status"),
   seed: () => api.post<ClaritasSeedResult>("/claritas/seed"),
 };
+
+// The Agency — 232 specialist agents
+export interface AgencyStatus {
+  available: number;
+  installed: number;
+}
+
+export interface AgencySeedResult {
+  seeded: number;
+  skipped: number;
+  total_found: number;
+  agents: string[];
+}
+
+export const agencyApi = {
+  status: () => api.get<AgencyStatus>("/agency/status"),
+  seed: () => api.post<AgencySeedResult>("/agency/seed"),
+};

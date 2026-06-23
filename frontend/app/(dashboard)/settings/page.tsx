@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { modelsApi, claritasApi, mediaApi, ClaritasStatus, ClaritasSeedResult, MediaStatus, MediaSeedResult, Provider, ModelInfo } from "@/lib/api";
+import { modelsApi, claritasApi, mediaApi, agencyApi, ClaritasStatus, ClaritasSeedResult, MediaStatus, MediaSeedResult, AgencyStatus, AgencySeedResult, Provider, ModelInfo } from "@/lib/api";
 import { isTauri, tauriBackend, tauriDatabase, DatabaseInfo } from "@/lib/tauri";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal, WifiOff, Image, Music, Video, Box, Sparkles } from "lucide-react";
+import { Cpu, Layers, Monitor, Database, Play, Square, Download, Upload, Crown, Code, Search, Zap, Terminal, WifiOff, Image, Music, Video, Box, Sparkles, Users } from "lucide-react";
 
 const MEDIA_AGENT_ICONS: Record<string, React.ReactNode> = {
   "Image Creator": <Image size={13} />,
@@ -110,6 +110,103 @@ function MediaAgentsPanel() {
         {error != null && <p className="mt-2 text-xs text-red-400">{error}</p>}
         {allInstalled && result == null && (
           <p className="text-xs text-[--text-secondary]">All media agents installed.</p>
+        )}
+      </Card>
+    </section>
+  );
+}
+
+const AGENCY_DIVISIONS = [
+  "Engineering", "Design", "Marketing", "Sales", "Product", "Project Management",
+  "Testing", "Security", "Support", "Finance", "Specialized", "Game Development",
+  "Academic", "GIS", "Paid Media", "Spatial Computing",
+];
+
+function AgencyPanel() {
+  const [status, setStatus] = useState<AgencyStatus | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [result, setResult] = useState<AgencySeedResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadStatus() {
+    try {
+      const s = await agencyApi.status();
+      setStatus(s);
+    } catch {
+      // backend may not be running yet
+    }
+  }
+
+  useEffect(() => { loadStatus(); }, []);
+
+  async function handleSeed() {
+    setSeeding(true);
+    setError(null);
+    setResult(null);
+    try {
+      const r = await agencyApi.seed();
+      setResult(r);
+      await loadStatus();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Seed failed");
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  const allInstalled = status != null && status.installed >= status.available;
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-sm font-semibold text-[--text-muted] uppercase tracking-wide mb-3 flex items-center gap-2">
+        <Users size={13} /> The Agency — 232 Specialists
+      </h2>
+
+      <Card>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[--text-primary] mb-1">Agency Specialist Agents</p>
+            <p className="text-xs text-[--text-secondary] leading-relaxed">
+              232 specialist AI agents spanning 16 divisions — engineering, design, security, finance, and more.
+              All run locally via Ollama. Sourced from the open-source <code className="bg-[--surface-2] px-1 rounded">agency-agents</code> library.
+            </p>
+          </div>
+          {status != null && (
+            <Badge variant={allInstalled ? "success" : "default"} className="ml-4 shrink-0">
+              {status.installed} / {status.available}
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-1 mb-4">
+          {AGENCY_DIVISIONS.map((div) => (
+            <span key={div} className="text-[10px] text-[--text-muted] bg-[--surface-2] px-1.5 py-0.5 rounded">
+              {div}
+            </span>
+          ))}
+        </div>
+
+        {!allInstalled && (
+          <Button size="sm" onClick={handleSeed} loading={seeding} disabled={seeding}>
+            {seeding ? "Downloading agents…" : "Install 232 Agents"}
+          </Button>
+        )}
+
+        {result != null && (
+          <div className="mt-3">
+            <p className="text-xs text-[--text-secondary]">
+              Installed {result.seeded} agent{result.seeded !== 1 ? "s" : ""}
+              {result.skipped > 0 ? `, skipped ${result.skipped} already present` : ""}.
+              {result.total_found !== result.seeded + result.skipped
+                ? ` (${result.total_found} found in source)`
+                : ""}
+            </p>
+          </div>
+        )}
+
+        {error != null && <p className="mt-2 text-xs text-red-400">{error}</p>}
+        {allInstalled && result == null && (
+          <p className="text-xs text-[--text-secondary]">All 232 agents installed.</p>
         )}
       </Card>
     </section>
@@ -441,6 +538,8 @@ export default function SettingsPage() {
       </div>
 
       <MediaAgentsPanel />
+
+      <AgencyPanel />
 
       <FreeCCPanel />
 

@@ -157,12 +157,19 @@
 - [x] Production build passing (13 routes, TypeScript clean)
 - [x] Phase 11 commit
 
-## Phase 12 — Tauri Desktop App (Pending)
+## Phase 12 — Tauri Desktop App (Complete)
 
-- [ ] Tauri v2 wrapper around Next.js frontend
-- [ ] Local backend process management
-- [ ] SQLite backup/export tool
-- [ ] Auto-update support
+- [x] Tauri v2 wrapper around Next.js frontend (`frontend/src-tauri/`)
+- [x] Rust library crate: `apex_lib` with commands module, auto-start/stop lifecycle hooks
+- [x] Local backend process management (`commands/backend.rs` — start/stop/status via spawn)
+- [x] SQLite backup/export tool (`commands/database.rs` — export/import with `.bak` safety copy)
+- [x] Auto-update support (tauri-plugin-updater configured with endpoint in `tauri.conf.json`)
+- [x] Frontend Tauri bridge (`frontend/lib/tauri.ts` — `isTauri()` guard, typed command wrappers)
+- [x] Desktop panel in Settings page (backend control + DB info + export/import file pickers)
+- [x] Static export mode for Tauri builds (`TAURI_ENV_TARGET_TRIPLE` → `output: "export"`)
+- [x] Tauri capabilities file (`capabilities/default.json` — shell/dialog/fs/updater/process)
+- [x] Placeholder icons for all required sizes
+- [x] Phase 12 commit
 
 ## Upcoming Phases
 

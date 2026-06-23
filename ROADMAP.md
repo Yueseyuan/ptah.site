@@ -84,10 +84,10 @@
 - [ ] Automation Studio UI
 
 ### Phase 12 — Tauri Desktop App
-- [ ] Tauri wrapper around Next.js frontend
-- [ ] Local backend process management
-- [ ] SQLite backup/export tool
-- [ ] Auto-update support
+- [x] Tauri v2 wrapper around Next.js frontend
+- [x] Local backend process management
+- [x] SQLite backup/export tool
+- [x] Auto-update support
 
 ## Export Formats
 - Markdown (all phases)

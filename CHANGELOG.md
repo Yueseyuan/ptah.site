@@ -1,5 +1,23 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 12 Tauri Desktop App
+
+### Added
+- `frontend/src-tauri/` — Tauri v2 project scaffold wrapping the Next.js frontend
+- `frontend/src-tauri/Cargo.toml` — Rust crate with tauri 2, tauri-plugin-shell/dialog/fs/updater/process
+- `frontend/src-tauri/tauri.conf.json` — app config (1280×800 window, CSP, bundle targets, updater endpoint)
+- `frontend/src-tauri/src/commands/backend.rs` — `start_backend` / `stop_backend` / `backend_status` Tauri commands (spawns FastAPI via bundled venv)
+- `frontend/src-tauri/src/commands/database.rs` — `export_database` / `import_database` / `database_info` Tauri commands (safe copy with `.bak` pre-backup)
+- `frontend/src-tauri/src/lib.rs` — Tauri app builder: auto-starts backend on launch, stops on window close
+- `frontend/src-tauri/capabilities/default.json` — Tauri v2 capability file granting shell/dialog/fs/updater/process permissions
+- `frontend/src-tauri/icons/` — placeholder PNG/ICO/ICNS icons (32×32, 128×128, 128×128@2x)
+- `frontend/lib/tauri.ts` — `isTauri()` guard + `tauriBackend` / `tauriDatabase` typed wrappers
+- Desktop panel in Settings page: backend start/stop control, live status indicator, DB export/import with file picker
+- `@tauri-apps/api`, `@tauri-apps/plugin-dialog`, `@tauri-apps/plugin-fs`, `@tauri-apps/plugin-updater`, `@tauri-apps/plugin-process` npm packages
+
+### Changed
+- `frontend/next.config.ts` — `output: "export"` + `images.unoptimized` when `TAURI_ENV_TARGET_TRIPLE` is set (static export for desktop, SSR for web)
+
 ## [Unreleased] — Phase 11 Next.js Frontend
 
 ### Added

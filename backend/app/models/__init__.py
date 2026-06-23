@@ -12,6 +12,15 @@ from app.models.agent import (
 from app.models.approval import ActionPolicy, ApprovalDecision, ApprovalRequest, ApprovalStatus, RiskPolicy
 from app.models.audit import AuditEventType, AuditLog
 from app.models.base import TimestampMixin
+from app.models.context import (
+    ContextPackage, ContextRebuildRun, ContextSource, ContextSourceType, ContextStatus,
+    DecisionRecord, DecisionStatus, ProjectState, RebuildStatus,
+)
+from app.models.knowledge import EdgeType, KnowledgeEdge, KnowledgeNode, KnowledgeSnapshot, NodeType
+from app.models.memory import (
+    ContentType, MemoryCollection, MemoryEntry, MemoryEntryTag,
+    MemoryLink, MemoryLinkType, MemoryTag, MemoryVersion,
+)
 from app.models.user import User
 
 __all__ = [
@@ -20,5 +29,10 @@ __all__ = [
     "ActionPolicy", "ApprovalDecision", "ApprovalRequest", "ApprovalStatus", "RiskPolicy",
     "AuditEventType", "AuditLog",
     "TimestampMixin",
+    "ContextPackage", "ContextRebuildRun", "ContextSource", "ContextSourceType", "ContextStatus",
+    "DecisionRecord", "DecisionStatus", "ProjectState", "RebuildStatus",
+    "EdgeType", "KnowledgeEdge", "KnowledgeNode", "KnowledgeSnapshot", "NodeType",
+    "ContentType", "MemoryCollection", "MemoryEntry", "MemoryEntryTag",
+    "MemoryLink", "MemoryLinkType", "MemoryTag", "MemoryVersion",
     "User",
 ]

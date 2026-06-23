@@ -1,5 +1,24 @@
 # CHANGELOG.md — APEX AI
 
+## [Unreleased] — Phase 8 Memory + Context + Knowledge
+
+### Added
+- `app/models/memory.py` — MemoryCollection, MemoryTag, MemoryEntry, MemoryEntryTag, MemoryLink, MemoryVersion + ContentType/MemoryLinkType enums
+- `app/models/context.py` — ContextPackage, ContextSource, ContextRebuildRun, ProjectState, DecisionRecord + status enums
+- `app/models/knowledge.py` — KnowledgeNode, KnowledgeEdge, KnowledgeSnapshot + NodeType/EdgeType enums
+- `alembic/versions/…_create_memory_context_knowledge_tables.py` — migration (18 tables, 20+ indexes)
+- `app/schemas/memory.py` — full schema set for Memory subsystem
+- `app/schemas/context.py` — full schema set for Context subsystem
+- `app/schemas/knowledge.py` — full schema set for Knowledge subsystem
+- `app/api/v1/endpoints/memory.py` — collections/tags/entries/versions/links + search + ilike filtering
+- `app/api/v1/endpoints/context.py` — packages/sources/rebuild runs + project states + decision records (ADR)
+- `app/api/v1/endpoints/knowledge.py` — nodes/edges/snapshots (auto-counts) + search
+- `tests/test_memory_context_knowledge.py` — 24 tests
+
+### Changed
+- `app/api/v1/router.py` — includes memory/context/knowledge routers
+- `app/models/__init__.py` — exports all Phase 8 models
+
 ## [Unreleased] — Phase 7 Skill + Prompt + Tool Registries
 
 ### Added

@@ -40,7 +40,7 @@ pub async fn start_backend(
         .to_string();
 
     let child = std::process::Command::new(&python)
-        .args(["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"])
+        .args(["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8083"])
         .current_dir(&backend_dir)
         .env("DATABASE_URL", data_dir_db(&app)?)
         .spawn()

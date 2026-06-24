@@ -36,17 +36,32 @@ from app.routers.billing import router as billing_router
 
 
 def run_migrations():
-    """Run alembic upgrade head on startup."""
+    """Run alembic upgrade heads on startup.
+
+    If the database was previously created with SQLAlchemy create_all (no
+    alembic_version table) but tables already exist, we stamp the DB at heads
+    first so Alembic doesn't try to re-create existing tables.
+    """
     try:
         from alembic.config import Config
         from alembic import command
-        # Resolve alembic.ini relative to this file's package root (backend/)
+        from sqlalchemy import inspect as sa_inspect
+        from app.database import engine
+
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         alembic_cfg = Config(os.path.join(base_dir, "alembic.ini"))
         alembic_cfg.set_main_option("script_location", os.path.join(base_dir, "alembic"))
-        command.upgrade(alembic_cfg, "heads")  # "heads" handles multiple-branch chains
+
+        # Detect create_all-initialised DB: tables exist but no alembic_version row.
+        insp = sa_inspect(engine)
+        existing = insp.get_table_names()
+        if "alembic_version" not in existing and "users" in existing:
+            print("[MIGRATION] Detected create_all DB — stamping heads before upgrade")
+            command.stamp(alembic_cfg, "heads")
+
+        command.upgrade(alembic_cfg, "heads")
+        print("[MIGRATION] Alembic upgrade heads completed successfully")
     except Exception as e:
-        # Fallback: use SQLAlchemy create_all so the app still starts
         print(f"[WARNING] Alembic migration failed ({e}), falling back to create_all")
         from app.database import engine, Base
         Base.metadata.create_all(bind=engine)

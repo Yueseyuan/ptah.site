@@ -90,59 +90,66 @@ def _doc_out(doc: ClientDocument) -> dict:
 @router.post("/register", status_code=201)
 def client_register(data: ClientRegister, db: Session = Depends(get_db)):
     """Public endpoint — register a new client portal account."""
-    if db.query(User).filter(User.username == data.username).first():
-        raise HTTPException(400, "Username already taken")
-    if db.query(User).filter(User.email == data.email).first():
-        raise HTTPException(400, "Email already registered")
+    try:
+        if db.query(User).filter(User.username == data.username).first():
+            raise HTTPException(400, "Username already taken")
+        if db.query(User).filter(User.email == data.email).first():
+            raise HTTPException(400, "Email already registered")
 
-    user = User(
-        username=data.username,
-        email=data.email,
-        full_name=f"{data.first_name} {data.last_name}",
-        hashed_password=hash_password(data.password),
-        role="client",
-        is_active=True,
-    )
-    db.add(user)
-    db.flush()
+        user = User(
+            username=data.username,
+            email=data.email,
+            full_name=f"{data.first_name} {data.last_name}",
+            hashed_password=hash_password(data.password),
+            role="client",
+            is_active=True,
+        )
+        db.add(user)
+        db.flush()
 
-    client = AegisClient(
-        first_name=data.first_name,
-        last_name=data.last_name,
-        email=data.email,
-        phone=data.phone or "",
-        address=data.address or "",
-        city=data.city or "",
-        state=data.state or "SC",
-        zip_code=data.zip_code or "",
-        dob=data.dob or "",
-        ssn_last4=data.ssn_last4 or "",
-        portal_user_id=user.id,
-    )
-    db.add(client)
-    db.flush()
+        client = AegisClient(
+            first_name=data.first_name,
+            last_name=data.last_name,
+            email=data.email,
+            phone=data.phone or "",
+            address=data.address or "",
+            city=data.city or "",
+            state=data.state or "SC",
+            zip_code=data.zip_code or "",
+            dob=data.dob or "",
+            ssn_last4=data.ssn_last4 or "",
+            portal_user_id=user.id,
+        )
+        db.add(client)
+        db.flush()
 
-    ts = datetime.now().strftime("%Y%m%d%H%M%S")
-    case = AegisCase(
-        client_id=client.id,
-        case_number=f"CA-{client.last_name.upper()[:4]}-{ts}",
-        status="intake",
-        portal_status="pending",
-        goal="Credit report review and dispute",
-    )
-    db.add(case)
-    db.commit()
-    db.refresh(user)
+        ts = datetime.now().strftime("%Y%m%d%H%M%S")
+        case = AegisCase(
+            client_id=client.id,
+            case_number=f"CA-{client.last_name.upper()[:4]}-{ts}",
+            status="intake",
+            portal_status="pending",
+            goal="Credit report review and dispute",
+        )
+        db.add(case)
+        db.commit()
+        db.refresh(user)
 
-    token = create_access_token({"sub": user.username, "role": "client"})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "role": "client",
-        "username": user.username,
-        "client_id": client.id,
-        "case_number": case.case_number,
-    }
+        token = create_access_token({"sub": user.username, "role": "client"})
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "role": "client",
+            "username": user.username,
+            "client_id": client.id,
+            "case_number": case.case_number,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        print(f"[REGISTER-ERROR] {type(e).__name__}: {e}")
+        raise HTTPException(500, f"Registration failed: {type(e).__name__}: {e}")
 
 
 @router.get("/me")

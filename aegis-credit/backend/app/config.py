@@ -43,16 +43,16 @@ def _env(key: str, default: str = "") -> str:
 settings = Settings()
 
 # Patch: if pydantic-settings returned the default for a critical key but os.environ has it, use os.environ.
-if not settings.ANTHROPIC_API_KEY:
-    settings.ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY")
-if not settings.STRIPE_SECRET_KEY:
-    settings.STRIPE_SECRET_KEY = _env("STRIPE_SECRET_KEY")
-if settings.DATABASE_URL == "sqlite:///./aegis.db":
-    db_from_env = _env("DATABASE_URL")
+if not settings.ANTHROPIC_API_KEY.strip():
+    settings.ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY").strip()
+if not settings.STRIPE_SECRET_KEY.strip():
+    settings.STRIPE_SECRET_KEY = _env("STRIPE_SECRET_KEY").strip()
+if settings.DATABASE_URL.strip() == "sqlite:///./aegis.db":
+    db_from_env = _env("DATABASE_URL").strip()
     if db_from_env:
         settings.DATABASE_URL = db_from_env
-if settings.JWT_SECRET_KEY == "change-me-in-production-use-env-var":
-    jwt_from_env = _env("JWT_SECRET_KEY")
+if settings.JWT_SECRET_KEY.strip() in ("", "change-me-in-production-use-env-var"):
+    jwt_from_env = _env("JWT_SECRET_KEY").strip()
     if jwt_from_env:
         settings.JWT_SECRET_KEY = jwt_from_env
 

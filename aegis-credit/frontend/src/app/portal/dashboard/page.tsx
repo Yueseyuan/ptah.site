@@ -39,13 +39,13 @@ export default function PortalDashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([portalMe(), billingStatus()])
-      .then(([me, billing]) => {
-        setData(me);
-        setSubStatus(billing.subscription_status);
-      })
+    portalMe()
+      .then(me => setData(me))
       .catch(() => setError('Failed to load your account. Please try again.'))
       .finally(() => setLoading(false));
+    billingStatus()
+      .then(billing => setSubStatus(billing.subscription_status))
+      .catch(() => setSubStatus(null));
   }, []);
 
   if (loading) return <LoadingState />;

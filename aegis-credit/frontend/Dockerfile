@@ -7,7 +7,7 @@ RUN npm ci --prefer-offline || npm ci
 
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=http://localhost:8082
+ARG NEXT_PUBLIC_API_URL=
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NODE_OPTIONS="--max-old-space-size=3072"
 ENV NEXT_TELEMETRY_DISABLED=1

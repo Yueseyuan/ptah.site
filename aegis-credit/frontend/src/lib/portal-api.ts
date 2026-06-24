@@ -6,7 +6,7 @@ export const portalApi = axios.create({
 
 portalApi.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('aegis_token');
+    const token = localStorage.getItem('portal_token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -16,8 +16,8 @@ portalApi.interceptors.response.use(
   (r) => r,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('aegis_token');
-      localStorage.removeItem('aegis_role');
+      localStorage.removeItem('portal_token');
+      localStorage.removeItem('portal_role');
       window.location.href = '/portal/login';
     }
     return Promise.reject(error);
@@ -26,22 +26,22 @@ portalApi.interceptors.response.use(
 
 export function getPortalToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('aegis_token');
+  return localStorage.getItem('portal_token');
 }
 
 export function getPortalRole(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('aegis_role');
+  return localStorage.getItem('portal_role');
 }
 
 export function setPortalAuth(token: string, role: string) {
-  localStorage.setItem('aegis_token', token);
-  localStorage.setItem('aegis_role', role);
+  localStorage.setItem('portal_token', token);
+  localStorage.setItem('portal_role', role);
 }
 
 export function clearPortalAuth() {
-  localStorage.removeItem('aegis_token');
-  localStorage.removeItem('aegis_role');
+  localStorage.removeItem('portal_token');
+  localStorage.removeItem('portal_role');
 }
 
 export interface RegisterData {
@@ -62,12 +62,10 @@ export interface RegisterData {
 export const portalRegister = (data: RegisterData) =>
   portalApi.post('/api/portal/register', data).then(r => r.data);
 
-export const portalLogin = (username: string, password: string) => {
-  const form = new FormData();
-  form.append('username', username);
-  form.append('password', password);
-  return portalApi.post('/api/auth/login', form).then(r => r.data);
-};
+export const portalLogin = (username: string, password: string) =>
+  portalApi.post('/api/auth/login',
+    new URLSearchParams({ username, password })
+  ).then(r => r.data);
 
 export const portalMe = () =>
   portalApi.get('/api/portal/me').then(r => r.data);

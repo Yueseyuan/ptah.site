@@ -144,6 +144,81 @@ _EMAIL_TOOLS: list[dict[str, Any]] = [
     },
 ]
 
+# ── Video / audio generation tools ───────────────────────────────────────────
+
+_MEDIA_GEN_TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "generate_video_clip",
+        "description": (
+            "Generate a short video clip using Higgsfield AI cinematic model. "
+            "Returns a URL to the rendered video. "
+            "Use for faceless promo videos, social media ads, product showcases. "
+            "Genres: auto, action, suspense, spectacle, intimate, comedy, horror, western. "
+            "Aspect ratios: 9:16 (Reels/TikTok), 16:9 (YouTube), 1:1 (Feed). "
+            "Duration: 3–12 seconds. Generation takes 1–3 minutes."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "Detailed cinematic scene description — lighting, framing, subject, mood",
+                },
+                "duration": {
+                    "type": "integer",
+                    "description": "Clip length in seconds (3-12, default 6)",
+                    "default": 6,
+                },
+                "genre": {
+                    "type": "string",
+                    "enum": ["auto", "action", "suspense", "spectacle", "intimate", "comedy", "horror", "western"],
+                    "description": "Visual style genre",
+                    "default": "auto",
+                },
+                "aspect_ratio": {
+                    "type": "string",
+                    "enum": ["9:16", "16:9", "1:1"],
+                    "description": "9:16 for Reels/TikTok, 16:9 for YouTube, 1:1 for feed posts",
+                    "default": "9:16",
+                },
+                "sound": {
+                    "type": "string",
+                    "enum": ["on", "off"],
+                    "description": "Include ambient cinematic sound",
+                    "default": "on",
+                },
+            },
+            "required": ["prompt"],
+        },
+    },
+    {
+        "name": "generate_voiceover",
+        "description": (
+            "Generate a voiceover audio file using Higgsfield TTS. "
+            "Returns a URL to the MP3 audio. "
+            "Available voices: Sterling (authoritative male), Harrison (warm male), "
+            "Arthur (classic male), Tallulah (female), Vesper (female). "
+            "Use for video narration, ad voiceovers, podcast intros."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "The voiceover script text to speak",
+                },
+                "voice": {
+                    "type": "string",
+                    "enum": ["Sterling", "Harrison", "Arthur", "Tallulah", "Vesper", "Roman", "Julian"],
+                    "description": "Voice character to use",
+                    "default": "Sterling",
+                },
+            },
+            "required": ["text"],
+        },
+    },
+]
+
 # ── Social media tools ────────────────────────────────────────────────────────
 
 _SOCIAL_TOOLS: list[dict[str, Any]] = [
@@ -176,7 +251,7 @@ _SOCIAL_TOOLS: list[dict[str, Any]] = [
 
 # ── Canonical tool list (Anthropic format) ────────────────────────────────────
 
-AGENT_TOOLS: list[dict[str, Any]] = _FILE_TOOLS + _WEB_TOOLS + _EMAIL_TOOLS + _SOCIAL_TOOLS
+AGENT_TOOLS: list[dict[str, Any]] = _FILE_TOOLS + _WEB_TOOLS + _EMAIL_TOOLS + _MEDIA_GEN_TOOLS + _SOCIAL_TOOLS
 
 
 def anthropic_to_ollama_tools(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -210,6 +285,10 @@ WEB TOOLS:
 
 EMAIL TOOLS:
 - send_email(to, subject, body, html=true): send via SendGrid
+
+VIDEO / AUDIO GENERATION:
+- generate_video_clip(prompt, duration=6, genre="auto", aspect_ratio="9:16", sound="on"): generate a video clip, returns URL
+- generate_voiceover(text, voice="Sterling"): generate spoken audio, returns URL
 
 SOCIAL MEDIA TOOLS:
 - post_social(platform, text, image_url=null): post to twitter/linkedin/instagram/facebook
@@ -248,6 +327,18 @@ def make_tool_executor(workspace: Path) -> Callable[[str, dict[str, Any]], Await
         # Social tool
         if name == "post_social":
             return await _post_social(args["platform"], args["text"], args.get("image_url"))
+
+        # Video / audio generation
+        if name == "generate_video_clip":
+            return await _generate_video_clip(
+                args["prompt"],
+                int(args.get("duration", 6)),
+                args.get("genre", "auto"),
+                args.get("aspect_ratio", "9:16"),
+                args.get("sound", "on"),
+            )
+        if name == "generate_voiceover":
+            return await _generate_voiceover(args["text"], args.get("voice", "Sterling"))
 
         # Bash execution
         if name == "run_bash":
@@ -318,6 +409,51 @@ async def _post_social(platform: str, text: str, image_url: str | None = None) -
         return f"Post failed ({platform}): {result['error']}"
     except Exception as exc:
         return f"Social posting error: {exc}"
+
+
+_VOICE_IDS: dict[str, str] = {
+    "Sterling":  "dc382508-c8bd-443c-8cb2-46e57b8d2e6f",
+    "Harrison":  "573e5163-59b3-4926-aab1-951ef2985f81",
+    "Arthur":    "30fc8796-ceb6-4a66-b3a7-4a145ef7f346",
+    "Tallulah":  "f32c8f51-449e-4ddf-bdf7-1527e11df917",
+    "Vesper":    "c3204739-4084-41a3-9dc5-c805b307ec18",
+    "Roman":     "7e63ac18-5fcd-4aba-8078-a86d4e11c127",
+    "Julian":    "95429266-c0ac-4137-a209-63b8812b0f23",
+}
+
+
+async def _generate_video_clip(
+    prompt: str,
+    duration: int = 6,
+    genre: str = "auto",
+    aspect_ratio: str = "9:16",
+    sound: str = "on",
+) -> str:
+    try:
+        from app.services.higgsfield_service import generate_video_clip
+        result = await generate_video_clip(
+            prompt=prompt, duration=duration, genre=genre,
+            aspect_ratio=aspect_ratio, sound=sound,
+        )
+        if result["ok"]:
+            return f"Video generated: {result['url']}"
+        return f"Video generation failed: {result['error']}"
+    except Exception as exc:
+        return f"Video generation error: {exc}"
+
+
+async def _generate_voiceover(text: str, voice: str = "Sterling") -> str:
+    try:
+        from app.services.higgsfield_service import generate_voiceover
+        voice_id = _VOICE_IDS.get(voice, _VOICE_IDS["Sterling"])
+        result = await generate_voiceover(text=text, voice_id=voice_id)
+        if result["ok"]:
+            dur = result.get("duration")
+            dur_str = f" ({dur:.1f}s)" if dur else ""
+            return f"Voiceover generated{dur_str}: {result['url']}"
+        return f"Voiceover generation failed: {result['error']}"
+    except Exception as exc:
+        return f"Voiceover generation error: {exc}"
 
 
 async def _run_bash(workspace: Path, command: str, timeout: int = 30) -> str:

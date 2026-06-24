@@ -53,5 +53,9 @@ class Settings(BaseSettings):
     facebook_access_token: str = ""
     instagram_business_account_id: str = ""
 
+    # ── Higgsfield AI  (video + audio generation) ─────────────────────────────
+    # Get key at higgsfield.ai → Dashboard → API Keys
+    higgsfield_api_key: str = ""
+
 
 settings = Settings()

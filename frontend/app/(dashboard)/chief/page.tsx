@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { chiefApi, ChiefRunResult, ChiefRunSummary, ChiefSubtask } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge, statusBadgeVariant } from "@/components/ui/badge";
-import { Crown, Bot, Loader2, ChevronRight, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Crown, Bot, Loader2, ChevronRight, Clock, CheckCircle2, XCircle, AlertCircle, Paperclip, X } from "lucide-react";
 
 type Phase = "idle" | "planning" | "assigning" | "executing" | "merging" | "done" | "error";
 
@@ -125,6 +125,33 @@ export default function ChiefPage() {
   const [history, setHistory] = useState<ChiefRunSummary[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [selectedRun, setSelectedRun] = useState<ChiefRunSummary | null>(null);
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function readFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setAttachedFile({ name: file.name, content });
+      if (!goal.trim()) setGoal(`Analyze the following file (${file.name}):\n\n${content}`);
+      else setGoal((g) => `${g}\n\n--- Attached: ${file.name} ---\n${content}`);
+    };
+    reader.readAsText(file);
+  }
+
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) readFile(file);
+    e.target.value = "";
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) readFile(file);
+  }
 
   async function loadHistory() {
     try {
@@ -171,6 +198,8 @@ export default function ChiefPage() {
     setPhase("idle");
     setResult(null);
     setSelectedRun(null);
+    setAttachedFile(null);
+    setGoal("");
   }
 
   async function selectHistoryRun(run: ChiefRunSummary) {
@@ -237,37 +266,82 @@ export default function ChiefPage() {
 
           {/* Goal input */}
           {!selectedRun && (
-            <Card className="mb-6">
+            <Card
+              className={`mb-6 transition-colors ${isDragging ? "border-[--accent]/60 bg-[--accent]/5" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
               <label className="block text-xs font-medium text-[--text-secondary] mb-2">
                 What should the Chief accomplish?
               </label>
+
+              {/* Attached file pill */}
+              {attachedFile && (
+                <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-[--accent]/10 border border-[--accent]/20 w-fit">
+                  <Paperclip size={10} className="text-[--accent]" />
+                  <span className="text-[10px] text-[--accent] font-medium">{attachedFile.name}</span>
+                  <button
+                    onClick={() => setAttachedFile(null)}
+                    className="text-[--accent]/60 hover:text-[--accent] ml-1"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              )}
+
               <textarea
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
                 disabled={isRunning}
-                placeholder="e.g. Research the latest AI frameworks and write a comparison report with code examples..."
+                placeholder={isDragging ? "Drop file here…" : "e.g. Research the latest AI frameworks and write a comparison report with code examples…"}
                 rows={4}
                 className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2.5 text-sm text-[--text-primary] placeholder-[--text-muted] resize-none focus:outline-none focus:border-[--accent]/50 transition-colors disabled:opacity-60"
               />
+
               <div className="flex items-center justify-between mt-3">
-                {phase === "done" || phase === "error" ? (
-                  <Button variant="secondary" size="sm" onClick={reset}>
-                    New Goal
-                  </Button>
+                <div className="flex items-center gap-2">
+                  {phase === "done" || phase === "error" ? (
+                    <Button variant="secondary" size="sm" onClick={reset}>
+                      New Goal
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={execute}
+                      loading={isRunning}
+                      disabled={!goal.trim() || isRunning}
+                    >
+                      <Crown size={14} />
+                      Execute
+                    </Button>
+                  )}
+
+                  {/* File upload button */}
+                  {!isRunning && phase === "idle" && (
+                    <>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept=".txt,.md,.json,.csv,.py,.ts,.tsx,.js,.jsx,.html,.css,.yaml,.yml,.xml,.log,.sh,.sql"
+                        onChange={handleFileInput}
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-[--text-muted] hover:text-[--text-primary] hover:bg-[--surface-2] border border-[--border] transition-colors"
+                        title="Attach a file"
+                      >
+                        <Paperclip size={12} />
+                        Attach
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {isRunning ? (
+                  <p className="text-xs text-[--text-muted] animate-pulse">{phaseLabels[phase]}</p>
                 ) : (
-                  <Button
-                    onClick={execute}
-                    loading={isRunning}
-                    disabled={!goal.trim() || isRunning}
-                  >
-                    <Crown size={14} />
-                    Execute
-                  </Button>
-                )}
-                {isRunning && (
-                  <p className="text-xs text-[--text-muted] animate-pulse">
-                    {phaseLabels[phase]}
-                  </p>
+                  <p className="text-[10px] text-[--text-muted]">or drag & drop a file</p>
                 )}
               </div>
             </Card>

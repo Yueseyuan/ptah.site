@@ -362,3 +362,38 @@ export const skillsShApi = {
     api.get<SkillFetchResult>(`/skills/sh/fetch?slug=${encodeURIComponent(slug)}${bustCache ? "&bust_cache=true" : ""}`),
   clearCache: () => api.delete("/skills/sh/cache"),
 };
+
+// Scheduler
+export interface ScheduleIn {
+  type: "daily" | "weekly" | "interval" | "cron";
+  hour?: number;
+  minute?: number;
+  day?: string;
+  hours?: number;
+  minutes?: number;
+  expr?: string;
+}
+
+export interface ScheduledTask {
+  id: number;
+  name: string;
+  goal: string;
+  schedule: Record<string, unknown>;
+  enabled: boolean;
+  run_count: number;
+  error_count: number;
+  last_run_at: string | null;
+  next_run_at: string | null;
+  last_run_status: string | null;
+  created_at: string;
+}
+
+export const schedulerApi = {
+  list: () => api.get<ScheduledTask[]>("/scheduler/"),
+  create: (body: { name: string; goal: string; schedule: ScheduleIn; enabled?: boolean }) =>
+    api.post<ScheduledTask>("/scheduler/", body),
+  update: (id: number, body: Partial<{ name: string; goal: string; schedule: ScheduleIn; enabled: boolean }>) =>
+    api.patch<ScheduledTask>(`/scheduler/${id}`, body),
+  delete: (id: number) => api.delete(`/scheduler/${id}`),
+  runNow: (id: number) => api.post<{ ok: boolean; run_id: number | null }>(`/scheduler/${id}/run`),
+};

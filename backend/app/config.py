@@ -33,5 +33,25 @@ class Settings(BaseSettings):
     localai_base_url: str = "http://localhost:8080"
     vllm_base_url: str = "http://localhost:8000"
 
+    # ── Email (SendGrid) ──────────────────────────────────────────────────────
+    sendgrid_api_key: str = ""
+    sendgrid_from_email: str = "noreply@example.com"
+
+    # ── Social Media ──────────────────────────────────────────────────────────
+    # Twitter / X  (OAuth 1.0a — create app at developer.twitter.com)
+    twitter_api_key: str = ""
+    twitter_api_secret: str = ""
+    twitter_access_token: str = ""
+    twitter_access_token_secret: str = ""
+
+    # LinkedIn  (OAuth 2.0 token from developer.linkedin.com)
+    linkedin_access_token: str = ""
+    linkedin_person_id: str = ""
+
+    # Facebook / Instagram  (Meta Business App access token)
+    facebook_page_id: str = ""
+    facebook_access_token: str = ""
+    instagram_business_account_id: str = ""
+
 
 settings = Settings()

@@ -29,6 +29,11 @@ _CAPABILITY_SKILLS: dict[str, list[str]] = {
     "document": [],
     "knowledge": [],
     "business": [],
+    "email": [],
+    "social": [],
+    "scrape": [],
+    "content": [],
+    "marketing": [],
 }
 
 _DECOMPOSE_SYSTEM = (
@@ -36,7 +41,7 @@ _DECOMPOSE_SYSTEM = (
     "parallel subtasks that specialized agents can execute independently. "
     "Return ONLY valid JSON in this exact format: "
     '{\"subtasks\": [{\"title\": \"...\", \"description\": \"...\", \"required_capability\": \"...\"}]}. '
-    "Use one of these capability values: research, code, website, automation, document, knowledge, business, review, risk_review. "
+    "Use one of these capability values: research, code, website, automation, document, knowledge, business, review, risk_review, email, social, scrape, content, marketing. "
     "Create 2-5 subtasks that together address the full goal."
 )
 

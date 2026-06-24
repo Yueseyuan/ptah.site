@@ -9,7 +9,10 @@ from app.api.v1.router import api_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    from app.services.scheduler_service import start_scheduler, stop_scheduler
+    await start_scheduler()
     yield
+    await stop_scheduler()
 
 
 app = FastAPI(

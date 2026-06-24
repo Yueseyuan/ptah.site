@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
     agency, agents, approval, audit, auth, chief, claritas, context, health, knowledge, media,
-    memory, models, orchestrator, prompts, repo_review, skills, tools, workflows, workspace,
+    memory, models, orchestrator, prompts, repo_review, scheduler, skills, tools, workflows, workspace,
 )
 
 api_router = APIRouter()
@@ -25,3 +25,4 @@ api_router.include_router(claritas.router, prefix="/claritas", tags=["claritas"]
 api_router.include_router(media.router, prefix="/media", tags=["media"])
 api_router.include_router(agency.router, prefix="/agency", tags=["agency"])
 api_router.include_router(workspace.router, prefix="/workspace", tags=["workspace"])
+api_router.include_router(scheduler.router, prefix="/scheduler", tags=["scheduler"])

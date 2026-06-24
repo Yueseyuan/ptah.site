@@ -145,8 +145,42 @@ app.include_router(portal_router)
 app.include_router(billing_router)
 
 
-@app.get("/api/health")
-def health():
+@app.get("/api/db-check")
+def db_check():
+    """Diagnostic — tests DB connectivity and table existence."""
+    from sqlalchemy import inspect as sa_inspect, text
+    from app.database import engine
+    result = {"database_url": settings.DATABASE_URL[:40] + "..."}
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        result["connection"] = "OK"
+    except Exception as e:
+        result["connection"] = f"FAILED: {e}"
+        return result
+    try:
+        insp = sa_inspect(engine)
+        tables = sorted(insp.get_table_names())
+        result["tables"] = tables
+        result["alembic_version"] = "alembic_version" in tables
+        result["users_table"] = "users" in tables
+        result["aegis_clients_table"] = "aegis_clients" in tables
+    except Exception as e:
+        result["inspect_error"] = str(e)
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(text("SELECT COUNT(*) FROM users")).fetchone()
+            result["user_count"] = row[0]
+    except Exception as e:
+        result["user_count_error"] = str(e)
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(text("SELECT version FROM alembic_version")).fetchone()
+            result["alembic_heads"] = row[0] if row else "empty"
+    except Exception as e:
+        result["alembic_heads"] = f"no table: {e}"
+    return result
+
     return {
         "status": "ok",
         "app": settings.APP_NAME,

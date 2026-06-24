@@ -137,3 +137,26 @@ def health():
         "stripe_key": "SET" if settings.STRIPE_SECRET_KEY else "MISSING",
         "database": settings.DATABASE_URL[:30] + "...",
     }
+
+
+@app.get("/api/env-check")
+def env_check():
+    """Temporary diagnostic — shows which Railway env vars reached the container."""
+    import os
+    keys_to_check = [
+        "ANTHROPIC_API_KEY", "STRIPE_SECRET_KEY", "DATABASE_URL",
+        "JWT_SECRET_KEY", "RAILWAY_ENVIRONMENT", "RAILWAY_SERVICE_NAME",
+        "RAILWAY_PROJECT_ID", "PORT",
+    ]
+    result = {}
+    for k in keys_to_check:
+        val = os.environ.get(k)
+        if val:
+            # Show first 6 chars only for secrets
+            if k in ("ANTHROPIC_API_KEY", "STRIPE_SECRET_KEY", "JWT_SECRET_KEY"):
+                result[k] = f"SET — starts with: {val[:6]}..."
+            else:
+                result[k] = val[:60]
+        else:
+            result[k] = "NOT SET"
+    return result

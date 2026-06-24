@@ -240,6 +240,11 @@ app.include_router(portal_router)
 app.include_router(billing_router)
 
 
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok"}
+
+
 @app.get("/api/db-check")
 def db_check():
     """Diagnostic — tests DB connectivity and table existence."""

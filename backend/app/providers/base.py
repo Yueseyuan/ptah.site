@@ -18,12 +18,20 @@ class ModelInfo:
 
 
 @dataclass
+class ToolCall:
+    id: str
+    name: str
+    arguments: dict[str, Any]
+
+
+@dataclass
 class CompletionResult:
     content: str
     model: str
     provider: str
     input_tokens: int | None = None
     output_tokens: int | None = None
+    tool_calls: list[ToolCall] = field(default_factory=list)
     raw: dict[str, Any] = field(default_factory=dict)
 
 

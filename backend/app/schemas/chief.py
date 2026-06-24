@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -17,10 +18,16 @@ class ChiefSubtaskOut(BaseModel):
     output: str | None
 
 
+class WorkspaceFileOut(BaseModel):
+    path: str
+    size: int
+
+
 class ChiefRunResult(BaseModel):
     run_id: int | None
     subtasks: list[ChiefSubtaskOut]
     merged_output: str | None
+    workspace_files: list[WorkspaceFileOut] = []
     error: str | None = None
 
 
@@ -28,8 +35,8 @@ class ChiefRunSummary(BaseModel):
     id: int
     name: str
     status: OrchestratorRunStatus
-    input: dict | None
-    output: dict | None
+    input: dict[str, Any] | None
+    output: dict[str, Any] | None
     error: str | None
     started_at: datetime | None
     finished_at: datetime | None

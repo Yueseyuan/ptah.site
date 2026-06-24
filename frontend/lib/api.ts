@@ -118,6 +118,14 @@ export const chiefApi = {
   getRun: (id: number) => api.get<ChiefRunSummary>(`/chief/runs/${id}`),
 };
 
+// Workspace
+export const workspaceApi = {
+  listFiles: (runId: number) => api.get<WorkspaceFile[]>(`/workspace/${runId}`),
+  readFile: (runId: number, path: string) =>
+    api.get<string>(`/workspace/${runId}/file?path=${encodeURIComponent(path)}`),
+  downloadUrl: (runId: number) => `${process.env.NEXT_PUBLIC_API_URL ?? "/api/v1"}/workspace/${runId}/download`,
+};
+
 // Types
 export interface Agent {
   id: number;
@@ -258,10 +266,16 @@ export interface ChiefSubtask {
   output: string | null;
 }
 
+export interface WorkspaceFile {
+  path: string;
+  size: number;
+}
+
 export interface ChiefRunResult {
   run_id: number | null;
   subtasks: ChiefSubtask[];
   merged_output: string | null;
+  workspace_files: WorkspaceFile[];
   error: string | null;
 }
 

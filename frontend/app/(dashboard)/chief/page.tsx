@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { chiefApi, ChiefRunResult, ChiefRunSummary, ChiefSubtask } from "@/lib/api";
+import { chiefApi, ChiefRunResult, ChiefRunSummary, ChiefSubtask, WorkspaceFile, workspaceApi } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge, statusBadgeVariant } from "@/components/ui/badge";
-import { Crown, Bot, Loader2, ChevronRight, Clock, CheckCircle2, XCircle, AlertCircle, Paperclip, X } from "lucide-react";
+import {
+  Crown, Bot, Loader2, ChevronRight, Clock, CheckCircle2, XCircle, AlertCircle,
+  Paperclip, X, FolderOpen, FileText, Download, Eye,
+} from "lucide-react";
 
 type Phase = "idle" | "planning" | "assigning" | "executing" | "merging" | "done" | "error";
 
@@ -99,6 +102,101 @@ function SubtaskCard({ subtask, idx }: { subtask: ChiefSubtask; idx: number }) {
   );
 }
 
+function FileExtIcon({ path }: { path: string }) {
+  const ext = path.split(".").pop()?.toLowerCase() ?? "";
+  const colorMap: Record<string, string> = {
+    html: "text-orange-400", css: "text-blue-400", js: "text-yellow-400",
+    ts: "text-blue-300", tsx: "text-blue-300", jsx: "text-yellow-300",
+    py: "text-green-400", json: "text-amber-400", md: "text-purple-400",
+    sh: "text-emerald-400", sql: "text-cyan-400", yml: "text-pink-400",
+    yaml: "text-pink-400",
+  };
+  return <FileText size={12} className={colorMap[ext] ?? "text-[--text-muted]"} />;
+}
+
+function WorkspacePanel({ runId, files }: { runId: number; files: WorkspaceFile[] }) {
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  async function viewFile(path: string) {
+    if (selectedFile === path) {
+      setSelectedFile(null);
+      setFileContent("");
+      return;
+    }
+    setLoading(true);
+    setSelectedFile(path);
+    try {
+      const content = await workspaceApi.readFile(runId, path);
+      setFileContent(typeof content === "string" ? content : JSON.stringify(content, null, 2));
+    } catch {
+      setFileContent("Error loading file.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (files.length === 0) return null;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <FolderOpen size={14} className="text-green-400" />
+          <h2 className="text-xs font-semibold text-[--text-muted] uppercase tracking-wide">
+            Generated Files
+          </h2>
+          <Badge variant="info">{files.length} files</Badge>
+        </div>
+        <a
+          href={workspaceApi.downloadUrl(runId)}
+          download
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-[--text-secondary] hover:text-[--text-primary] hover:bg-[--surface-2] border border-[--border] transition-colors"
+        >
+          <Download size={11} />
+          Download All
+        </a>
+      </div>
+      <Card className="overflow-hidden p-0">
+        <div className="divide-y divide-[--border]">
+          {files.map((f) => (
+            <div key={f.path}>
+              <button
+                onClick={() => viewFile(f.path)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-[--surface-2] transition-colors text-left"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileExtIcon path={f.path} />
+                  <span className="text-xs text-[--text-primary] font-mono truncate">{f.path}</span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[10px] text-[--text-muted]">{(f.size / 1024).toFixed(1)} KB</span>
+                  <Eye size={11} className={`transition-colors ${selectedFile === f.path ? "text-[--accent]" : "text-[--text-muted]"}`} />
+                </div>
+              </button>
+              {selectedFile === f.path && (
+                <div className="border-t border-[--border] bg-[--bg]">
+                  {loading ? (
+                    <div className="flex items-center gap-2 p-4">
+                      <Loader2 size={12} className="animate-spin text-[--text-muted]" />
+                      <span className="text-xs text-[--text-muted]">Loading…</span>
+                    </div>
+                  ) : (
+                    <pre className="p-4 text-xs text-[--text-secondary] overflow-x-auto leading-relaxed max-h-80 overflow-y-auto">
+                      {fileContent}
+                    </pre>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function HistoryItem({ run, onSelect }: { run: ChiefRunSummary; onSelect: () => void }) {
   const goal = run.input?.goal as string | undefined;
   const date = new Date(run.created_at);
@@ -173,7 +271,6 @@ export default function ChiefPage() {
     setResult(null);
     setSelectedRun(null);
 
-    // Animate through phases
     setPhase("planning");
     await new Promise((r) => setTimeout(r, 600));
     setPhase("assigning");
@@ -189,7 +286,7 @@ export default function ChiefPage() {
       loadHistory();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Request failed";
-      setResult({ run_id: null, subtasks: [], merged_output: null, error: msg });
+      setResult({ run_id: null, subtasks: [], merged_output: null, workspace_files: [], error: msg });
       setPhase("error");
     }
   }
@@ -205,15 +302,18 @@ export default function ChiefPage() {
   async function selectHistoryRun(run: ChiefRunSummary) {
     setSelectedRun(run);
     setResult(null);
-    // Reconstruct result from stored output
     if (run.output) {
       const subtasks: ChiefSubtask[] = Array.isArray(run.output.subtasks)
         ? (run.output.subtasks as ChiefSubtask[])
+        : [];
+      const workspaceFiles: WorkspaceFile[] = Array.isArray(run.output.workspace_files)
+        ? (run.output.workspace_files as WorkspaceFile[])
         : [];
       setResult({
         run_id: run.id,
         subtasks,
         merged_output: (run.output.merged_output as string) ?? null,
+        workspace_files: workspaceFiles,
         error: run.error,
       });
     }
@@ -276,7 +376,6 @@ export default function ChiefPage() {
                 What should the Chief accomplish?
               </label>
 
-              {/* Attached file pill */}
               {attachedFile && (
                 <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded-md bg-[--accent]/10 border border-[--accent]/20 w-fit">
                   <Paperclip size={10} className="text-[--accent]" />
@@ -294,7 +393,7 @@ export default function ChiefPage() {
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
                 disabled={isRunning}
-                placeholder={isDragging ? "Drop file here…" : "e.g. Research the latest AI frameworks and write a comparison report with code examples…"}
+                placeholder={isDragging ? "Drop file here…" : "e.g. Build a landing page for my AI SaaS product, including hero section, features, pricing, and contact form…"}
                 rows={4}
                 className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2.5 text-sm text-[--text-primary] placeholder-[--text-muted] resize-none focus:outline-none focus:border-[--accent]/50 transition-colors disabled:opacity-60"
               />
@@ -316,7 +415,6 @@ export default function ChiefPage() {
                     </Button>
                   )}
 
-                  {/* File upload button */}
                   {!isRunning && phase === "idle" && (
                     <>
                       <input
@@ -368,12 +466,16 @@ export default function ChiefPage() {
                 </div>
               )}
 
-              {/* Partial error warning */}
               {result.error && result.merged_output && (
                 <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
                   <AlertCircle size={14} className="text-amber-400 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-amber-400/80">{result.error}</p>
                 </div>
+              )}
+
+              {/* Generated files */}
+              {result.run_id && result.workspace_files && result.workspace_files.length > 0 && (
+                <WorkspacePanel runId={result.run_id} files={result.workspace_files} />
               )}
 
               {/* Subtask cards */}
@@ -417,7 +519,6 @@ export default function ChiefPage() {
                 </div>
               )}
 
-              {/* New goal button after viewing history */}
               {selectedRun && (
                 <Button variant="secondary" size="sm" onClick={reset}>
                   New Goal
@@ -439,8 +540,9 @@ export default function ChiefPage() {
             <Card className="text-center py-16 border-dashed">
               <Crown size={40} className="text-[--text-muted] mx-auto mb-4 opacity-40" />
               <p className="text-base font-medium text-[--text-secondary] mb-2">Ready for your command</p>
-              <p className="text-sm text-[--text-muted] max-w-xs mx-auto leading-relaxed">
-                Give the Chief a goal and it will decompose it, assign your agents, and synthesize the results.
+              <p className="text-sm text-[--text-muted] max-w-sm mx-auto leading-relaxed">
+                Give the Chief a goal and it will decompose it, assign agents, write files to disk, and synthesize the results.
+                Generated files appear here for preview and download.
               </p>
             </Card>
           )}

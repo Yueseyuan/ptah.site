@@ -7,7 +7,7 @@ from app.core.dependencies import get_current_user
 from app.database import get_db
 from app.models.orchestrator import OrchestratorRun
 from app.models.user import User
-from app.schemas.chief import ChiefRunRequest, ChiefRunResult, ChiefRunSummary, ChiefSubtaskOut
+from app.schemas.chief import ChiefRunRequest, ChiefRunResult, ChiefRunSummary, ChiefSubtaskOut, WorkspaceFileOut
 from app.services.chief import run_chief
 
 router = APIRouter()
@@ -36,10 +36,16 @@ async def chief_run(
         for s in result.get("subtasks", [])
     ]
 
+    workspace_files = [
+        WorkspaceFileOut(path=f["path"], size=f["size"])
+        for f in result.get("workspace_files", [])
+    ]
+
     return ChiefRunResult(
         run_id=result.get("run_id"),
         subtasks=subtasks,
         merged_output=result.get("merged_output"),
+        workspace_files=workspace_files,
         error=result.get("error"),
     )
 

@@ -1,5 +1,7 @@
 """Agent execution service — runs an AgentRun against the configured LLM provider."""
+import logging
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +11,8 @@ from app.models.audit import AuditEventType
 from app.providers.base import Message
 from app.providers.registry import get_registry
 from app.services.audit import log_event
+
+logger = logging.getLogger(__name__)
 
 
 async def _execute_media_run(run: AgentRun, agent: Agent, version: AgentVersion | None, db: AsyncSession) -> AgentRun:
@@ -66,7 +70,7 @@ async def _execute_media_run(run: AgentRun, agent: Agent, version: AgentVersion 
 
 
 async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
-    """Load a pending AgentRun, call the LLM, and persist the result."""
+    """Load a pending AgentRun, call the LLM (with agentic tool loop if workspace present), and persist the result."""
     run = (await db.execute(select(AgentRun).where(AgentRun.id == run_id))).scalar_one_or_none()
     if run is None:
         raise ValueError(f"AgentRun {run_id} not found")
@@ -105,7 +109,6 @@ async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
         provider = registry.get(provider_name)
 
     if provider is None:
-        # Pick the first healthy provider
         for p in registry.all():
             try:
                 if await p.health():
@@ -122,7 +125,6 @@ async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
         await db.refresh(run)
         return run
 
-    # If we found a provider but no model_id, pick any available model
     if not model_id:
         try:
             models = await provider.list_models()
@@ -160,8 +162,60 @@ async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
         if skill_context:
             system_prompt = skill_context + "\n\n---\n\n" + (system_prompt or "")
 
-    # Build messages
-    messages: list[Message] = []
+    # Workspace / agentic tool loop
+    workspace_path: Path | None = None
+    use_tools = False
+    if run.input and run.input.get("_workspace"):
+        workspace_path = Path(run.input["_workspace"])
+        workspace_path.mkdir(parents=True, exist_ok=True)
+        if hasattr(provider, "complete_with_tools"):
+            use_tools = True
+
+    if use_tools and workspace_path is not None:
+        from app.services.agent_tools import AGENT_TOOLS, OLLAMA_TOOLS, get_tools_system_addendum, make_tool_executor
+
+        tool_addendum = get_tools_system_addendum()
+        system_prompt = (system_prompt or "") + "\n\n" + tool_addendum
+
+        # Choose correct tool format per provider
+        tools = OLLAMA_TOOLS if provider.name == "ollama" else AGENT_TOOLS
+        tool_exec = make_tool_executor(workspace_path)
+
+        messages: list[Message] = []
+        if system_prompt:
+            messages.append(Message(role="system", content=system_prompt))
+
+        user_content = ""
+        if run.input:
+            goal = run.input.get("goal") or run.input.get("task") or str(run.input)
+            user_content = goal
+        if not user_content:
+            user_content = "Complete your assigned task."
+        messages.append(Message(role="user", content=user_content))
+
+        try:
+            result = await provider.complete_with_tools(messages, model_id, tools, tool_exec)  # type: ignore[attr-defined]
+            run.status = AgentRunStatus.COMPLETED
+            run.output = {"content": result.content, "model": result.model, "provider": result.provider, "used_tools": True}
+            if result.input_tokens is not None:
+                run.output["input_tokens"] = result.input_tokens
+            if result.output_tokens is not None:
+                run.output["output_tokens"] = result.output_tokens
+            run.finished_at = datetime.now(timezone.utc)
+            db.add(AgentRunEvent(run_id=run.id, event_type="completion", data={"status": "completed", "provider": provider.name, "model": model_id, "used_tools": True}))
+            await log_event(db, AuditEventType.AGENT_RUN, resource_type="agent_run", resource_id=str(run.id), detail={"status": "completed", "agent_id": agent.id})
+        except Exception as exc:
+            run.status = AgentRunStatus.FAILED
+            run.error = str(exc)
+            run.finished_at = datetime.now(timezone.utc)
+            db.add(AgentRunEvent(run_id=run.id, event_type="error", data={"error": str(exc)}))
+
+        await db.commit()
+        await db.refresh(run)
+        return run
+
+    # Standard (non-agentic) path
+    messages = []
     if system_prompt:
         messages.append(Message(role="system", content=system_prompt))
 

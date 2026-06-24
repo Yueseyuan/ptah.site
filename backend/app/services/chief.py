@@ -14,6 +14,7 @@ from app.providers.base import Message
 from app.providers.registry import get_registry
 from app.services.agent_executor import execute_agent_run
 from app.services.audit import log_event
+from app.services.workspace import create_workspace, ws_list_as_dicts
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +171,9 @@ async def run_chief(goal: str, db: AsyncSession, triggered_by_id: int) -> dict:
     )
 
     try:
+        # 0. Create workspace for this run (agents write files here)
+        workspace = await create_workspace(orch_run.id)
+
         # 1. Decompose
         subtask_defs = await _decompose_goal(goal, registry)
 
@@ -231,7 +235,7 @@ async def run_chief(goal: str, db: AsyncSession, triggered_by_id: int) -> dict:
                 agent_id=matched_agent.id,
                 triggered_by_id=triggered_by_id,
                 status=AgentRunStatus.PENDING,
-                input={"goal": description, "_skills": auto_skills},
+                input={"goal": description, "_skills": auto_skills, "_workspace": str(workspace)},
             )
             db.add(agent_run)
             await db.flush()  # get agent_run.id
@@ -276,10 +280,14 @@ async def run_chief(goal: str, db: AsyncSession, triggered_by_id: int) -> dict:
         # 5. Merge results
         merged_output = await _merge_results(goal, subtask_meta, registry)
 
-        # 6. Update OrchestratorRun
+        # 6. Collect workspace files
+        workspace_files = ws_list_as_dicts(workspace)
+
+        # 7. Update OrchestratorRun
         orch_run.status = OrchestratorRunStatus.COMPLETED
         orch_run.output = {
             "merged_output": merged_output,
+            "workspace_files": workspace_files,
             "subtasks": [
                 {
                     "title": m["title"],
@@ -298,6 +306,7 @@ async def run_chief(goal: str, db: AsyncSession, triggered_by_id: int) -> dict:
             "run_id": orch_run.id,
             "subtasks": subtask_meta,
             "merged_output": merged_output,
+            "workspace_files": workspace_files,
         }
 
     except Exception as exc:

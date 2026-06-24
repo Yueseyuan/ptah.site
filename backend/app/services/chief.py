@@ -17,6 +17,19 @@ from app.services.audit import log_event
 
 logger = logging.getLogger(__name__)
 
+# Maps subtask capability → skills.sh slugs to auto-inject
+_CAPABILITY_SKILLS: dict[str, list[str]] = {
+    "code": ["python-patterns", "typescript-patterns"],
+    "website": ["react-patterns", "nextjs-patterns"],
+    "automation": ["python-patterns", "docker-patterns"],
+    "review": ["security-patterns", "testing-patterns"],
+    "risk_review": ["security-patterns"],
+    "research": [],
+    "document": [],
+    "knowledge": [],
+    "business": [],
+}
+
 _DECOMPOSE_SYSTEM = (
     "You are the Chief of an AI company. Your job is to decompose a high-level goal into "
     "parallel subtasks that specialized agents can execute independently. "
@@ -213,11 +226,12 @@ async def run_chief(goal: str, db: AsyncSession, triggered_by_id: int) -> dict:
                 orch_task.finished_at = datetime.now(timezone.utc)
                 continue
 
+            auto_skills = _CAPABILITY_SKILLS.get(required_cap, [])
             agent_run = AgentRun(
                 agent_id=matched_agent.id,
                 triggered_by_id=triggered_by_id,
                 status=AgentRunStatus.PENDING,
-                input={"goal": description},
+                input={"goal": description, "_skills": auto_skills},
             )
             db.add(agent_run)
             await db.flush()  # get agent_run.id

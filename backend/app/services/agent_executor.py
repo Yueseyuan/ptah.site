@@ -146,14 +146,19 @@ async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
     run.model_id = model_id
     await db.commit()
 
-    # Inject skills.sh SKILL.md content when configured on the agent version
+    # Merge skills from version config + Chief auto-resolved _skills
+    skill_slugs: list[str] = []
     if version and version.config:
-        skill_slugs: list[str] = version.config.get("skills", [])
-        if skill_slugs:
-            from app.services.skill_loader import load_skills_content
-            skill_context = await load_skills_content(skill_slugs)
-            if skill_context:
-                system_prompt = skill_context + "\n\n---\n\n" + (system_prompt or "")
+        skill_slugs = list(version.config.get("skills", []))
+    if run.input and run.input.get("_skills"):
+        for s in run.input["_skills"]:
+            if s not in skill_slugs:
+                skill_slugs.append(s)
+    if skill_slugs:
+        from app.services.skill_loader import load_skills_content
+        skill_context = await load_skills_content(skill_slugs)
+        if skill_context:
+            system_prompt = skill_context + "\n\n---\n\n" + (system_prompt or "")
 
     # Build messages
     messages: list[Message] = []

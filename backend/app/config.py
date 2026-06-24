@@ -54,8 +54,9 @@ class Settings(BaseSettings):
     instagram_business_account_id: str = ""
 
     # ── Higgsfield AI  (video + audio generation) ─────────────────────────────
-    # Get key at higgsfield.ai → Dashboard → API Keys
-    higgsfield_api_key: str = ""
+    # Run `hf auth login` once, then set this to the credentials.json path.
+    # Default: ~/.config/higgsfield/credentials.json (auto-detected if present)
+    higgsfield_credentials_path: str = ""
 
 
 settings = Settings()

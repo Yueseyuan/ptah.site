@@ -1,10 +1,20 @@
-"""Higgsfield AI video and audio generation service.
+"""Higgsfield AI video / audio generation service.
 
-API key: get from higgsfield.ai → Dashboard → API Keys.
-Set HIGGSFIELD_API_KEY in your .env file.
+Auth: run `hf auth login` once on any machine that has the CLI, copy the
+written credentials.json to this server, and point HIGGSFIELD_CREDENTIALS_PATH
+at it.  The service auto-refreshes the access token using the stored refresh
+token, so the one-time login is all that's needed.
+
+CLI install (one-time, on any machine):
+    curl -fsSL https://raw.githubusercontent.com/higgsfield-ai/cli/main/install.sh | sh
+    hf auth login          # browser OAuth flow
+    cat ~/.config/higgsfield/credentials.json   # copy this to the server
 """
 import asyncio
+import json
 import logging
+import time
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -13,41 +23,117 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_BASE = "https://api.higgsfield.ai"
-_POLL_INTERVAL = 5   # seconds between status checks
-_MAX_POLL_SEC = 360  # 6-minute timeout (video gen takes 1-3 min)
+_BASE = "https://fnf.higgsfield.ai/agents"
+_REFRESH_URL = "https://fnf.higgsfield.ai/v1/cli/refresh"
+_POLL_INTERVAL = 5    # seconds between polls
+_MAX_POLL_SEC = 360   # 6-minute ceiling
 
-# Default voices
-VOICE_STERLING = "dc382508-c8bd-443c-8cb2-46e57b8d2e6f"
-VOICE_HARRISON = "573e5163-59b3-4926-aab1-951ef2985f81"
-VOICE_ARTHUR   = "30fc8796-ceb6-4a66-b3a7-4a145ef7f346"
+# Default voice IDs (from `hf voices list`)
+VOICE_STERLING  = "dc382508-c8bd-443c-8cb2-46e57b8d2e6f"
+VOICE_HARRISON  = "573e5163-59b3-4926-aab1-951ef2985f81"
+VOICE_ARTHUR    = "30fc8796-ceb6-4a66-b3a7-4a145ef7f346"
+VOICE_TALLULAH  = "f32c8f51-449e-4ddf-bdf7-1527e11df917"
+VOICE_VESPER    = "c3204739-4084-41a3-9dc5-c805b307ec18"
+VOICE_ROMAN     = "7e63ac18-5fcd-4aba-8078-a86d4e11c127"
+VOICE_JULIAN    = "95429266-c0ac-4137-a209-63b8812b0f23"
+
+# In-memory token cache (access_token, expires_at_unix)
+_token_cache: dict[str, Any] = {}
 
 
-def _headers() -> dict[str, str]:
-    return {
-        "Authorization": f"Bearer {settings.higgsfield_api_key}",
-        "Content-Type": "application/json",
-    }
+def _creds_path() -> Path | None:
+    raw = settings.higgsfield_credentials_path
+    if raw:
+        return Path(raw).expanduser()
+    default = Path.home() / ".config" / "higgsfield" / "credentials.json"
+    return default if default.exists() else None
 
 
-async def _poll(client: httpx.AsyncClient, job_id: str) -> dict[str, Any]:
-    """Poll /v1/generations/{id} until status is completed or failed."""
+def _load_credentials() -> dict[str, Any]:
+    path = _creds_path()
+    if not path or not path.exists():
+        raise FileNotFoundError(
+            "Higgsfield credentials not found. "
+            "Run `hf auth login` and set HIGGSFIELD_CREDENTIALS_PATH."
+        )
+    return json.loads(path.read_text())
+
+
+async def _access_token() -> str:
+    """Return a valid access token, refreshing if within 60s of expiry."""
+    global _token_cache
+
+    now = time.time()
+    cached_expires = _token_cache.get("expires_at", 0)
+    if _token_cache.get("access_token") and now < cached_expires - 60:
+        return _token_cache["access_token"]
+
+    creds = _load_credentials()
+    # If still valid, cache and return
+    expires_at = creds.get("expires_at", 0)
+    if creds.get("access_token") and now < expires_at - 60:
+        _token_cache = creds
+        return creds["access_token"]
+
+    # Refresh
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            _REFRESH_URL,
+            json={"refresh_token": creds["refresh_token"]},
+        )
+        resp.raise_for_status()
+        new_creds = {**creds, **resp.json()}
+        path = _creds_path()
+        if path:
+            path.write_text(json.dumps(new_creds, indent=2))
+        _token_cache = new_creds
+        logger.debug("Higgsfield token refreshed")
+        return new_creds["access_token"]
+
+
+async def _headers() -> dict[str, str]:
+    token = await _access_token()
+    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+
+async def _create_job(client: httpx.AsyncClient, payload: dict[str, Any]) -> str:
+    resp = await client.post(f"{_BASE}/jobs", json=payload, headers=await _headers(), timeout=30.0)
+    resp.raise_for_status()
+    data = resp.json()
+    records = data.get("results", [data])
+    job_id = records[0].get("id") if records else data.get("id")
+    if not job_id:
+        raise ValueError(f"No job ID in Higgsfield response: {data}")
+    return job_id
+
+
+async def _poll_job(client: httpx.AsyncClient, job_id: str) -> dict[str, Any]:
+    """Poll /agents/jobs/poll until completed or failed."""
     elapsed = 0.0
     while elapsed < _MAX_POLL_SEC:
         await asyncio.sleep(_POLL_INTERVAL)
         elapsed += _POLL_INTERVAL
-        resp = await client.get(f"{_BASE}/v1/generations/{job_id}", headers=_headers(), timeout=30.0)
+        resp = await client.get(
+            f"{_BASE}/jobs/poll",
+            params={"job_id": job_id},
+            headers=await _headers(),
+            timeout=30.0,
+        )
         resp.raise_for_status()
         data = resp.json()
-        # Handle both top-level and results-wrapped responses
         record = data if "status" in data else (data.get("results") or [data])[0]
         status = record.get("status", "pending")
         if status == "completed":
             return record
         if status in ("failed", "error"):
-            raise RuntimeError(f"Generation failed: {record.get('error', 'unknown')}")
-        logger.debug("Higgsfield job %s: %s (%.0fs elapsed)", job_id, status, elapsed)
-    raise TimeoutError(f"Higgsfield job {job_id} did not complete within {_MAX_POLL_SEC}s")
+            raise RuntimeError(f"Higgsfield job {job_id} failed: {record.get('error', 'unknown')}")
+        logger.debug("Higgsfield job %s: %s (%.0fs)", job_id, status, elapsed)
+    raise TimeoutError(f"Higgsfield job {job_id} timed out after {_MAX_POLL_SEC}s")
+
+
+def _extract_url(record: dict[str, Any]) -> str | None:
+    results = record.get("results") or {}
+    return results.get("rawUrl") or results.get("url") or record.get("rawUrl")
 
 
 async def generate_video_clip(
@@ -57,33 +143,31 @@ async def generate_video_clip(
     duration: int = 6,
     genre: str = "auto",
     sound: str = "on",
+    batch_size: int = 1,
 ) -> dict[str, Any]:
     """Generate a video clip. Returns {"ok": True, "url": "...", "id": "..."}."""
-    if not settings.higgsfield_api_key:
-        return {"ok": False, "error": "HIGGSFIELD_API_KEY not set in .env"}
+    try:
+        await _access_token()
+    except FileNotFoundError as exc:
+        return {"ok": False, "error": str(exc)}
 
     payload: dict[str, Any] = {
         "model": model,
-        "prompt": prompt,
-        "aspect_ratio": aspect_ratio,
-        "duration": duration,
-        "genre": genre,
-        "sound": sound,
+        "params": {
+            "prompt": prompt,
+            "aspect_ratio": aspect_ratio,
+            "duration": duration,
+            "genre": genre,
+            "sound": sound,
+        },
     }
+    if batch_size > 1:
+        payload["batch_size"] = min(batch_size, 20)
 
     async with httpx.AsyncClient(timeout=60.0) as client:
-        resp = await client.post(f"{_BASE}/v1/generations", json=payload, headers=_headers())
-        resp.raise_for_status()
-        data = resp.json()
-        records = data.get("results", [data])
-        job_id = records[0].get("id") if records else data.get("id")
-        if not job_id:
-            raise ValueError(f"No job ID in response: {data}")
-
-        record = await _poll(client, job_id)
-        results = record.get("results") or {}
-        url = results.get("rawUrl") or results.get("url") or record.get("rawUrl")
-        return {"ok": True, "url": url, "id": job_id, "duration": results.get("durationSec")}
+        job_id = await _create_job(client, payload)
+        record = await _poll_job(client, job_id)
+        return {"ok": True, "url": _extract_url(record), "id": job_id}
 
 
 async def generate_voiceover(
@@ -92,27 +176,40 @@ async def generate_voiceover(
     voice_type: str = "preset",
     model: str = "text2speech_v2_elevenlabs",
 ) -> dict[str, Any]:
-    """Generate a voiceover. Returns {"ok": True, "url": "...", "id": "..."}."""
-    if not settings.higgsfield_api_key:
-        return {"ok": False, "error": "HIGGSFIELD_API_KEY not set in .env"}
+    """Generate a voiceover MP3. Returns {"ok": True, "url": "...", "id": "..."}."""
+    try:
+        await _access_token()
+    except FileNotFoundError as exc:
+        return {"ok": False, "error": str(exc)}
 
     payload: dict[str, Any] = {
         "model": model,
-        "prompt": text,
-        "voice_id": voice_id,
-        "voice_type": voice_type,
+        "params": {
+            "prompt": text,
+            "voice_id": voice_id,
+            "voice_type": voice_type,
+        },
     }
 
     async with httpx.AsyncClient(timeout=60.0) as client:
-        resp = await client.post(f"{_BASE}/v1/generate/audio", json=payload, headers=_headers())
-        resp.raise_for_status()
-        data = resp.json()
-        records = data.get("results", [data])
-        job_id = records[0].get("id") if records else data.get("id")
-        if not job_id:
-            raise ValueError(f"No job ID in response: {data}")
-
-        record = await _poll(client, job_id)
+        job_id = await _create_job(client, payload)
+        record = await _poll_job(client, job_id)
         results = record.get("results") or {}
-        url = results.get("rawUrl") or results.get("url") or record.get("rawUrl")
-        return {"ok": True, "url": url, "id": job_id, "duration": results.get("durationSec")}
+        return {
+            "ok": True,
+            "url": _extract_url(record),
+            "id": job_id,
+            "duration": results.get("durationSec"),
+        }
+
+
+async def check_balance() -> dict[str, Any]:
+    """Return current Higgsfield credit balance."""
+    try:
+        headers = await _headers()
+    except FileNotFoundError as exc:
+        return {"ok": False, "error": str(exc)}
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        resp = await client.get(f"{_BASE}/balance", headers=headers)
+        resp.raise_for_status()
+        return {"ok": True, **resp.json()}

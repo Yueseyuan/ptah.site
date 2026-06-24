@@ -25,6 +25,7 @@ async def agency_seed(
     try:
         return await seed_agency_agents(db, current_user.id)
     except Exception as exc:
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Agency seed failed: {exc}",

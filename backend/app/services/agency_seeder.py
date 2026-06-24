@@ -105,11 +105,13 @@ async def seed_agency_agents(db: AsyncSession, user_id: int) -> dict:
     seeded = 0
     skipped = 0
     agent_names: list[str] = []
+    seen_this_run: set[str] = set()
 
     for spec in agent_specs:
-        if spec["name"] in existing_names:
+        if spec["name"] in existing_names or spec["name"] in seen_this_run:
             skipped += 1
             continue
+        seen_this_run.add(spec["name"])
 
         agent = Agent(
             name=spec["name"],

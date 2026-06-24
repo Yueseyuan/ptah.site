@@ -707,7 +707,7 @@ export default function SettingsPage() {
                   <span className="text-sm font-medium text-[--text-primary]">{m.name}</span>
                   <span className="text-xs text-[--text-muted] ml-2">{m.provider}</span>
                 </div>
-                <span className="text-xs text-[--text-muted]">{m.context_length.toLocaleString()} ctx</span>
+                <span className="text-xs text-[--text-muted]">{(m.context_length ?? 0).toLocaleString()} ctx</span>
               </div>
             ))}
           </div>

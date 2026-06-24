@@ -173,9 +173,24 @@ async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
 
     if use_tools and workspace_path is not None:
         from app.services.agent_tools import AGENT_TOOLS, OLLAMA_TOOLS, get_tools_system_addendum, make_tool_executor
+        from app.services.workspace import ws_list_as_dicts
 
         tool_addendum = get_tools_system_addendum()
         system_prompt = (system_prompt or "") + "\n\n" + tool_addendum
+
+        # Inject shared project context from Chief (all agents share same blueprint)
+        shared_context = (run.input or {}).get("_shared_context", "")
+        if shared_context:
+            system_prompt = f"## Project Blueprint\n{shared_context}\n\n---\n\n" + system_prompt
+
+        # Inject current workspace manifest so agents see what's already been built
+        existing_files = ws_list_as_dicts(workspace_path)
+        if existing_files:
+            manifest_lines = "\n".join(f"  {f['path']} ({f['size']} B)" for f in existing_files)
+            system_prompt += (
+                f"\n\n## Files already in workspace:\n{manifest_lines}\n"
+                "Use read_file to inspect any of these before writing new content."
+            )
 
         # Choose correct tool format per provider
         tools = OLLAMA_TOOLS if provider.name == "ollama" else AGENT_TOOLS

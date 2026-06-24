@@ -1,4 +1,5 @@
 """Tool definitions and executor factory for agentic agent runs."""
+import asyncio
 import re
 from pathlib import Path
 from typing import Any, Awaitable, Callable
@@ -62,6 +63,30 @@ _FILE_TOOLS: list[dict[str, Any]] = [
                 "path": {"type": "string", "description": "Directory path relative to workspace root"},
             },
             "required": ["path"],
+        },
+    },
+    {
+        "name": "run_bash",
+        "description": (
+            "Execute a shell command in the workspace directory. "
+            "Use to: run Python scripts (python script.py), install packages (pip install X), "
+            "run tests (pytest), build projects (npm run build), verify output, lint code, etc. "
+            "Returns combined stdout + stderr. The working directory is the workspace root."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "Shell command to execute",
+                },
+                "timeout": {
+                    "type": "integer",
+                    "description": "Max seconds to wait (default: 30, max: 120)",
+                    "default": 30,
+                },
+            },
+            "required": ["command"],
         },
     },
 ]
@@ -178,6 +203,7 @@ FILE TOOLS:
 - read_file(path): read a file you already wrote
 - list_files(directory=""): see what's in the workspace
 - create_directory(path): create folders
+- run_bash(command, timeout=30): run shell commands in workspace (python, pip, npm, pytest, etc.)
 
 WEB TOOLS:
 - fetch_url(url, mode): fetch webpage as text/html/links
@@ -191,6 +217,8 @@ SOCIAL MEDIA TOOLS:
 RULES:
 - Write COMPLETE files — never truncate with "..." or placeholders
 - Use list_files to check progress, fetch_url to research before building
+- Use run_bash to verify your code actually runs (python script.py, pytest, npm test, etc.)
+- Fix any errors you find before finishing
 - After all work is done, provide a brief summary of what was accomplished
 """
 
@@ -220,6 +248,10 @@ def make_tool_executor(workspace: Path) -> Callable[[str, dict[str, Any]], Await
         # Social tool
         if name == "post_social":
             return await _post_social(args["platform"], args["text"], args.get("image_url"))
+
+        # Bash execution
+        if name == "run_bash":
+            return await _run_bash(workspace, args["command"], int(args.get("timeout", 30)))
 
         return f"Unknown tool: {name}"
 
@@ -286,3 +318,27 @@ async def _post_social(platform: str, text: str, image_url: str | None = None) -
         return f"Post failed ({platform}): {result['error']}"
     except Exception as exc:
         return f"Social posting error: {exc}"
+
+
+async def _run_bash(workspace: Path, command: str, timeout: int = 30) -> str:
+    """Execute a shell command inside the workspace directory."""
+    timeout = min(max(int(timeout), 5), 120)
+    try:
+        proc = await asyncio.create_subprocess_shell(
+            command,
+            cwd=str(workspace),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        try:
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.wait()
+            return f"[command timed out after {timeout}s]"
+        output = stdout.decode("utf-8", errors="replace").strip()
+        rc = proc.returncode
+        prefix = f"[exit {rc}]\n" if rc != 0 else ""
+        return f"{prefix}{output}" if output else f"{prefix}[no output]"
+    except Exception as exc:
+        return f"[error running command: {exc}]"

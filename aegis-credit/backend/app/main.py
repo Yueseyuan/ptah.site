@@ -35,6 +35,99 @@ from app.routers.portal import router as portal_router
 from app.routers.billing import router as billing_router
 
 
+def repair_schema():
+    """Add any columns/tables that are missing due to partial Alembic migration history.
+
+    This runs after run_migrations() as a safety net. It is idempotent — if all
+    columns already exist it is a no-op. This fixes cases where the DB was created
+    by create_all from an older model snapshot, then Alembic failed to add newer
+    columns via ALTER TABLE.
+    """
+    from sqlalchemy import inspect as sa_inspect, text
+    from app.database import engine
+
+    try:
+        insp = sa_inspect(engine)
+        existing_tables = set(insp.get_table_names())
+
+        def cols(table):
+            if table not in existing_tables:
+                return set()
+            return {c["name"] for c in insp.get_columns(table)}
+
+        def run_ddl(sql, label):
+            try:
+                with engine.begin() as conn:
+                    conn.execute(text(sql))
+                print(f"[REPAIR] {label}")
+            except Exception as exc:
+                if "already exists" not in str(exc).lower():
+                    print(f"[REPAIR-WARN] {label}: {exc}")
+
+        # Migration 003: organizations table + users.organization_id
+        if "organizations" not in existing_tables:
+            run_ddl(
+                "CREATE TABLE IF NOT EXISTS organizations "
+                "(id SERIAL PRIMARY KEY, name VARCHAR NOT NULL, "
+                "created_at TIMESTAMP DEFAULT NOW())",
+                "Created organizations table",
+            )
+            existing_tables.add("organizations")
+
+        if "users" in existing_tables and "organization_id" not in cols("users"):
+            run_ddl(
+                "ALTER TABLE users ADD COLUMN organization_id INTEGER "
+                "REFERENCES organizations(id)",
+                "Added users.organization_id",
+            )
+
+        # Migration 006: portal columns on aegis_clients / aegis_cases + client_documents
+        if "aegis_clients" in existing_tables and "portal_user_id" not in cols("aegis_clients"):
+            run_ddl(
+                "ALTER TABLE aegis_clients ADD COLUMN portal_user_id INTEGER "
+                "REFERENCES users(id)",
+                "Added aegis_clients.portal_user_id",
+            )
+
+        if "aegis_cases" in existing_tables and "portal_status" not in cols("aegis_cases"):
+            run_ddl(
+                "ALTER TABLE aegis_cases ADD COLUMN portal_status VARCHAR "
+                "DEFAULT 'pending'",
+                "Added aegis_cases.portal_status",
+            )
+
+        if "client_documents" not in existing_tables:
+            run_ddl(
+                "CREATE TABLE IF NOT EXISTS client_documents ("
+                "id SERIAL PRIMARY KEY, "
+                "case_id INTEGER REFERENCES aegis_cases(id), "
+                "client_id INTEGER REFERENCES aegis_clients(id), "
+                "doc_type VARCHAR, bureau VARCHAR, original_filename VARCHAR, "
+                "file_path VARCHAR, notes TEXT, "
+                "uploaded_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
+                "Created client_documents table",
+            )
+
+        # Migration 007: stripe billing columns on users
+        if "users" in existing_tables:
+            ucols = cols("users")
+            for col_name, col_def in [
+                ("stripe_customer_id", "VARCHAR"),
+                ("stripe_subscription_id", "VARCHAR"),
+                ("subscription_status", "VARCHAR"),
+                ("subscription_period_end", "TIMESTAMP"),
+            ]:
+                if col_name not in ucols:
+                    run_ddl(
+                        f"ALTER TABLE users ADD COLUMN {col_name} {col_def}",
+                        f"Added users.{col_name}",
+                    )
+
+        print("[REPAIR] Schema repair complete")
+    except Exception as e:
+        print(f"[WARNING] Schema repair failed: {e}")
+
+
 def run_migrations():
     """Run alembic upgrade heads on startup.
 
@@ -87,8 +180,10 @@ def run_seeds():
 # Skip migrations during test runs (tests call create_all directly)
 if not os.environ.get("TESTING"):
     # Migrations run synchronously so the schema is ready before any request hits.
+    # repair_schema() adds any columns missed by partial migration history (safety net).
     # Seeds are idempotent and slow; run them in the background.
     run_migrations()
+    repair_schema()
     import threading
     threading.Thread(target=run_seeds, daemon=True).start()
 

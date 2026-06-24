@@ -71,8 +71,11 @@ def run_seeds():
 
 # Skip migrations during test runs (tests call create_all directly)
 if not os.environ.get("TESTING"):
-    run_migrations()
-    run_seeds()
+    import threading
+    def _startup_tasks():
+        run_migrations()
+        run_seeds()
+    threading.Thread(target=_startup_tasks, daemon=True).start()
 
 # Startup diagnostics — visible in Railway deploy logs
 print(f"[ENV-RAW] ANTHROPIC_API_KEY in os.environ: {'YES' if os.environ.get('ANTHROPIC_API_KEY') else 'NO'}")

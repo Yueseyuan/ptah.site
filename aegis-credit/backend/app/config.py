@@ -56,22 +56,31 @@ if settings.JWT_SECRET_KEY.strip() in ("", "change-me-in-production-use-env-var"
     if jwt_from_env:
         settings.JWT_SECRET_KEY = jwt_from_env
 
-# Build DATABASE_URL from individual PG* vars when they're available.
-# This avoids copy-paste errors with special characters in passwords.
-# Set these in Railway backend service as variable references:
-#   PGHOST     = ${{Postgres.PGHOST}}
-#   PGPORT     = ${{Postgres.PGPORT}}
-#   PGUSER     = ${{Postgres.PGUSER}}
+# If PGPASSWORD (or POSTGRES_PASSWORD) is available, rebuild the DATABASE_URL
+# with the correct password + proper URL encoding. This avoids manual copy-paste errors.
+# Add ONE variable reference in the Railway backend service:
 #   PGPASSWORD = ${{Postgres.PGPASSWORD}}
-#   PGDATABASE = ${{Postgres.PGDATABASE}}
+_pg_pw = _env("PGPASSWORD") or _env("POSTGRES_PASSWORD")
+if _pg_pw and settings.DATABASE_URL.startswith("postgresql"):
+    try:
+        from urllib.parse import urlparse, urlunparse, quote_plus as _qp
+        _p = urlparse(settings.DATABASE_URL)
+        _host = _p.hostname or "postgres.railway.internal"
+        _port = _p.port or 5432
+        _user = _p.username or "postgres"
+        _db   = (_p.path or "/railway").lstrip("/") or "railway"
+        settings.DATABASE_URL = f"postgresql://{_user}:{_qp(_pg_pw)}@{_host}:{_port}/{_db}"
+    except Exception:
+        pass
+
+# Build DATABASE_URL entirely from PG* vars if PGHOST is also provided.
 _pghost = _env("PGHOST")
-_pgpassword = _env("PGPASSWORD") or _env("POSTGRES_PASSWORD")
-if _pghost and _pgpassword:
-    from urllib.parse import quote_plus as _qp
+if _pghost and _pg_pw:
+    from urllib.parse import quote_plus as _qp2
     _pguser = _env("PGUSER") or _env("POSTGRES_USER") or "postgres"
     _pgport = _env("PGPORT") or "5432"
-    _pgdb = _env("PGDATABASE") or _env("POSTGRES_DB") or "railway"
-    settings.DATABASE_URL = f"postgresql://{_pguser}:{_qp(_pgpassword)}@{_pghost}:{_pgport}/{_pgdb}"
+    _pgdb   = _env("PGDATABASE") or _env("POSTGRES_DB") or "railway"
+    settings.DATABASE_URL = f"postgresql://{_pguser}:{_qp2(_pg_pw)}@{_pghost}:{_pgport}/{_pgdb}"
 
 
 def _validate_settings(s):

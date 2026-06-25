@@ -156,8 +156,11 @@ def run_migrations():
         print("[MIGRATION] Alembic upgrade heads completed successfully")
     except Exception as e:
         print(f"[WARNING] Alembic migration failed ({e}), falling back to create_all")
-        from app.database import engine, Base
-        Base.metadata.create_all(bind=engine)
+        try:
+            from app.database import engine, Base
+            Base.metadata.create_all(bind=engine)
+        except Exception as e2:
+            print(f"[WARNING] create_all also failed ({e2}) — app will start without schema")
 
 
 def run_seeds():
@@ -190,8 +193,15 @@ if not os.environ.get("TESTING"):
 # Startup diagnostics — visible in Railway deploy logs
 print(f"[ENV-RAW] ANTHROPIC_API_KEY in os.environ: {'YES' if os.environ.get('ANTHROPIC_API_KEY') else 'NO'}")
 print(f"[ENV-RAW] STRIPE_SECRET_KEY in os.environ: {'YES' if os.environ.get('STRIPE_SECRET_KEY') else 'NO'}")
-print(f"[ENV-RAW] DATABASE_URL in os.environ: {os.environ.get('DATABASE_URL', 'NOT SET')[:40]}")
-print(f"[CONFIG] DATABASE_URL: {settings.DATABASE_URL[:35]}...")
+_raw_db = os.environ.get('DATABASE_URL', 'NOT SET')
+print(f"[ENV-RAW] DATABASE_URL in os.environ: {_raw_db[:40]}")
+# Show host+user without password for diagnosis
+try:
+    import re as _re
+    _db_safe = _re.sub(r'://([^:]+):[^@]+@', r'://\1:***@', settings.DATABASE_URL)
+    print(f"[CONFIG] DATABASE_URL (masked): {_db_safe[:80]}")
+except Exception:
+    print(f"[CONFIG] DATABASE_URL: {settings.DATABASE_URL[:35]}...")
 print(f"[CONFIG] ANTHROPIC_API_KEY: {'SET (' + str(len(settings.ANTHROPIC_API_KEY)) + ' chars)' if settings.ANTHROPIC_API_KEY else 'MISSING — reports will fail'}")
 print(f"[CONFIG] STRIPE_SECRET_KEY: {'SET' if settings.STRIPE_SECRET_KEY else 'MISSING — billing will fail'}")
 print(f"[CONFIG] JWT_SECRET_KEY: {'SET (custom)' if settings.JWT_SECRET_KEY not in ('change-me-in-production-use-env-var', '') else 'MISSING — using insecure default'}")

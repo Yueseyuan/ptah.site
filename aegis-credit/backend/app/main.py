@@ -303,22 +303,55 @@ def db_check():
 
 @app.get("/api/env-check")
 def env_check():
-    """Temporary diagnostic — shows which Railway env vars reached the container."""
-    import os
-    keys_to_check = [
-        "ANTHROPIC_API_KEY", "STRIPE_SECRET_KEY", "DATABASE_URL",
-        "JWT_SECRET_KEY", "RAILWAY_ENVIRONMENT", "RAILWAY_SERVICE_NAME",
-        "RAILWAY_PROJECT_ID", "PORT",
-    ]
+    """Diagnostic — shows env vars and DB connection test."""
+    import os, re
+
+    def masked_url(url):
+        return re.sub(r'://([^:]+):[^@]+@', r'://\1:***@', url) if url else "NOT SET"
+
     result = {}
-    for k in keys_to_check:
-        val = os.environ.get(k)
+
+    # Anthropic key — show length + prefix
+    ak = os.environ.get("ANTHROPIC_API_KEY", "")
+    if ak:
+        result["ANTHROPIC_API_KEY"] = f"SET — {len(ak)} chars, starts: {ak[:14]}..."
+    else:
+        result["ANTHROPIC_API_KEY"] = "NOT SET"
+
+    # DATABASE_URL — mask password but show host/port/db
+    db_raw = os.environ.get("DATABASE_URL", "")
+    result["DATABASE_URL_len"] = len(db_raw)
+    result["DATABASE_URL_masked"] = masked_url(db_raw)
+
+    # PG* individual vars
+    for k in ["PGHOST", "PGPORT", "PGUSER", "PGDATABASE", "PGPASSWORD", "POSTGRES_PASSWORD"]:
+        val = os.environ.get(k, "")
         if val:
-            # Show first 6 chars only for secrets
-            if k in ("ANTHROPIC_API_KEY", "STRIPE_SECRET_KEY", "JWT_SECRET_KEY"):
-                result[k] = f"SET — starts with: {val[:6]}..."
-            else:
-                result[k] = val[:60]
+            result[k] = "***" if "PASSWORD" in k else val[:60]
         else:
             result[k] = "NOT SET"
+
+    # What config.py ended up with
+    result["resolved_DATABASE_URL"] = masked_url(settings.DATABASE_URL)
+
+    # Live DB connection test
+    try:
+        from sqlalchemy import text
+        from app.database import engine
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        result["db_connection"] = "OK"
+    except Exception as e:
+        result["db_connection"] = f"FAILED: {str(e)[:120]}"
+
+    # Other vars
+    for k in ["STRIPE_SECRET_KEY", "JWT_SECRET_KEY", "RAILWAY_ENVIRONMENT", "RAILWAY_SERVICE_NAME", "PORT"]:
+        val = os.environ.get(k, "")
+        if val and k in ("STRIPE_SECRET_KEY", "JWT_SECRET_KEY"):
+            result[k] = f"SET ({len(val)} chars)"
+        elif val:
+            result[k] = val[:60]
+        else:
+            result[k] = "NOT SET"
+
     return result

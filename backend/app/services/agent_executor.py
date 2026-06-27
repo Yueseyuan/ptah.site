@@ -109,7 +109,8 @@ async def execute_agent_run(run_id: int, db: AsyncSession) -> AgentRun:
         provider = registry.get(provider_name)
 
     if provider is None:
-        for p in registry.all():
+        _PRIORITY = {"anthropic": 0, "openai": 1, "ollama": 99}
+        for p in sorted(registry.all(), key=lambda x: _PRIORITY.get(x.name, 50)):
             try:
                 if await p.health():
                     provider = p

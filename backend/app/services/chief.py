@@ -70,8 +70,15 @@ _REVIEW_SYSTEM = (
 
 
 async def _get_provider_and_model(registry):
-    """Return the first healthy (provider, model_id) pair or (None, None)."""
-    for provider in registry.all():
+    """Return the best healthy (provider, model_id) pair.
+
+    Preference order: anthropic → openai → others → ollama
+    Ollama is deprioritised because local models rarely call write_file reliably.
+    """
+    _PRIORITY = {"anthropic": 0, "openai": 1, "ollama": 99}
+
+    providers = sorted(registry.all(), key=lambda p: _PRIORITY.get(p.name, 50))
+    for provider in providers:
         try:
             if not await provider.health():
                 continue

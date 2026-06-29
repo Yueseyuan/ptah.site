@@ -311,12 +311,11 @@ def env_check():
 
     result = {}
 
-    # Anthropic key — show length + prefix
-    ak = os.environ.get("ANTHROPIC_API_KEY", "")
-    if ak:
-        result["ANTHROPIC_API_KEY"] = f"SET — {len(ak)} chars, starts: {ak[:14]}..."
-    else:
-        result["ANTHROPIC_API_KEY"] = "NOT SET"
+    # Anthropic key — compare os.environ vs settings
+    ak_env = os.environ.get("ANTHROPIC_API_KEY", "")
+    ak_settings = settings.ANTHROPIC_API_KEY or ""
+    result["ANTHROPIC_API_KEY_env"] = f"{len(ak_env)} chars, starts: {ak_env[:14]}..." if ak_env else "NOT SET"
+    result["ANTHROPIC_API_KEY_settings"] = f"{len(ak_settings)} chars, starts: {ak_settings[:14]}..." if ak_settings else "EMPTY — pydantic-settings failed to load it"
 
     # DATABASE_URL — mask password but show host/port/db
     db_raw = os.environ.get("DATABASE_URL", "")

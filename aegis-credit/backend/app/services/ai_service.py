@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import time
 import anthropic
@@ -139,8 +140,12 @@ Return ONLY the JSON array with no other text.
 """
 
 
+def _api_key() -> str:
+    return settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY", "")
+
+
 def _client() -> anthropic.Anthropic:
-    return anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return anthropic.Anthropic(api_key=_api_key())
 
 
 def _extract_json(content: str) -> str:
@@ -189,8 +194,8 @@ def _parse_json_response(content: str) -> list[dict]:
 
 
 def _require_api_key() -> None:
-    if not settings.ANTHROPIC_API_KEY:
-        raise RuntimeError("ANTHROPIC_API_KEY is not configured in backend/.env.")
+    if not _api_key():
+        raise RuntimeError("ANTHROPIC_API_KEY is not configured.")
 
 
 def _retry_after_seconds(e: anthropic.APIStatusError, default: float) -> float:

@@ -254,7 +254,7 @@ app.include_router(billing_router)
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok", "v": 4}
 
 
 @app.get("/api/db-check")

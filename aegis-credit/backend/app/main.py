@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 
@@ -182,13 +182,15 @@ def run_seeds():
 
 # Skip migrations during test runs (tests call create_all directly)
 if not os.environ.get("TESTING"):
-    # Migrations run synchronously so the schema is ready before any request hits.
-    # repair_schema() adds any columns missed by partial migration history (safety net).
-    # Seeds are idempotent and slow; run them in the background.
-    run_migrations()
-    repair_schema()
+    # Run all startup tasks in a background thread so uvicorn starts immediately
+    # and the Railway healthcheck at /api/health responds before DB ops finish.
+    # This prevents health-check timeouts from rolling back deployments.
     import threading
-    threading.Thread(target=run_seeds, daemon=True).start()
+    def _startup():
+        run_migrations()
+        repair_schema()
+        run_seeds()
+    threading.Thread(target=_startup, daemon=True).start()
 
 # Startup diagnostics — visible in Railway deploy logs
 print(f"[ENV-RAW] ANTHROPIC_API_KEY in os.environ: {'YES' if os.environ.get('ANTHROPIC_API_KEY') else 'NO'}")
@@ -302,55 +304,51 @@ def db_check():
 
 
 @app.get("/api/env-check")
-def env_check():
-    """Diagnostic — shows env vars and DB connection test."""
-    import os, re
+def env_check(response: Response):
+    """Diagnostic — no-cache, shows every DB source and live connection test."""
+    import re
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
 
-    def masked_url(url):
-        return re.sub(r'://([^:]+):[^@]+@', r'://\1:***@', url) if url else "NOT SET"
+    def mask(url: str) -> str:
+        return re.sub(r"://([^:]+):[^@]+@", r"://\1:***@", url) if url else "NOT SET"
 
-    result = {}
+    result = {"_version": "v3"}
 
-    # Anthropic key — compare os.environ vs settings
-    ak_env = os.environ.get("ANTHROPIC_API_KEY", "")
+    # Anthropic key: compare raw env vs what pydantic-settings loaded
+    ak_env      = os.environ.get("ANTHROPIC_API_KEY", "")
     ak_settings = settings.ANTHROPIC_API_KEY or ""
-    result["ANTHROPIC_API_KEY_env"] = f"{len(ak_env)} chars, starts: {ak_env[:14]}..." if ak_env else "NOT SET"
-    result["ANTHROPIC_API_KEY_settings"] = f"{len(ak_settings)} chars, starts: {ak_settings[:14]}..." if ak_settings else "EMPTY — pydantic-settings failed to load it"
+    result["ANTHROPIC_KEY_env"]      = f"{len(ak_env)} chars — {ak_env[:14]}..." if ak_env else "NOT SET"
+    result["ANTHROPIC_KEY_settings"] = f"{len(ak_settings)} chars" if ak_settings else "EMPTY (pydantic-settings missed it)"
 
-    # DATABASE_URL — mask password but show host/port/db
-    db_raw = os.environ.get("DATABASE_URL", "")
-    result["DATABASE_URL_len"] = len(db_raw)
-    result["DATABASE_URL_masked"] = masked_url(db_raw)
-
-    # PG* individual vars
-    for k in ["PGHOST", "PGPORT", "PGUSER", "PGDATABASE", "PGPASSWORD", "POSTGRES_PASSWORD"]:
+    # All DB-related env vars
+    for k in ["DATABASE_URL", "PGHOST", "PGPORT", "PGUSER", "PGDATABASE"]:
         val = os.environ.get(k, "")
-        if val:
-            result[k] = "***" if "PASSWORD" in k else val[:60]
-        else:
-            result[k] = "NOT SET"
+        result[f"env_{k}"] = mask(val)[:80] if k == "DATABASE_URL" else (val[:60] if val else "NOT SET")
+    for k in ["PGPASSWORD", "POSTGRES_PASSWORD"]:
+        result[f"env_{k}"] = "SET (***)" if os.environ.get(k) else "NOT SET"
 
-    # What config.py ended up with
-    result["resolved_DATABASE_URL"] = masked_url(settings.DATABASE_URL)
+    # What database.py is actually using (after all patching)
+    from app.database import _url as db_resolved_url
+    result["db_resolved_url"]   = mask(db_resolved_url)[:80]
+    result["settings_DB_URL"]   = mask(settings.DATABASE_URL)[:80]
 
-    # Live DB connection test
+    # Live connection test
     try:
         from sqlalchemy import text
         from app.database import engine
         with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        result["db_connection"] = "OK"
-    except Exception as e:
-        result["db_connection"] = f"FAILED: {str(e)[:120]}"
+            row = conn.execute(text("SELECT current_database(), version()")).fetchone()
+        result["db_connection"] = f"OK — db={row[0]}, pg={row[1][:40]}"
+    except Exception as exc:
+        result["db_connection"] = f"FAILED: {str(exc)[:150]}"
 
-    # Other vars
-    for k in ["STRIPE_SECRET_KEY", "JWT_SECRET_KEY", "RAILWAY_ENVIRONMENT", "RAILWAY_SERVICE_NAME", "PORT"]:
+    # Other keys
+    for k in ["STRIPE_SECRET_KEY", "JWT_SECRET_KEY"]:
         val = os.environ.get(k, "")
-        if val and k in ("STRIPE_SECRET_KEY", "JWT_SECRET_KEY"):
-            result[k] = f"SET ({len(val)} chars)"
-        elif val:
-            result[k] = val[:60]
-        else:
-            result[k] = "NOT SET"
+        result[k] = f"SET ({len(val)} chars)" if val else "NOT SET"
+
+    for k in ["RAILWAY_ENVIRONMENT", "RAILWAY_SERVICE_NAME", "PORT"]:
+        result[k] = os.environ.get(k, "NOT SET")
 
     return result

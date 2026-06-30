@@ -1,13 +1,12 @@
 /** @type {import('next').NextConfig} */
-// build: 2026-06-24-r1
 const nextConfig = {
-  eslint: { ignoreDuringBuilds: true },
+  eslint:     { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'https://ptahsite-production.up.railway.app/api/:path*',
+        source:      '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8082'}/api/:path*`,
       },
     ];
   },

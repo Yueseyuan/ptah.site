@@ -11,6 +11,9 @@ RUN echo "bust:20260630" && pip install --no-cache-dir -r requirements.txt
 
 COPY aegis-credit/backend/ .
 
+# Guarantee alembic+stripe are present even if the pip layer above was cached
+RUN pip install --no-cache-dir alembic>=1.13.0 stripe>=9.0.0
+
 EXPOSE 8080
 
 CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}

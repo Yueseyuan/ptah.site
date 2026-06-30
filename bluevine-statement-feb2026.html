@@ -3,70 +3,136 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BlueVine – Account Statement – February 2026 – PTAH LLC</title>
+  <title>BlueVine – Account Statement – February 2026</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #e8e8e8;
+      background: #c8c8c8;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 12.5px;
+      font-size: 13px;
       color: #222;
     }
 
+    /* ── Page shell ── */
     .page {
       width: 8.5in;
       min-height: 11in;
       background: #fff;
-      margin: 40px auto;
-      padding: 0.80in 0.85in 0.70in;
+      margin: 30px auto;
+      padding: 0.60in 0.75in 0.55in;
       position: relative;
     }
 
-    /* ── Logo ── */
-    .logo { display: flex; align-items: center; gap: 7px; margin-bottom: 18px; }
-    .logo svg { width: 30px; height: 30px; }
+    /* ── Watermark top-right ── */
+    .watermark {
+      position: absolute;
+      top: 0.38in;
+      right: 0.75in;
+      font-size: 10px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── BlueVine Logo ── */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
     .logo-wordmark {
-      font-size: 30px; font-weight: 700; color: #1a7fc1;
-      letter-spacing: -0.5px; font-family: Arial, Helvetica, sans-serif;
+      font-size: 27px;
+      font-weight: 700;
+      font-style: italic;
+      color: #1a7fc1;
+      letter-spacing: -0.3px;
+      line-height: 1;
     }
 
-    /* ── Address ── */
-    .address-block { font-size: 12.5px; line-height: 1.65; }
-    .address-block .company { font-weight: 700; text-decoration: underline; margin-bottom: 1px; }
-
-    /* ── Section heading ── */
-    .section-heading { font-size: 15px; font-weight: 700; margin-top: 26px; margin-bottom: 3px; }
-    .divider { border: none; border-top: 2px solid #222; margin-bottom: 10px; }
-
-    /* ── Account meta ── */
-    .meta p { margin-bottom: 3px; font-size: 12.5px; }
-
-    /* ── Activity Summary ── */
-    .activity-table { width: 100%; border-collapse: collapse; margin-top: 2px; }
-    .activity-table tr td { padding: 5px 2px; font-size: 12.5px; border-bottom: 1px solid #bbb; }
-    .activity-table tr:first-child td { border-top: 2px solid #222; }
-    .activity-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
-    .activity-table .row-bold td { font-weight: 700; }
-
-    /* ── Transactions ── */
-    .txn-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-    .txn-table thead tr th {
-      font-size: 12.5px; font-weight: 700; text-align: left;
-      padding: 5px 4px; border-bottom: 1.5px solid #444;
+    /* ── Address block ── */
+    .co-name {
+      font-size: 13px;
+      text-decoration: underline;
+      margin-bottom: 1px;
+      line-height: 1.5;
     }
-    .txn-table thead tr th:last-child { text-align: right; }
-    .txn-table tbody tr td { font-size: 12.5px; padding: 5px 4px; border-bottom: 1px solid #e0e0e0; }
-    .txn-table tbody tr td:last-child {
-      text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap;
+    .addr {
+      font-size: 13px;
+      line-height: 1.55;
     }
-    .txn-table tbody tr td:first-child { white-space: nowrap; }
+
+    /* ── "Account Statement" heading ── */
+    .stmt-heading {
+      font-size: 15.5px;
+      font-weight: 700;
+      text-decoration: underline;
+      margin-top: 22px;
+      margin-bottom: 5px;
+    }
+
+    /* ── Account meta (Number / Period) ── */
+    .meta { font-size: 13px; margin-bottom: 16px; }
+    .meta p { line-height: 1.6; }
+
+    /* ── Section title + full-width rule ── */
+    .sec-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 16px;
+      margin-bottom: 2px;
+    }
+    .sec-rule {
+      border: none;
+      border-top: 1.8px solid #222;
+      margin-bottom: 0;
+    }
+
+    /* ── Activity Summary table ── */
+    .act-tbl { width: 100%; border-collapse: collapse; }
+    .act-tbl td {
+      padding: 5px 2px;
+      font-size: 13px;
+      border-bottom: 1px solid #aaa;
+      line-height: 1.45;
+    }
+    .act-tbl tr:first-child td { border-top: 1.8px solid #222; font-weight: 700; }
+    .act-tbl td:last-child { text-align: right; white-space: nowrap; padding-right: 0; }
+    .act-tbl .bold td { font-weight: 700; }
+
+    /* ── Transactions table ── */
+    .txn-tbl { width: 100%; border-collapse: collapse; margin-top: 1px; }
+    .txn-tbl thead th {
+      font-size: 13px;
+      font-weight: 700;
+      text-align: left;
+      padding: 5px 4px;
+      border-bottom: 1px solid #555;
+    }
+    .txn-tbl thead th:last-child { text-align: right; padding-right: 0; }
+    .txn-tbl tbody td {
+      font-size: 13px;
+      padding: 5px 4px;
+      border-bottom: 1px solid #ccc;
+      line-height: 1.4;
+    }
+    .txn-tbl tbody td:first-child { white-space: nowrap; }
+    .txn-tbl tbody td:last-child { text-align: right; white-space: nowrap; padding-right: 0; }
 
     /* ── Page number ── */
-    .page-num { text-align: center; margin-top: 48px; font-size: 11px; color: #666; }
+    .pg-num {
+      text-align: center;
+      font-size: 11px;
+      color: #555;
+      margin-top: 36px;
+    }
 
-    /* ── Page break ── */
-    @media screen { .page-break { height: 2px; background: #ccc; width: 8.5in; margin: 0 auto; } }
+    /* ── Screen page-break separator ── */
+    @media screen {
+      .page-break { width: 8.5in; margin: 0 auto; height: 3px; background: #999; }
+    }
     @media print {
       body { background: white; }
       .page { margin: 0; page-break-after: always; }
@@ -76,44 +142,59 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════ PAGE 1 ═══════════════════════════ -->
+<!-- ══════════════════════════════ PAGE 1 ══════════════════════════════ -->
 <div class="page">
 
+  <!-- Watermark -->
+  <div class="watermark">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="#888">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+    BankStatements.net
+  </div>
+
+  <!-- Logo -->
   <div class="logo">
-    <svg viewBox="0 0 24 24" fill="#1a7fc1" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17 8C8 10 5.9 16.17 3.82 22H5.71C6.19 20.5 6.79 19 7.5 17.6C9.07 18.15 10.71 18.5 12.5 18.5C18 18.5 21 14 21 8L22 7Z"/>
+    <svg width="30" height="30" viewBox="0 0 80 80" fill="#1a7fc1">
+      <path d="M65 10 C70 30 68 50 50 63 C37 72 18 70 10 76 C16 55 26 36 44 24 C54 17 65 10 65 10Z"/>
     </svg>
     <span class="logo-wordmark">BlueVine</span>
   </div>
 
-  <div class="address-block">
-    <div class="company">PTAH LLC</div>
+  <!-- Address -->
+  <div class="co-name">PTAH LLC</div>
+  <div class="addr">
     3210 N. Pleasantburg Drive Suite 1123,<br>
     Greenville, SC 29609
   </div>
 
-  <div class="section-heading" style="margin-top:28px;">Account Statement</div>
-  <hr class="divider">
+  <!-- Account Statement -->
+  <div class="stmt-heading">Account Statement</div>
   <div class="meta">
     <p><strong>Account Number:</strong> 875110864282</p>
-    <p><strong>Statement Period:</strong> February 2026 (Feb. 1, 2026 – Feb. 28, 2026)</p>
+    <p><strong>Statement Period:</strong> February 2026 (Feb. 1, 2026 - Feb. 28, 2026)</p>
   </div>
 
-  <div class="section-heading">Activity Summary</div>
-  <table class="activity-table">
-    <tbody>
-      <tr><td>Beginning Balance on Feb. 1, 2026</td><td>173,013.00</td></tr>
-      <tr><td>Deposits/Additions</td><td>91,200.00</td></tr>
-      <tr><td>Withdrawals/Subtractions</td><td>-16,722.00</td></tr>
-      <tr class="row-bold"><td>Ending balance on Feb. 28, 2026</td><td>247,491.00</td></tr>
-    </tbody>
+  <!-- Activity Summary -->
+  <div class="sec-title">Activity Summary</div>
+  <hr class="sec-rule">
+  <table class="act-tbl">
+    <tr><td>Beginning Balance on Feb. 1, 2026</td><td>173,013.00</td></tr>
+    <tr><td>Deposits/Additions</td><td>91,200.00</td></tr>
+    <tr><td>Withdrawals/Subtractions</td><td>-16,722.00</td></tr>
+    <tr class="bold"><td>Ending balance on Feb. 28, 2026</td><td>247,491.00</td></tr>
   </table>
 
-  <div class="section-heading">Transactions</div>
-  <hr class="divider">
-  <table class="txn-table">
+  <!-- Transactions -->
+  <div class="sec-title">Transactions</div>
+  <hr class="sec-rule">
+  <table class="txn-tbl">
     <thead>
-      <tr><th>Date</th><th>Description</th><th>Amount</th></tr>
+      <tr>
+        <th style="width:90px">Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+      </tr>
     </thead>
     <tbody>
       <tr><td>02/02/26</td><td>Invoice #2001 – Client A</td><td>4,200.00</td></tr>
@@ -139,37 +220,54 @@
     </tbody>
   </table>
 
-  <div class="page-num">page 1 of 2</div>
+  <div class="pg-num">page 1 of 2</div>
 </div>
 
 <div class="page-break"></div>
 
-<!-- ═══════════════════════════ PAGE 2 ═══════════════════════════ -->
+<!-- ══════════════════════════════ PAGE 2 ══════════════════════════════ -->
 <div class="page">
 
+  <!-- Watermark -->
+  <div class="watermark">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="#888">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+    BankStatements.net
+  </div>
+
+  <!-- Logo -->
   <div class="logo">
-    <svg viewBox="0 0 24 24" fill="#1a7fc1" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17 8C8 10 5.9 16.17 3.82 22H5.71C6.19 20.5 6.79 19 7.5 17.6C9.07 18.15 10.71 18.5 12.5 18.5C18 18.5 21 14 21 8L22 7Z"/>
+    <svg width="30" height="30" viewBox="0 0 80 80" fill="#1a7fc1">
+      <path d="M65 10 C70 30 68 50 50 63 C37 72 18 70 10 76 C16 55 26 36 44 24 C54 17 65 10 65 10Z"/>
     </svg>
     <span class="logo-wordmark">BlueVine</span>
   </div>
 
-  <div class="address-block">
-    <div class="company">PTAH LLC</div>
+  <!-- Address -->
+  <div class="co-name">PTAH LLC</div>
+  <div class="addr">
     3210 N. Pleasantburg Drive Suite 1123,<br>
     Greenville, SC 29609
   </div>
 
-  <div class="meta" style="margin-top:18px;">
+  <!-- Account Statement -->
+  <div class="stmt-heading">Account Statement</div>
+  <div class="meta">
     <p><strong>Account Number:</strong> 875110864282</p>
-    <p><strong>Statement Period:</strong> February 2026 (Feb. 1, 2026 – Feb. 28, 2026) — continued</p>
+    <p><strong>Statement Period:</strong> February 2026 (Feb. 1, 2026 - Feb. 28, 2026)</p>
   </div>
 
-  <div class="section-heading">Transactions (continued)</div>
-  <hr class="divider">
-  <table class="txn-table">
+  <!-- Transactions continued -->
+  <div class="sec-title">Transactions</div>
+  <hr class="sec-rule">
+  <table class="txn-tbl">
     <thead>
-      <tr><th>Date</th><th>Description</th><th>Amount</th></tr>
+      <tr>
+        <th style="width:90px">Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+      </tr>
     </thead>
     <tbody>
       <tr><td>02/16/26</td><td>Payment Link – E-Commerce</td><td>2,500.00</td></tr>
@@ -193,7 +291,7 @@
     </tbody>
   </table>
 
-  <div class="page-num">page 2 of 2</div>
+  <div class="pg-num">page 2 of 2</div>
 </div>
 
 </body>

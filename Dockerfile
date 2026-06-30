@@ -6,9 +6,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 && rm -rf /var/lib/apt/lists/*
 
-ARG CACHEBUST=20260629
 COPY aegis-credit/backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN echo "bust:20260630" && pip install --no-cache-dir -r requirements.txt
 
 COPY aegis-credit/backend/ .
 

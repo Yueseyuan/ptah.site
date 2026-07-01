@@ -308,6 +308,40 @@ export const mediaApi = {
   seed: () => api.post<MediaSeedResult>("/media/seed"),
 };
 
+// Media Studio — direct Higgsfield generation
+export interface VideoGenerateResult {
+  ok: boolean;
+  url: string | null;
+  id: string;
+}
+
+export interface VoiceoverResult {
+  ok: boolean;
+  url: string | null;
+  id: string;
+  duration: number | null;
+}
+
+export interface HiggsfieldBalance {
+  ok: boolean;
+  balance?: number;
+  credits?: number;
+  error?: string;
+}
+
+export const mediaStudioApi = {
+  balance: () => api.get<HiggsfieldBalance>("/media/balance"),
+  generateVideo: (data: {
+    prompt: string;
+    duration?: number;
+    genre?: string;
+    aspect_ratio?: string;
+    sound?: string;
+  }) => api.post<VideoGenerateResult>("/media/generate/video", data),
+  generateVoiceover: (data: { text: string; voice?: string }) =>
+    api.post<VoiceoverResult>("/media/generate/voiceover", data),
+};
+
 // CL4R1T4S Agent Templates
 export interface ClaritasStatus {
   available: number;

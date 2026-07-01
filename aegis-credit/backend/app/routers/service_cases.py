@@ -1,0 +1,266 @@
+from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.dependencies import get_current_user
+from app.models import AegisClient, ServiceCase, User
+
+router = APIRouter(prefix="/api/service-cases", tags=["service-cases"])
+
+# ---------------------------------------------------------------------------
+# Division registry
+# ---------------------------------------------------------------------------
+
+DIVISIONS = [
+    {
+        "slug": "notary",
+        "name": "Mobile Notary",
+        "description": (
+            "Certified mobile notary services for loan signings, real estate closings, "
+            "affidavits, powers of attorney, and other legal documents — at a location "
+            "convenient for you."
+        ),
+        "icon": "stamp",
+    },
+    {
+        "slug": "credit",
+        "name": "Credit Restoration",
+        "description": (
+            "Comprehensive credit repair and restoration services including bureau dispute "
+            "management, FCRA violation identification, goodwill interventions, and "
+            "ongoing score monitoring to rebuild your financial profile."
+        ),
+        "icon": "credit-card",
+    },
+    {
+        "slug": "criminal",
+        "name": "Criminal Record Relief",
+        "description": (
+            "Document preparation and attorney referral services for expungements, record "
+            "sealings, pardons, and post-conviction relief — helping clients move forward "
+            "with a clean slate."
+        ),
+        "icon": "shield",
+    },
+    {
+        "slug": "document",
+        "name": "Document Preparation",
+        "description": (
+            "Professional preparation of legal and business documents including contracts, "
+            "LLC formations, demand letters, lease agreements, and custom forms — "
+            "accurate, compliant, and ready to sign."
+        ),
+        "icon": "file-text",
+    },
+    {
+        "slug": "judgment",
+        "name": "Judgment & Asset Recovery",
+        "description": (
+            "Strategic assistance with judgment enforcement, lien research, asset location, "
+            "and collections — helping creditors and individuals recover what they are owed "
+            "through legal channels."
+        ),
+        "icon": "gavel",
+    },
+    {
+        "slug": "consulting",
+        "name": "Business Consulting",
+        "description": (
+            "Practical business advisory services covering entity formation, compliance, "
+            "credit building for businesses, operational workflows, and growth strategy "
+            "tailored to small and mid-sized enterprises."
+        ),
+        "icon": "briefcase",
+    },
+]
+
+_VALID_SLUGS = {d["slug"] for d in DIVISIONS}
+_VALID_STATUSES = {"intake", "active", "on_hold", "closed"}
+
+
+# ---------------------------------------------------------------------------
+# Pydantic schemas
+# ---------------------------------------------------------------------------
+
+class ServiceCaseCreate(BaseModel):
+    client_id: int
+    division_slug: str
+    title: Optional[str] = None
+    intake_data: Optional[str] = None   # JSON blob
+    notes: Optional[str] = None
+    assigned_to: Optional[str] = None
+    status: Optional[str] = "intake"
+
+
+class ServiceCaseUpdate(BaseModel):
+    title: Optional[str] = None
+    status: Optional[str] = None
+    intake_data: Optional[str] = None
+    notes: Optional[str] = None
+    assigned_to: Optional[str] = None
+
+
+class ServiceCaseOut(BaseModel):
+    id: int
+    client_id: int
+    division_slug: str
+    case_number: Optional[str]
+    status: str
+    title: Optional[str]
+    intake_data: Optional[str]
+    notes: Optional[str]
+    assigned_to: Optional[str]
+    created_at: Optional[str]
+    updated_at: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _gen_case_number(division_slug: str, year: int, record_id: int) -> str:
+    prefix = division_slug[:3].upper()
+    return f"SVC-{prefix}-{year}-{record_id:04d}"
+
+
+def _out(sc: ServiceCase) -> dict:
+    return {
+        "id": sc.id,
+        "client_id": sc.client_id,
+        "division_slug": sc.division_slug,
+        "case_number": sc.case_number,
+        "status": sc.status,
+        "title": sc.title,
+        "intake_data": sc.intake_data,
+        "notes": sc.notes,
+        "assigned_to": sc.assigned_to,
+        "created_at": sc.created_at.isoformat() if sc.created_at else None,
+        "updated_at": sc.updated_at.isoformat() if sc.updated_at else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Routes — /divisions must come before /{id} to avoid path conflict
+# ---------------------------------------------------------------------------
+
+@router.get("/divisions")
+def list_divisions():
+    """Return all 6 service divisions with slug, display name, description, and icon."""
+    return DIVISIONS
+
+
+@router.get("/")
+def list_service_cases(
+    division: Optional[str] = None,
+    client_id: Optional[int] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """List service cases with optional filters: division slug, client_id, status."""
+    q = db.query(ServiceCase)
+    if division is not None:
+        q = q.filter(ServiceCase.division_slug == division)
+    if client_id is not None:
+        q = q.filter(ServiceCase.client_id == client_id)
+    if status is not None:
+        q = q.filter(ServiceCase.status == status)
+    return [_out(sc) for sc in q.order_by(ServiceCase.id.desc()).all()]
+
+
+@router.post("/", status_code=201)
+def create_service_case(
+    data: ServiceCaseCreate,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """Create a new service case. Validates division slug and client existence."""
+    if data.division_slug not in _VALID_SLUGS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid division_slug '{data.division_slug}'. "
+                   f"Must be one of: {', '.join(sorted(_VALID_SLUGS))}",
+        )
+    if data.status and data.status not in _VALID_STATUSES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid status '{data.status}'. "
+                   f"Must be one of: {', '.join(sorted(_VALID_STATUSES))}",
+        )
+
+    client = db.query(AegisClient).filter(AegisClient.id == data.client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    sc = ServiceCase(**data.model_dump())
+    # Placeholder case_number — will be replaced after flush gives us the id.
+    sc.case_number = "SVC-PENDING"
+    db.add(sc)
+    db.flush()   # populates sc.id without committing
+
+    year = (sc.created_at or datetime.utcnow()).year
+    sc.case_number = _gen_case_number(sc.division_slug, year, sc.id)
+    db.commit()
+    db.refresh(sc)
+    return _out(sc)
+
+
+@router.get("/{service_case_id}")
+def get_service_case(
+    service_case_id: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """Retrieve a single service case by ID."""
+    sc = db.query(ServiceCase).filter(ServiceCase.id == service_case_id).first()
+    if not sc:
+        raise HTTPException(status_code=404, detail="Service case not found")
+    return _out(sc)
+
+
+@router.put("/{service_case_id}")
+def update_service_case(
+    service_case_id: int,
+    data: ServiceCaseUpdate,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """Update title, status, intake_data, notes, or assigned_to for a service case."""
+    sc = db.query(ServiceCase).filter(ServiceCase.id == service_case_id).first()
+    if not sc:
+        raise HTTPException(status_code=404, detail="Service case not found")
+
+    if data.status is not None and data.status not in _VALID_STATUSES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid status '{data.status}'. "
+                   f"Must be one of: {', '.join(sorted(_VALID_STATUSES))}",
+        )
+
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(sc, field, value)
+
+    db.commit()
+    db.refresh(sc)
+    return _out(sc)
+
+
+@router.delete("/{service_case_id}", status_code=204)
+def delete_service_case(
+    service_case_id: int,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """Delete a service case by ID."""
+    sc = db.query(ServiceCase).filter(ServiceCase.id == service_case_id).first()
+    if not sc:
+        raise HTTPException(status_code=404, detail="Service case not found")
+    db.delete(sc)
+    db.commit()

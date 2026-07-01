@@ -476,3 +476,153 @@ class LegalUpdate(Base):
     reviewed_at = Column(DateTime, nullable=True)
     review_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+
+
+# ═══════════════════════════════════════════════════════════
+# DOCUMENT AUTOMATION SYSTEM — Cruel & Associates Services
+# ═══════════════════════════════════════════════════════════
+
+class ServiceCase(Base):
+    """A case for any of the 6 service divisions (not credit-specific)."""
+    __tablename__ = "service_cases"
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("aegis_clients.id"))
+    division_slug = Column(String, index=True)  # notary|credit|criminal|document|judgment|consulting
+    case_number = Column(String, unique=True, index=True)
+    status = Column(String, default="intake")  # intake|active|on_hold|closed
+    title = Column(String)
+    intake_data = Column(Text)   # JSON blob of intake form answers
+    notes = Column(Text)
+    assigned_to = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+    client = relationship("AegisClient", backref="service_cases")
+    service_documents = relationship("ServiceDocument", back_populates="service_case")
+    appointments = relationship("Appointment", back_populates="service_case")
+    invoices = relationship("ServiceInvoice", back_populates="service_case")
+    referrals = relationship("AttorneyReferral", back_populates="service_case")
+    notary_logs = relationship("NotaryLog", back_populates="service_case")
+
+
+class DocumentTemplate(Base):
+    """Reusable templates with {{variable}} placeholders for document generation."""
+    __tablename__ = "document_templates"
+    id = Column(Integer, primary_key=True, index=True)
+    division_slug = Column(String, index=True)
+    template_type = Column(String, default="generated")  # intake|generated
+    name = Column(String)
+    description = Column(Text)
+    content = Column(Text)       # template body with {{first_name}}-style vars
+    variables = Column(Text)     # JSON list of required variable names
+    category = Column(String)    # agreement|letter|report|log|form|packet
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    documents = relationship("ServiceDocument", back_populates="template")
+
+
+class ServiceDocument(Base):
+    """AI-generated document instance, ready for e-signature or download."""
+    __tablename__ = "service_documents"
+    id = Column(Integer, primary_key=True, index=True)
+    service_case_id = Column(Integer, ForeignKey("service_cases.id"))
+    client_id = Column(Integer, ForeignKey("aegis_clients.id"))
+    template_id = Column(Integer, ForeignKey("document_templates.id"), nullable=True)
+    division_slug = Column(String)
+    title = Column(String)
+    document_type = Column(String)   # agreement|letter|report|log|form|packet
+    content = Column(Text)           # final rendered content
+    file_path = Column(String)       # path to PDF on disk
+    status = Column(String, default="draft")  # draft|pending_sign|signed|archived
+    esign_request_id = Column(String, nullable=True)
+    esign_provider = Column(String, nullable=True)  # docusign|dropboxsign
+    ai_generated = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    service_case = relationship("ServiceCase", back_populates="service_documents")
+    template = relationship("DocumentTemplate", back_populates="documents")
+    client = relationship("AegisClient", backref="service_documents")
+
+
+class Appointment(Base):
+    """Scheduled appointments across all service divisions."""
+    __tablename__ = "appointments"
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("aegis_clients.id"))
+    service_case_id = Column(Integer, ForeignKey("service_cases.id"), nullable=True)
+    division_slug = Column(String)
+    appointment_type = Column(String)  # signing|consultation|document_review|intake
+    scheduled_at = Column(DateTime)
+    duration_minutes = Column(Integer, default=60)
+    location = Column(String)
+    travel_miles = Column(Float, nullable=True)
+    status = Column(String, default="scheduled")  # scheduled|confirmed|completed|cancelled
+    notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    service_case = relationship("ServiceCase", back_populates="appointments")
+    client = relationship("AegisClient", backref="appointments")
+
+
+class ServiceInvoice(Base):
+    """Invoice for any service rendered."""
+    __tablename__ = "service_invoices"
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("aegis_clients.id"))
+    service_case_id = Column(Integer, ForeignKey("service_cases.id"), nullable=True)
+    invoice_number = Column(String, unique=True, index=True)
+    division_slug = Column(String)
+    line_items = Column(Text)    # JSON: [{description, quantity, unit_price, total}]
+    subtotal = Column(Float, default=0.0)
+    tax_rate = Column(Float, default=0.0)
+    tax_amount = Column(Float, default=0.0)
+    total = Column(Float, default=0.0)
+    status = Column(String, default="draft")  # draft|sent|paid|void
+    due_date = Column(DateTime, nullable=True)
+    paid_at = Column(DateTime, nullable=True)
+    payment_method = Column(String, nullable=True)
+    notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    service_case = relationship("ServiceCase", back_populates="invoices")
+    client = relationship("AegisClient", backref="service_invoices")
+
+
+class AttorneyReferral(Base):
+    """Attorney referral record — required for criminal and legal matters."""
+    __tablename__ = "attorney_referrals"
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("aegis_clients.id"))
+    service_case_id = Column(Integer, ForeignKey("service_cases.id"), nullable=True)
+    attorney_name = Column(String)
+    attorney_firm = Column(String)
+    attorney_email = Column(String)
+    attorney_phone = Column(String)
+    practice_area = Column(String)
+    reason = Column(Text)
+    status = Column(String, default="pending")  # pending|accepted|declined|completed
+    referral_letter_path = Column(String, nullable=True)
+    notes = Column(Text)
+    referred_at = Column(DateTime, server_default=func.now())
+    service_case = relationship("ServiceCase", back_populates="referrals")
+    client = relationship("AegisClient", backref="attorney_referrals")
+
+
+class NotaryLog(Base):
+    """Official notary journal entry for every notarized document."""
+    __tablename__ = "notary_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("aegis_clients.id"))
+    service_case_id = Column(Integer, ForeignKey("service_cases.id"), nullable=True)
+    journal_number = Column(String, unique=True, index=True)
+    document_type = Column(String)
+    signer_name = Column(String)
+    signer_id_type = Column(String)      # passport|drivers_license|state_id
+    signer_id_number = Column(String)
+    signer_id_expiry = Column(String)
+    num_signers = Column(Integer, default=1)
+    num_witnesses = Column(Integer, default=0)
+    notarized_at = Column(DateTime)
+    location = Column(String)
+    travel_miles = Column(Float, nullable=True)
+    fee_charged = Column(Float, nullable=True)
+    notes = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    service_case = relationship("ServiceCase", back_populates="notary_logs")
+    client = relationship("AegisClient", backref="notary_logs")

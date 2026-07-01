@@ -11,20 +11,34 @@ const NAV_SECTIONS = [
     section: 'Investigation',
     items: [
       { href: '/dashboard', label: 'Dashboard', icon: '◼' },
-      { href: '/cases', label: 'Cases', icon: '📁' },
+      { href: '/cases', label: 'Credit Cases', icon: '📁' },
       { href: '/clients', label: 'Clients', icon: '👥' },
       { href: '/analytics', label: 'Analytics', icon: '📊' },
+    ],
+  },
+  {
+    section: 'Services',
+    items: [
+      { href: '/services', label: 'All Services', icon: '🏛' },
+      { href: '/services/notary', label: 'Mobile Notary', icon: '✍️' },
+      { href: '/services/criminal', label: 'Record Relief', icon: '📋' },
+      { href: '/services/document', label: 'Doc Preparation', icon: '📄' },
+      { href: '/services/judgment', label: 'Asset Recovery', icon: '⚖️' },
+      { href: '/services/consulting', label: 'Consulting', icon: '💼' },
+    ],
+  },
+  {
+    section: 'Operations',
+    items: [
+      { href: '/appointments', label: 'Appointments', icon: '📅' },
+      { href: '/invoices', label: 'Invoices', icon: '💵' },
+      { href: '/templates', label: 'Templates', icon: '📝' },
     ],
   },
   {
     section: 'Research',
     items: [
       { href: '/legal', label: 'Legal Knowledge', icon: '⚖' },
-    ],
-  },
-  {
-    section: 'Knowledge',
-    items: [
       { href: '/learning', label: 'Learning Vault', icon: '🧠' },
     ],
   },
@@ -34,8 +48,8 @@ const NAV_SECTIONS = [
       { href: '/admin/portal', label: 'Portal Intake', icon: '📥' },
       { href: '/organizations', label: 'Organizations', icon: '🏢' },
       { href: '/admin/users', label: 'User Management', icon: '👤' },
-      { href: '/admin/legal-updates', label: 'Legal Updates', icon: '📝' },
-      { href: '/admin/audit', label: 'Audit Log', icon: '📋' },
+      { href: '/admin/legal-updates', label: 'Legal Updates', icon: '📰' },
+      { href: '/admin/audit', label: 'Audit Log', icon: '🔍' },
     ],
   },
 ];

@@ -33,6 +33,13 @@ from app.routers.search import router as search_router
 from app.routers.ai_consult import router as ai_consult_router
 from app.routers.portal import router as portal_router
 from app.routers.billing import router as billing_router
+from app.routers.service_cases import router as service_cases_router
+from app.routers.document_templates import router as document_templates_router
+from app.routers.document_generation import router as document_generation_router
+from app.routers.appointments import router as appointments_router
+from app.routers.service_invoices import router as service_invoices_router
+from app.routers.notary import router as notary_router
+from app.routers.referrals import router as referrals_router
 
 
 def repair_schema():
@@ -107,6 +114,19 @@ def repair_schema():
                 "uploaded_at TIMESTAMP DEFAULT NOW(), reviewed BOOLEAN DEFAULT FALSE)",
                 "Created client_documents table",
             )
+
+        for new_table, ddl in [
+            ("service_cases", "CREATE TABLE IF NOT EXISTS service_cases (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES aegis_clients(id), division_slug VARCHAR, case_number VARCHAR UNIQUE, status VARCHAR DEFAULT 'intake', title VARCHAR, intake_data TEXT, notes TEXT, assigned_to VARCHAR, created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP)"),
+            ("document_templates", "CREATE TABLE IF NOT EXISTS document_templates (id SERIAL PRIMARY KEY, division_slug VARCHAR, template_type VARCHAR DEFAULT 'generated', name VARCHAR, description TEXT, content TEXT, variables TEXT, category VARCHAR, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT NOW())"),
+            ("service_documents", "CREATE TABLE IF NOT EXISTS service_documents (id SERIAL PRIMARY KEY, service_case_id INTEGER REFERENCES service_cases(id), client_id INTEGER REFERENCES aegis_clients(id), template_id INTEGER REFERENCES document_templates(id), division_slug VARCHAR, title VARCHAR, document_type VARCHAR, content TEXT, file_path VARCHAR, status VARCHAR DEFAULT 'draft', esign_request_id VARCHAR, esign_provider VARCHAR, ai_generated BOOLEAN DEFAULT FALSE, created_at TIMESTAMP DEFAULT NOW())"),
+            ("appointments", "CREATE TABLE IF NOT EXISTS appointments (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES aegis_clients(id), service_case_id INTEGER REFERENCES service_cases(id), division_slug VARCHAR, appointment_type VARCHAR, scheduled_at TIMESTAMP, duration_minutes INTEGER DEFAULT 60, location VARCHAR, travel_miles FLOAT, status VARCHAR DEFAULT 'scheduled', notes TEXT, created_at TIMESTAMP DEFAULT NOW())"),
+            ("service_invoices", "CREATE TABLE IF NOT EXISTS service_invoices (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES aegis_clients(id), service_case_id INTEGER REFERENCES service_cases(id), invoice_number VARCHAR UNIQUE, division_slug VARCHAR, line_items TEXT, subtotal FLOAT DEFAULT 0, tax_rate FLOAT DEFAULT 0, tax_amount FLOAT DEFAULT 0, total FLOAT DEFAULT 0, status VARCHAR DEFAULT 'draft', due_date TIMESTAMP, paid_at TIMESTAMP, payment_method VARCHAR, notes TEXT, created_at TIMESTAMP DEFAULT NOW())"),
+            ("attorney_referrals", "CREATE TABLE IF NOT EXISTS attorney_referrals (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES aegis_clients(id), service_case_id INTEGER REFERENCES service_cases(id), attorney_name VARCHAR, attorney_firm VARCHAR, attorney_email VARCHAR, attorney_phone VARCHAR, practice_area VARCHAR, reason TEXT, status VARCHAR DEFAULT 'pending', referral_letter_path VARCHAR, notes TEXT, referred_at TIMESTAMP DEFAULT NOW())"),
+            ("notary_logs", "CREATE TABLE IF NOT EXISTS notary_logs (id SERIAL PRIMARY KEY, client_id INTEGER REFERENCES aegis_clients(id), service_case_id INTEGER REFERENCES service_cases(id), journal_number VARCHAR UNIQUE, document_type VARCHAR, signer_name VARCHAR, signer_id_type VARCHAR, signer_id_number VARCHAR, signer_id_expiry VARCHAR, num_signers INTEGER DEFAULT 1, num_witnesses INTEGER DEFAULT 0, notarized_at TIMESTAMP, location VARCHAR, travel_miles FLOAT, fee_charged FLOAT, notes TEXT, created_at TIMESTAMP DEFAULT NOW())"),
+        ]:
+            if new_table not in existing_tables:
+                run_ddl(ddl, f"Created {new_table} table")
+                existing_tables.add(new_table)
 
         # Migration 007: stripe billing columns on users
         if "users" in existing_tables:
@@ -250,6 +270,13 @@ app.include_router(search_router)
 app.include_router(ai_consult_router)
 app.include_router(portal_router)
 app.include_router(billing_router)
+app.include_router(service_cases_router)
+app.include_router(document_templates_router)
+app.include_router(document_generation_router)
+app.include_router(appointments_router)
+app.include_router(service_invoices_router)
+app.include_router(notary_router)
+app.include_router(referrals_router)
 
 
 @app.get("/api/health")

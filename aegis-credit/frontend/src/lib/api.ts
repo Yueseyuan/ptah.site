@@ -249,3 +249,26 @@ export const consultAI = (caseId: number, data: { finding_id?: number; user_theo
 // Bulk update findings status
 export const bulkUpdateFindings = (ids: number[], status: string) =>
   api.post('/api/findings/bulk-update', { ids, status }).then(r => r.data);
+
+// Appointments
+export const listAppointments = () => api.get('/api/appointments').then(r => r.data);
+export const listUpcomingAppointments = () => api.get('/api/appointments/upcoming').then(r => r.data);
+export const createAppointment = (data: Record<string, unknown>) => api.post('/api/appointments', data).then(r => r.data);
+export const updateAppointment = (id: number, data: Record<string, unknown>) => api.patch(`/api/appointments/${id}`, data).then(r => r.data);
+export const deleteAppointment = (id: number) => api.delete(`/api/appointments/${id}`);
+
+// Invoices
+export const listInvoices = () => api.get('/api/invoices').then(r => r.data);
+export const createInvoice = (data: Record<string, unknown>) => api.post('/api/invoices', data).then(r => r.data);
+export const markInvoicePaid = (id: number) => api.put(`/api/invoices/${id}/mark-paid`, {}).then(r => r.data);
+export const getInvoicePdf = (id: number) => api.get(`/api/invoices/${id}/pdf`, { responseType: 'blob' }).then(r => r.data);
+
+// Document Templates
+export const listTemplates = () => api.get('/api/templates').then(r => r.data);
+export const createTemplate = (data: Record<string, unknown>) => api.post('/api/templates', data).then(r => r.data);
+export const updateTemplate = (id: number, data: Record<string, unknown>) => api.patch(`/api/templates/${id}`, data).then(r => r.data);
+export const deleteTemplate = (id: number) => api.delete(`/api/templates/${id}`);
+export const seedTemplates = () => api.post('/api/templates/seed', {}).then(r => r.data);
+export const previewTemplate = (id: number) => api.post(`/api/templates/${id}/preview`, {}).then(r => r.data);
+
+export default api;

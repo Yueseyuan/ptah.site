@@ -11,8 +11,8 @@ RUN echo "bust:20260630" && pip install --no-cache-dir -r requirements.txt
 
 COPY aegis-credit/backend/ .
 
-# Guarantee alembic+stripe are present even if the pip layer above was cached
-RUN pip install --no-cache-dir alembic>=1.13.0 stripe>=9.0.0
+# Guarantee critical packages present even if the main pip layer was cached
+RUN pip install --no-cache-dir alembic>=1.13.0 stripe>=9.0.0 python-docx>=1.1.0
 
 EXPOSE 8080
 

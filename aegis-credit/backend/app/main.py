@@ -257,6 +257,113 @@ def health_check():
     return {"status": "ok", "v": 4}
 
 
+@app.get("/api/diagnose")
+def diagnose(response: Response):
+    """Full system diagnostic — checks env, packages, DB, tables, and config."""
+    import re
+    import importlib
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+
+    out = {"_version": "v1", "_mode": "check-only"}
+    issues = []
+    warnings = []
+
+    # ── env vars ──────────────────────────────────────────────────────────────
+    def mask(v): return re.sub(r'://([^:]+):[^@]+@', r'://\1:***@', v) if v else ""
+
+    env = {}
+    ak = os.environ.get("ANTHROPIC_API_KEY", "")
+    env["ANTHROPIC_API_KEY"] = (
+        f"OK — {len(ak)} chars" if ak.startswith("sk-ant-api03-") and len(ak) >= 100
+        else f"INVALID/TRUNCATED — {len(ak)} chars (need ~108 starting sk-ant-api03-)"
+    )
+    if "INVALID" in env["ANTHROPIC_API_KEY"]:
+        issues.append("ANTHROPIC_API_KEY: get full key from console.anthropic.com")
+
+    sk = os.environ.get("STRIPE_SECRET_KEY", "")
+    env["STRIPE_SECRET_KEY"] = (
+        f"OK — {len(sk)} chars" if (sk.startswith("sk_live_") or sk.startswith("sk_test_")) and len(sk) > 50
+        else f"INVALID/TRUNCATED — {len(sk)} chars (need ~107 starting sk_live_ or sk_test_)"
+    )
+    if "INVALID" in env["STRIPE_SECRET_KEY"]:
+        issues.append("STRIPE_SECRET_KEY: get full key from dashboard.stripe.com → Developers → API Keys")
+
+    db_url = os.environ.get("DATABASE_URL", "")
+    env["DATABASE_URL"] = mask(db_url)[:80] if db_url else "NOT SET"
+    if not db_url:
+        issues.append("DATABASE_URL: set to ${{ Postgres.DATABASE_URL }} in Railway Variables")
+    elif "PASSWORD" in db_url:
+        issues.append("DATABASE_URL: contains literal 'PASSWORD' — set to ${{ Postgres.DATABASE_URL }}")
+
+    jwt = os.environ.get("JWT_SECRET_KEY", "")
+    env["JWT_SECRET_KEY"] = (
+        f"OK — {len(jwt)} chars" if jwt and jwt not in ("change-me-in-production-use-env-var", "")
+        else "USING INSECURE DEFAULT — set a random 32+ char string"
+    )
+    if "INSECURE" in env["JWT_SECRET_KEY"]:
+        warnings.append("JWT_SECRET_KEY is using default — change for production")
+
+    out["env"] = env
+
+    # ── packages ──────────────────────────────────────────────────────────────
+    pkgs = {}
+    for pip_name, import_name in [
+        ("alembic", "alembic"), ("stripe", "stripe"), ("anthropic", "anthropic"),
+        ("psycopg2-binary", "psycopg2"), ("pdfplumber", "pdfplumber"),
+        ("reportlab", "reportlab"), ("passlib", "passlib"), ("python-jose", "jose"),
+    ]:
+        try:
+            mod = importlib.import_module(import_name)
+            pkgs[pip_name] = getattr(mod, "__version__", "installed")
+        except ImportError:
+            pkgs[pip_name] = "MISSING"
+            issues.append(f"Package '{pip_name}' not installed — Dockerfile pip layer may be cached")
+    out["packages"] = pkgs
+
+    # ── database ──────────────────────────────────────────────────────────────
+    db = {}
+    if db_url and db_url.startswith("postgresql"):
+        try:
+            from sqlalchemy import create_engine, text, inspect as sa_inspect
+            engine = create_engine(db_url, connect_args={"connect_timeout": 8}, pool_pre_ping=True)
+            with engine.connect() as conn:
+                row = conn.execute(text("SELECT current_database(), version()")).fetchone()
+            db["connection"] = f"OK — db={row[0]}"
+
+            insp = sa_inspect(engine)
+            existing = set(insp.get_table_names())
+            required = ["users", "aegis_clients", "aegis_cases", "aegis_tradelines",
+                        "aegis_findings", "aegis_reports", "audit_logs", "client_documents"]
+            db["tables_present"]  = sorted(existing)
+            db["tables_missing"]  = [t for t in required if t not in existing]
+            db["alembic_version"] = "present" if "alembic_version" in existing else "missing"
+
+            if db["tables_missing"]:
+                issues.append(f"Missing DB tables: {', '.join(db['tables_missing'])} — run migrations")
+
+            try:
+                with engine.connect() as conn:
+                    db["user_count"] = conn.execute(text("SELECT COUNT(*) FROM users")).scalar()
+                    if db["user_count"] == 0:
+                        warnings.append("No users in DB — you need to register or create an admin")
+            except Exception:
+                pass
+
+        except Exception as exc:
+            db["connection"] = f"FAILED: {str(exc)[:200]}"
+            issues.append(f"DB connection failed: {str(exc)[:120]} — check DATABASE_URL in Railway Variables")
+    else:
+        db["connection"] = "SKIPPED — DATABASE_URL not set or not PostgreSQL"
+    out["database"] = db
+
+    # ── summary ───────────────────────────────────────────────────────────────
+    out["issues"]   = issues
+    out["warnings"] = warnings
+    out["status"]   = "ALL GOOD" if not issues else f"{len(issues)} ISSUE(S) NEED ATTENTION"
+
+    return out
+
+
 @app.get("/api/db-check")
 def db_check():
     """Diagnostic — tests DB connectivity and table existence."""

@@ -21,6 +21,22 @@
       margin: 30px auto;
       padding: 0.60in 0.75in 0.55in;
       position: relative;
+      overflow: hidden;
+    }
+
+    .page::before {
+      content: "SAMPLE";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 110px;
+      font-weight: 900;
+      color: rgba(180, 0, 0, 0.10);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 1;
+      letter-spacing: 0.15em;
     }
 
     .logo { display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }

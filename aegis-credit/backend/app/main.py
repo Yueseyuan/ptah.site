@@ -447,13 +447,20 @@ def env_check(response: Response):
     def mask(url: str) -> str:
         return re.sub(r"://([^:]+):[^@]+@", r"://\1:***@", url) if url else "NOT SET"
 
-    result = {"_version": "v3"}
+    result = {"_version": "v4"}
 
     # Anthropic key: compare raw env vs what pydantic-settings loaded
     ak_env      = os.environ.get("ANTHROPIC_API_KEY", "")
     ak_settings = settings.ANTHROPIC_API_KEY or ""
     result["ANTHROPIC_KEY_env"]      = f"{len(ak_env)} chars — {ak_env[:14]}..." if ak_env else "NOT SET"
     result["ANTHROPIC_KEY_settings"] = f"{len(ak_settings)} chars" if ak_settings else "EMPTY (pydantic-settings missed it)"
+
+    # DATABASE_URL_OVERRIDE — priority 0 in database.py, bypasses Railway auto-injection
+    dbo = os.environ.get("DATABASE_URL_OVERRIDE", "")
+    result["DATABASE_URL_OVERRIDE"] = (
+        f"SET — {mask(dbo)[:80]}" if dbo and dbo.startswith("postgresql")
+        else ("SET but not postgresql (ignored)" if dbo else "NOT SET — add this in Railway Variables to fix DB")
+    )
 
     # All DB-related env vars
     for k in ["DATABASE_URL", "PGHOST", "PGPORT", "PGUSER", "PGDATABASE"]:

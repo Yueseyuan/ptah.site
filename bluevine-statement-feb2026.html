@@ -14,7 +14,6 @@
       color: #222;
     }
 
-    /* ── Page shell ── */
     .page {
       width: 8.5in;
       min-height: 11in;
@@ -24,102 +23,44 @@
       position: relative;
     }
 
-    /* ── Watermark top-right ── */
-
-    /* ── BlueVine Logo ── */
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-bottom: 15px;
-    }
+    .logo { display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
     .logo-wordmark {
-      font-size: 27px;
-      font-weight: 700;
-      font-style: italic;
-      color: #1a7fc1;
-      letter-spacing: -0.3px;
-      line-height: 1;
+      font-size: 27px; font-weight: 700; font-style: italic;
+      color: #1a7fc1; letter-spacing: -0.3px; line-height: 1;
     }
 
-    /* ── Address block ── */
-    .co-name {
-      font-size: 13px;
-      text-decoration: underline;
-      margin-bottom: 1px;
-      line-height: 1.5;
-    }
-    .addr {
-      font-size: 13px;
-      line-height: 1.55;
-    }
+    .co-name { font-size: 13px; text-decoration: underline; margin-bottom: 1px; line-height: 1.5; }
+    .addr { font-size: 13px; line-height: 1.55; }
 
-    /* ── "Account Statement" heading ── */
     .stmt-heading {
-      font-size: 15.5px;
-      font-weight: 700;
-      text-decoration: underline;
-      margin-top: 22px;
-      margin-bottom: 5px;
+      font-size: 15.5px; font-weight: 700; text-decoration: underline;
+      margin-top: 22px; margin-bottom: 5px;
     }
 
-    /* ── Account meta (Number / Period) ── */
     .meta { font-size: 13px; margin-bottom: 16px; }
     .meta p { line-height: 1.6; }
 
-    /* ── Section title + full-width rule ── */
-    .sec-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-top: 16px;
-      margin-bottom: 2px;
-    }
-    .sec-rule {
-      border: none;
-      border-top: 1.8px solid #222;
-      margin-bottom: 0;
-    }
+    .sec-title { font-size: 15px; font-weight: 700; margin-top: 16px; margin-bottom: 2px; }
+    .sec-rule { border: none; border-top: 1.8px solid #222; margin-bottom: 0; }
 
-    /* ── Activity Summary table ── */
     .act-tbl { width: 100%; border-collapse: collapse; }
-    .act-tbl td {
-      padding: 5px 2px;
-      font-size: 13px;
-      border-bottom: 1px solid #aaa;
-      line-height: 1.45;
-    }
+    .act-tbl td { padding: 5px 2px; font-size: 13px; border-bottom: 1px solid #aaa; line-height: 1.45; }
     .act-tbl tr:first-child td { border-top: 1.8px solid #222; font-weight: 700; }
     .act-tbl td:last-child { text-align: right; white-space: nowrap; padding-right: 0; }
     .act-tbl .bold td { font-weight: 700; }
 
-    /* ── Transactions table ── */
     .txn-tbl { width: 100%; border-collapse: collapse; margin-top: 1px; }
     .txn-tbl thead th {
-      font-size: 13px;
-      font-weight: 700;
-      text-align: left;
-      padding: 5px 4px;
-      border-bottom: 1px solid #555;
+      font-size: 13px; font-weight: 700; text-align: left;
+      padding: 5px 4px; border-bottom: 1px solid #555;
     }
     .txn-tbl thead th:last-child { text-align: right; padding-right: 0; }
-    .txn-tbl tbody td {
-      font-size: 13px;
-      padding: 5px 4px;
-      border-bottom: 1px solid #ccc;
-      line-height: 1.4;
-    }
+    .txn-tbl tbody td { font-size: 13px; padding: 5px 4px; border-bottom: 1px solid #ccc; line-height: 1.4; }
     .txn-tbl tbody td:first-child { white-space: nowrap; }
     .txn-tbl tbody td:last-child { text-align: right; white-space: nowrap; padding-right: 0; }
 
-    /* ── Page number ── */
-    .pg-num {
-      text-align: center;
-      font-size: 11px;
-      color: #555;
-      margin-top: 36px;
-    }
+    .pg-num { text-align: center; font-size: 11px; color: #555; margin-top: 36px; }
 
-    /* ── Screen page-break separator ── */
     @media screen {
       .page-break { width: 8.5in; margin: 0 auto; height: 3px; background: #999; }
     }
@@ -135,8 +76,6 @@
 <!-- ══════════════════════════════ PAGE 1 ══════════════════════════════ -->
 <div class="page">
 
-
-  <!-- Logo -->
   <div class="logo">
     <svg width="30" height="30" viewBox="0 0 80 80" fill="#1a7fc1">
       <path d="M65 10 C70 30 68 50 50 63 C37 72 18 70 10 76 C16 55 26 36 44 24 C54 17 65 10 65 10Z"/>
@@ -144,21 +83,18 @@
     <span class="logo-wordmark">BlueVine</span>
   </div>
 
-  <!-- Address -->
   <div class="co-name">PTAH LLC</div>
   <div class="addr">
     3210 N. Pleasantburg Drive Suite 1123,<br>
     Greenville, SC 29609
   </div>
 
-  <!-- Account Statement -->
   <div class="stmt-heading">Account Statement</div>
   <div class="meta">
     <p><strong>Account Number:</strong> 875110864282</p>
     <p><strong>Statement Period:</strong> February 2026 (Feb. 1, 2026 - Feb. 28, 2026)</p>
   </div>
 
-  <!-- Activity Summary -->
   <div class="sec-title">Activity Summary</div>
   <hr class="sec-rule">
   <table class="act-tbl">
@@ -168,7 +104,6 @@
     <tr class="bold"><td>Ending balance on Feb. 28, 2026</td><td>247,491.00</td></tr>
   </table>
 
-  <!-- Transactions -->
   <div class="sec-title">Transactions</div>
   <hr class="sec-rule">
   <table class="txn-tbl">
@@ -180,26 +115,26 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td>02/02/26</td><td>Invoice #2001 – Client A</td><td>4,200.00</td></tr>
-      <tr><td>02/02/26</td><td>Bank Service Fee</td><td>-12.00</td></tr>
-      <tr><td>02/03/26</td><td>ACH – Client B</td><td>3,800.00</td></tr>
-      <tr><td>02/04/26</td><td>Wire – Client C</td><td>5,100.00</td></tr>
-      <tr><td>02/04/26</td><td>Outgoing Wire Transfer Fee</td><td>-25.00</td></tr>
-      <tr><td>02/05/26</td><td>Payment Link – Product X</td><td>2,300.00</td></tr>
-      <tr><td>02/06/26</td><td>Invoice #2002 – Client D</td><td>4,500.00</td></tr>
-      <tr><td>02/06/26</td><td>Bill Pay – Rent (Feb)</td><td>-4,800.00</td></tr>
-      <tr><td>02/07/26</td><td>Tap to Pay – In-Store</td><td>1,100.00</td></tr>
-      <tr><td>02/08/26</td><td>ACH – Client E</td><td>3,900.00</td></tr>
-      <tr><td>02/08/26</td><td>Office Supplies</td><td>-350.00</td></tr>
-      <tr><td>02/09/26</td><td>Wire – Client F</td><td>4,800.00</td></tr>
-      <tr><td>02/10/26</td><td>Invoice #2003 – Client G</td><td>5,000.00</td></tr>
-      <tr><td>02/10/26</td><td>Bill Pay – Utilities</td><td>-780.00</td></tr>
-      <tr><td>02/11/26</td><td>Payment Link – Digital Service</td><td>2,200.00</td></tr>
-      <tr><td>02/12/26</td><td>Tap to Pay – Workshop</td><td>950.00</td></tr>
-      <tr><td>02/13/26</td><td>ACH – Client H</td><td>3,600.00</td></tr>
-      <tr><td>02/14/26</td><td>Wire – Client I</td><td>4,250.00</td></tr>
-      <tr><td>02/15/26</td><td>Invoice #2004 – Client J</td><td>5,400.00</td></tr>
-      <tr><td>02/15/26</td><td>Bill Pay – Payroll (1st)</td><td>-3,500.00</td></tr>
+      <tr><td>02/02/26</td><td>ACH CREDIT MERIDIAN LEGAL SERVICES INC PMT INV2001 REF7829401536</td><td>4,200.00</td></tr>
+      <tr><td>02/02/26</td><td>BLUEVINE MONTHLY SERVICE FEE FEB2026</td><td>-12.00</td></tr>
+      <tr><td>02/03/26</td><td>ACH CREDIT CAROLINA REALTY SOLUTIONS LLC PMT INV2002 REF4920183657</td><td>3,800.00</td></tr>
+      <tr><td>02/04/26</td><td>INCOMING WIRE TRANSFER ATLAS CAPITAL GROUP REF WIR20260204 8834521</td><td>5,100.00</td></tr>
+      <tr><td>02/04/26</td><td>OUTGOING DOMESTIC WIRE FEE 02042026</td><td>-25.00</td></tr>
+      <tr><td>02/05/26</td><td>BLUEVINE PMT LINK CREDIT MGMT CONSULTATION PKG REF BV8820173</td><td>2,300.00</td></tr>
+      <tr><td>02/06/26</td><td>ACH CREDIT SPARTANBURG FINANCIAL PARTNERS INV2003 REF3847201956</td><td>4,500.00</td></tr>
+      <tr><td>02/06/26</td><td>BILL PMT WOODRUFF ROAD PROPERTIES LLC OFFICE RENT FEB2026 REF8291046735</td><td>-4,800.00</td></tr>
+      <tr><td>02/07/26</td><td>TAP TO PAY PTAH LLC POS TERMINAL 0274 GREENVILLE SC REF BV0207</td><td>1,100.00</td></tr>
+      <tr><td>02/08/26</td><td>ACH CREDIT UPSTATE CREDIT ADVISORS LLC PMT INV2004 REF5738291046</td><td>3,900.00</td></tr>
+      <tr><td>02/08/26</td><td>DEBIT CARD STAPLES #1074 GREENVILLE SC 02-08 864-271-6400 1826</td><td>-350.00</td></tr>
+      <tr><td>02/09/26</td><td>INCOMING WIRE TRANSFER PINNACLE ASSET MANAGEMENT REF WIR20260209 9943712</td><td>4,800.00</td></tr>
+      <tr><td>02/10/26</td><td>ACH CREDIT HARTWELL CONSULTING GROUP PMT INV2005 REF6274810935</td><td>5,000.00</td></tr>
+      <tr><td>02/10/26</td><td>BILL PMT DUKE ENERGY CAROLINAS 800-777-9898 NC ACCT 5584227461002 02102026</td><td>-780.00</td></tr>
+      <tr><td>02/11/26</td><td>BLUEVINE PMT LINK DIGITAL RECORDS REVIEW SVC REF BV4411829</td><td>2,200.00</td></tr>
+      <tr><td>02/12/26</td><td>TAP TO PAY PTAH LLC WORKSHOP REG GREENVILLE SC REF BV0212</td><td>950.00</td></tr>
+      <tr><td>02/13/26</td><td>ACH CREDIT GREENVILLE BUSINESS SOLUTIONS INV2006 REF8290174536</td><td>3,600.00</td></tr>
+      <tr><td>02/14/26</td><td>INCOMING WIRE TRANSFER COASTAL EQUITY PARTNERS REF WIR20260214 2215894</td><td>4,250.00</td></tr>
+      <tr><td>02/15/26</td><td>ACH CREDIT FOOTHILLS DEVELOPMENT LLC PMT INV2007 REF3748201956</td><td>5,400.00</td></tr>
+      <tr><td>02/15/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 02152026</td><td>-3,500.00</td></tr>
     </tbody>
   </table>
 
@@ -211,8 +146,6 @@
 <!-- ══════════════════════════════ PAGE 2 ══════════════════════════════ -->
 <div class="page">
 
-
-  <!-- Logo -->
   <div class="logo">
     <svg width="30" height="30" viewBox="0 0 80 80" fill="#1a7fc1">
       <path d="M65 10 C70 30 68 50 50 63 C37 72 18 70 10 76 C16 55 26 36 44 24 C54 17 65 10 65 10Z"/>
@@ -220,21 +153,18 @@
     <span class="logo-wordmark">BlueVine</span>
   </div>
 
-  <!-- Address -->
   <div class="co-name">PTAH LLC</div>
   <div class="addr">
     3210 N. Pleasantburg Drive Suite 1123,<br>
     Greenville, SC 29609
   </div>
 
-  <!-- Account Statement -->
   <div class="stmt-heading">Account Statement</div>
   <div class="meta">
     <p><strong>Account Number:</strong> 875110864282</p>
     <p><strong>Statement Period:</strong> February 2026 (Feb. 1, 2026 - Feb. 28, 2026)</p>
   </div>
 
-  <!-- Transactions continued -->
   <div class="sec-title">Transactions</div>
   <hr class="sec-rule">
   <table class="txn-tbl">
@@ -246,24 +176,24 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td>02/16/26</td><td>Payment Link – E-Commerce</td><td>2,500.00</td></tr>
-      <tr><td>02/17/26</td><td>ACH – Client K</td><td>3,200.00</td></tr>
-      <tr><td>02/17/26</td><td>Internet &amp; Phone</td><td>-420.00</td></tr>
-      <tr><td>02/18/26</td><td>Wire – Client L</td><td>4,900.00</td></tr>
-      <tr><td>02/19/26</td><td>Tap to Pay – Event</td><td>1,300.00</td></tr>
-      <tr><td>02/20/26</td><td>Invoice #2005 – Client M</td><td>5,100.00</td></tr>
-      <tr><td>02/20/26</td><td>Bill Pay – Software (monthly)</td><td>-1,200.00</td></tr>
-      <tr><td>02/21/26</td><td>ACH – Client N</td><td>3,500.00</td></tr>
-      <tr><td>02/22/26</td><td>Invoice #2006 – Client O</td><td>4,000.00</td></tr>
-      <tr><td>02/23/26</td><td>Payment Link – Subscription</td><td>2,100.00</td></tr>
-      <tr><td>02/24/26</td><td>Wire – Client P</td><td>4,300.00</td></tr>
-      <tr><td>02/24/26</td><td>Marketing/Ads</td><td>-2,000.00</td></tr>
-      <tr><td>02/25/26</td><td>Tap to Pay – Retail</td><td>800.00</td></tr>
-      <tr><td>02/26/26</td><td>ACH – Client Q</td><td>3,200.00</td></tr>
-      <tr><td>02/27/26</td><td>Invoice #2007 – Client R</td><td>5,200.00</td></tr>
-      <tr><td>02/27/26</td><td>Bill Pay – Payroll (2nd)</td><td>-3,500.00</td></tr>
-      <tr><td>02/28/26</td><td>Misc. Office Expense</td><td>-120.00</td></tr>
-      <tr><td>02/28/26</td><td>Bank Monthly Maintenance</td><td>-15.00</td></tr>
+      <tr><td>02/16/26</td><td>BLUEVINE PMT LINK ECOM CREDIT RESOLUTION SVC REF BV5516273</td><td>2,500.00</td></tr>
+      <tr><td>02/17/26</td><td>ACH CREDIT ANDERSON COUNTY ENTERPRISES INV2008 REF9201748365</td><td>3,200.00</td></tr>
+      <tr><td>02/17/26</td><td>BILL PMT SPECTRUM BUSINESS 855-707-7328 MO ACCT 5464195642387904 02172026</td><td>-420.00</td></tr>
+      <tr><td>02/18/26</td><td>INCOMING WIRE TRANSFER BLUE RIDGE CAPITAL GROUP REF WIR20260218 7745821</td><td>4,900.00</td></tr>
+      <tr><td>02/19/26</td><td>TAP TO PAY PTAH LLC COMMUNITY EVENT VENUE SC REF BV0219</td><td>1,300.00</td></tr>
+      <tr><td>02/20/26</td><td>ACH CREDIT PALMETTO PROFESSIONAL SERVICES INV2009 REF4829301756</td><td>5,100.00</td></tr>
+      <tr><td>02/20/26</td><td>BILL PMT CLIO LEGAL SOFTWARE 888-858-2546 CA ACCT CL8827410 02202026</td><td>-1,200.00</td></tr>
+      <tr><td>02/21/26</td><td>ACH CREDIT LAKEVIEW HOLDINGS LLC PMT INV2010 REF7291048356</td><td>3,500.00</td></tr>
+      <tr><td>02/22/26</td><td>ACH CREDIT CHEROKEE FINANCIAL ADVISORS INV2011 REF2819473650</td><td>4,000.00</td></tr>
+      <tr><td>02/23/26</td><td>BLUEVINE PMT LINK SUBSCRIPTION CREDIT SVC Q1 REF BV6623184</td><td>2,100.00</td></tr>
+      <tr><td>02/24/26</td><td>INCOMING WIRE TRANSFER MAGNOLIA WEALTH GROUP REF WIR20260224 3318264</td><td>4,300.00</td></tr>
+      <tr><td>02/24/26</td><td>DEBIT CARD GOOGLE ADS 650-253-0000 CA 02-24 5374920183 1826</td><td>-2,000.00</td></tr>
+      <tr><td>02/25/26</td><td>TAP TO PAY PTAH LLC RETAIL COUNTER GREENVILLE SC REF BV0225</td><td>800.00</td></tr>
+      <tr><td>02/26/26</td><td>ACH CREDIT BILTMORE FINANCIAL GROUP PMT INV2012 REF5837291046</td><td>3,200.00</td></tr>
+      <tr><td>02/27/26</td><td>ACH CREDIT PICKENS COUNTY RESOURCES INC INV2013 REF9201847365</td><td>5,200.00</td></tr>
+      <tr><td>02/27/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 02272026</td><td>-3,500.00</td></tr>
+      <tr><td>02/28/26</td><td>DEBIT CARD AMAZON.COM AMZN.COM/BILL WA 02-28 1826</td><td>-120.00</td></tr>
+      <tr><td>02/28/26</td><td>BLUEVINE MONTHLY MAINTENANCE FEE FEB2026</td><td>-15.00</td></tr>
     </tbody>
   </table>
 

@@ -12,6 +12,12 @@ def _resolve_db_url() -> str:
     Resolve the correct DB URL from every possible source, in priority order.
     This makes the app robust against wrong/placeholder DATABASE_URL values.
     """
+    # Priority 0: DATABASE_URL_OVERRIDE — bypasses Railway's auto-injected DATABASE_URL
+    override = os.environ.get("DATABASE_URL_OVERRIDE", "").strip()
+    if override and override.startswith("postgresql"):
+        print(f"[DB] Using DATABASE_URL_OVERRIDE")
+        return override
+
     pghost = os.environ.get("PGHOST", "").strip()
     pgpw   = (os.environ.get("PGPASSWORD", "") or os.environ.get("POSTGRES_PASSWORD", "")).strip()
 

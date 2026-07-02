@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlueVine – Account Statement – April 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #c8c8c8;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      color: #222;
+    }
+
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      background: #fff;
+      margin: 30px auto;
+      padding: 0.60in 0.75in 0.55in;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page::before {
+      content: "SAMPLE";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 110px;
+      font-weight: 900;
+      color: rgba(180, 0, 0, 0.10);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 1;
+      letter-spacing: 0.15em;
+    }
+
+    .logo { display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
+    .logo-wordmark {
+      font-size: 27px; font-weight: 700; font-style: italic;
+      color: #1a7fc1; letter-spacing: -0.3px; line-height: 1;
+    }
+
+    .co-name { font-size: 13px; text-decoration: underline; margin-bottom: 1px; line-height: 1.5; }
+    .addr { font-size: 13px; line-height: 1.55; }
+
+    .stmt-heading {
+      font-size: 15.5px; font-weight: 700; text-decoration: underline;
+      margin-top: 22px; margin-bottom: 5px;
+    }
+
+    .meta { font-size: 13px; margin-bottom: 16px; }
+    .meta p { line-height: 1.6; }
+
+    .sec-title { font-size: 15px; font-weight: 700; margin-top: 16px; margin-bottom: 2px; }
+    .sec-rule { border: none; border-top: 1.8px solid #222; margin-bottom: 0; }
+
+    .act-tbl { width: 100%; border-collapse: collapse; }
+    .act-tbl td { padding: 5px 2px; font-size: 13px; border-bottom: 1px solid #aaa; line-height: 1.45; }
+    .act-tbl tr:first-child td { border-top: 1.8px solid #222; font-weight: 700; }
+    .act-tbl td:last-child { text-align: right; white-space: nowrap; padding-right: 0; }
+    .act-tbl .bold td { font-weight: 700; }
+
+    .txn-tbl { width: 100%; border-collapse: collapse; margin-top: 1px; }
+    .txn-tbl thead th {
+      font-size: 13px; font-weight: 700; text-align: left;
+      padding: 5px 4px; border-bottom: 1px solid #555;
+    }
+    .txn-tbl thead th:last-child { text-align: right; padding-right: 0; }
+    .txn-tbl tbody td { font-size: 13px; padding: 5px 4px; border-bottom: 1px solid #ccc; line-height: 1.4; }
+    .txn-tbl tbody td:first-child { white-space: nowrap; }
+    .txn-tbl tbody td:last-child { text-align: right; white-space: nowrap; padding-right: 0; }
+
+    .pg-num { text-align: center; font-size: 11px; color: #555; margin-top: 36px; }
+
+    @media screen {
+      .page-break { width: 8.5in; margin: 0 auto; height: 3px; background: #999; }
+    }
+    @media print {
+      body { background: white; }
+      .page { margin: 0; page-break-after: always; }
+      .page-break { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ PAGE 1 ══════════════════════════════ -->
+<div class="page">
+
+  <div class="logo">
+    <svg width="30" height="30" viewBox="0 0 80 80" fill="#1a7fc1">
+      <path d="M65 10 C70 30 68 50 50 63 C37 72 18 70 10 76 C16 55 26 36 44 24 C54 17 65 10 65 10Z"/>
+    </svg>
+    <span class="logo-wordmark">BlueVine</span>
+  </div>
+
+  <div class="co-name">PTAH LLC</div>
+  <div class="addr">
+    3210 N. Pleasantburg Drive Suite 1123,<br>
+    Greenville, SC 29609
+  </div>
+
+  <div class="stmt-heading">Account Statement</div>
+  <div class="meta">
+    <p><strong>Account Number:</strong> 875110864282</p>
+    <p><strong>Statement Period:</strong> April 2026 (Apr. 1, 2026 - Apr. 30, 2026)</p>
+  </div>
+
+  <div class="sec-title">Activity Summary</div>
+  <hr class="sec-rule">
+  <table class="act-tbl">
+    <tr><td>Beginning Balance on Apr. 1, 2026</td><td>330,655.00</td></tr>
+    <tr><td>Deposits/Additions</td><td>118,500.00</td></tr>
+    <tr><td>Withdrawals/Subtractions</td><td>-24,880.00</td></tr>
+    <tr class="bold"><td>Ending balance on Apr. 30, 2026</td><td>424,275.00</td></tr>
+  </table>
+
+  <div class="sec-title">Transactions</div>
+  <hr class="sec-rule">
+  <table class="txn-tbl">
+    <thead>
+      <tr>
+        <th style="width:90px">Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>04/01/26</td><td>ACH CREDIT MERIDIAN LEGAL SERVICES INC PMT INV4001 REF9281047362</td><td>4,800.00</td></tr>
+      <tr><td>04/01/26</td><td>BLUEVINE MONTHLY SERVICE FEE APR2026</td><td>-15.00</td></tr>
+      <tr><td>04/02/26</td><td>INCOMING WIRE TRANSFER ATLAS CAPITAL GROUP REF WIR20260402 6637291</td><td>5,500.00</td></tr>
+      <tr><td>04/03/26</td><td>ACH CREDIT CAROLINA REALTY SOLUTIONS LLC PMT INV4002 REF5839201746</td><td>4,100.00</td></tr>
+      <tr><td>04/04/26</td><td>ACH PROCESSING FEE 026009593 04042026</td><td>-18.00</td></tr>
+      <tr><td>04/06/26</td><td>BLUEVINE PMT LINK CREDIT DISPUTE RESOLUTION PKG REF BV8841072</td><td>2,600.00</td></tr>
+      <tr><td>04/06/26</td><td>BILL PMT WOODRUFF ROAD PROPERTIES LLC OFFICE RENT APR2026 REF4102358746</td><td>-4,800.00</td></tr>
+      <tr><td>04/07/26</td><td>ACH CREDIT SPARTANBURG FINANCIAL PARTNERS INV4003 REF4829301746</td><td>5,900.00</td></tr>
+      <tr><td>04/07/26</td><td>OUTGOING DOMESTIC WIRE FEE 04072026</td><td>-25.00</td></tr>
+      <tr><td>04/08/26</td><td>INCOMING WIRE TRANSFER PINNACLE ASSET MANAGEMENT REF WIR20260408 7782913</td><td>4,700.00</td></tr>
+      <tr><td>04/09/26</td><td>ACH CREDIT HARTWELL CONSULTING GROUP PMT INV4004 REF7382910465</td><td>5,200.00</td></tr>
+      <tr><td>04/09/26</td><td>BILL PMT DUKE ENERGY CAROLINAS 800-777-9898 NC ACCT 5584227461002 04092026</td><td>-840.00</td></tr>
+      <tr><td>04/10/26</td><td>TAP TO PAY PTAH LLC POS TERMINAL 0274 GREENVILLE SC REF BV0410</td><td>1,300.00</td></tr>
+      <tr><td>04/11/26</td><td>BLUEVINE PMT LINK DIGITAL RECORDS REVIEW SVC REF BV5511283</td><td>2,800.00</td></tr>
+      <tr><td>04/11/26</td><td>DEBIT CARD STAPLES #1074 GREENVILLE SC 04-11 864-271-6400 1826</td><td>-380.00</td></tr>
+      <tr><td>04/13/26</td><td>ACH CREDIT UPSTATE CREDIT ADVISORS LLC PMT INV4005 REF6283910475</td><td>4,000.00</td></tr>
+      <tr><td>04/14/26</td><td>INCOMING WIRE TRANSFER COASTAL EQUITY PARTNERS REF WIR20260414 3325819</td><td>5,100.00</td></tr>
+      <tr><td>04/14/26</td><td>BILL PMT SPECTRUM BUSINESS 855-707-7328 MO ACCT 5464195642387904 04142026</td><td>-440.00</td></tr>
+      <tr><td>04/15/26</td><td>ACH CREDIT FOOTHILLS DEVELOPMENT LLC PMT INV4006 REF8291047362</td><td>5,600.00</td></tr>
+      <tr><td>04/15/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 04152026</td><td>-3,900.00</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pg-num">page 1 of 2</div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ══════════════════════════════ PAGE 2 ══════════════════════════════ -->
+<div class="page">
+
+  <div class="logo">
+    <svg width="30" height="30" viewBox="0 0 80 80" fill="#1a7fc1">
+      <path d="M65 10 C70 30 68 50 50 63 C37 72 18 70 10 76 C16 55 26 36 44 24 C54 17 65 10 65 10Z"/>
+    </svg>
+    <span class="logo-wordmark">BlueVine</span>
+  </div>
+
+  <div class="co-name">PTAH LLC</div>
+  <div class="addr">
+    3210 N. Pleasantburg Drive Suite 1123,<br>
+    Greenville, SC 29609
+  </div>
+
+  <div class="stmt-heading">Account Statement</div>
+  <div class="meta">
+    <p><strong>Account Number:</strong> 875110864282</p>
+    <p><strong>Statement Period:</strong> April 2026 (Apr. 1, 2026 - Apr. 30, 2026)</p>
+  </div>
+
+  <div class="sec-title">Transactions</div>
+  <hr class="sec-rule">
+  <table class="txn-tbl">
+    <thead>
+      <tr>
+        <th style="width:90px">Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>04/16/26</td><td>BLUEVINE PMT LINK ECOM CREDIT RESOLUTION SVC REF BV6616374</td><td>2,400.00</td></tr>
+      <tr><td>04/17/26</td><td>TAP TO PAY PTAH LLC WORKSHOP REG GREENVILLE SC REF BV0417</td><td>1,100.00</td></tr>
+      <tr><td>04/20/26</td><td>ACH CREDIT GREENVILLE BUSINESS SOLUTIONS INV4007 REF9201748365</td><td>4,300.00</td></tr>
+      <tr><td>04/20/26</td><td>DEBIT CARD GOOGLE ADS 650-253-0000 CA 04-20 5374920183 1826</td><td>-2,500.00</td></tr>
+      <tr><td>04/21/26</td><td>INCOMING WIRE TRANSFER BLUE RIDGE CAPITAL GROUP REF WIR20260421 9947283</td><td>4,900.00</td></tr>
+      <tr><td>04/21/26</td><td>BILL PMT CLIO LEGAL SOFTWARE 888-858-2546 CA ACCT CL8827410 04212026</td><td>-1,200.00</td></tr>
+      <tr><td>04/22/26</td><td>ACH CREDIT ANDERSON COUNTY ENTERPRISES INV4008 REF7382910465</td><td>5,300.00</td></tr>
+      <tr><td>04/22/26</td><td>DEBIT CARD OFFICE DEPOT #4837 GREENVILLE SC 04-22 864-234-7100 1826</td><td>-445.00</td></tr>
+      <tr><td>04/23/26</td><td>BLUEVINE PMT LINK SUBSCRIPTION CREDIT SVC Q2 REF BV7721836</td><td>2,100.00</td></tr>
+      <tr><td>04/24/26</td><td>ACH CREDIT PALMETTO PROFESSIONAL SERVICES INV4009 REF3829104756</td><td>4,600.00</td></tr>
+      <tr><td>04/25/26</td><td>TAP TO PAY PTAH LLC RETAIL COUNTER GREENVILLE SC REF BV0425</td><td>1,050.00</td></tr>
+      <tr><td>04/25/26</td><td>DEBIT CARD AMAZON.COM AMZN.COM/BILL WA 04-25 1826</td><td>-155.00</td></tr>
+      <tr><td>04/27/26</td><td>INCOMING WIRE TRANSFER MAGNOLIA WEALTH GROUP REF WIR20260427 5531029</td><td>4,800.00</td></tr>
+      <tr><td>04/27/26</td><td>DEBIT CARD RUTH'S CHRIS STEAK HOUSE GREENVILLE SC 04-27 864-467-1799 1826</td><td>-980.00</td></tr>
+      <tr><td>04/28/26</td><td>ACH CREDIT CHEROKEE FINANCIAL ADVISORS PMT INV4010 REF2938471056</td><td>5,400.00</td></tr>
+      <tr><td>04/28/26</td><td>ACH CREDIT FOOTHILLS DEVELOPMENT LLC PMT INV4011 REF7291840365</td><td>6,200.00</td></tr>
+      <tr><td>04/28/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 04282026</td><td>-3,900.00</td></tr>
+      <tr><td>04/29/26</td><td>INCOMING WIRE TRANSFER ATLAS CAPITAL GROUP REF WIR20260429 1122384</td><td>5,800.00</td></tr>
+      <tr><td>04/29/26</td><td>BLUEVINE PMT LINK CONSULTING SVC RETAINER PKG REF BV8829174</td><td>2,350.00</td></tr>
+      <tr><td>04/29/26</td><td>BILL PMT OGLETREE DEAKINS NASH SMOAK &amp; STEWART PC LEGAL RETAINER 04292026</td><td>-1,500.00</td></tr>
+      <tr><td>04/30/26</td><td>ACH CREDIT LAKEVIEW HOLDINGS LLC PMT INV4012 REF4829301756</td><td>5,600.00</td></tr>
+      <tr><td>04/30/26</td><td>ACH CREDIT PICKENS COUNTY RESOURCES INC PMT INV4013 REF8201947365</td><td>6,400.00</td></tr>
+      <tr><td>04/30/26</td><td>ACH CREDIT BILTMORE FINANCIAL GROUP PMT INV4014 REF6183940275</td><td>4,600.00</td></tr>
+      <tr><td>04/30/26</td><td>BILL PMT BLUECROSS BLUESHIELD SC HEALTH INS PREMIUM 803-788-0222 APR2026</td><td>-1,008.00</td></tr>
+      <tr><td>04/30/26</td><td>DEBIT CARD USPS PO #0497810040 GREENVILLE SC 04-30 1826</td><td>-65.00</td></tr>
+      <tr><td>04/30/26</td><td>DEBIT CARD MARKETING CREATIVE SOLUTIONS GREENVILLE SC 04-30 1826</td><td>-2,709.00</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pg-num">page 2 of 2</div>
+</div>
+
+</body>
+</html>

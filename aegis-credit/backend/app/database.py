@@ -33,6 +33,17 @@ def _resolve_db_url() -> str:
     # Priority 2: settings.DATABASE_URL (may already be patched by config.py if PGPASSWORD was set)
     base_url = settings.DATABASE_URL
 
+    # Detect Railway's broken placeholder — ${{Postgres.DATABASE_URL}} resolves to a URL
+    # with the literal word "PASSWORD" when the source service has no real credentials.
+    # This means the ${{Postgres.DATABASE_URL}} reference is pointing to the wrong/broken service.
+    # FIX: In Railway ptah.site Variables, set DATABASE_URL to the literal acela.proxy.rlwy.net URL,
+    # OR add DATABASE_URL_OVERRIDE with the acela URL.
+    if ":PASSWORD@" in base_url:
+        print("[DB-CRITICAL] DATABASE_URL contains literal 'PASSWORD' — Railway reference is broken.")
+        print("[DB-CRITICAL] Go to Railway > ptah.site > Variables > DATABASE_URL")
+        print("[DB-CRITICAL] Change value to: postgresql://postgres:***@acela.proxy.rlwy.net:21813/railway")
+        print("[DB-CRITICAL] OR add a new variable: DATABASE_URL_OVERRIDE = <that same literal URL>")
+
     # Priority 3: If we have PGPASSWORD but no PGHOST, substitute password into existing URL
     if pgpw and base_url.startswith("postgresql"):
         try:

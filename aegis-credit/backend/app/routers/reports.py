@@ -223,7 +223,11 @@ def reparse_report(report_id: int, db: Session = Depends(get_db)):
         except Exception as primary_exc:
             primary_error = str(primary_exc)
             print(f"[REPARSE] extract_report_data failed (report {report_id}): {primary_error}")
-            tradelines_data = extract_tradelines_from_text(report.raw_text)
+            try:
+                tradelines_data = extract_tradelines_from_text(report.raw_text)
+            except Exception as fallback_exc:
+                print(f"[REPARSE] fallback also failed (report {report_id}): {fallback_exc}")
+                tradelines_data = []
             inquiries_data = []
             pi_data = []
 

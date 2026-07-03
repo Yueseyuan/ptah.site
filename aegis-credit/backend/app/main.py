@@ -530,3 +530,33 @@ def env_check(response: Response):
         result[k] = os.environ.get(k, "NOT SET")
 
     return result
+
+
+@app.get("/api/test-ai")
+def test_ai(response: Response):
+    """Live Anthropic API test — makes a 1-token call to verify key works end-to-end."""
+    response.headers["Cache-Control"] = "no-store"
+    from app.services.ai_service import _api_key, _client
+    key = _api_key()
+    key_info = f"{len(key)} chars, starts with {key[:14]}..." if key else "EMPTY"
+    if not key or len(key) < 50:
+        return {"status": "ERROR", "reason": "No valid API key found", "key_info": key_info}
+    try:
+        import anthropic
+        client = _client()
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=10,
+            messages=[{"role": "user", "content": "Say: OK"}],
+        )
+        return {
+            "status": "OK",
+            "key_info": key_info,
+            "anthropic_response": msg.content[0].text if msg.content else "(empty)",
+        }
+    except anthropic.AuthenticationError as e:
+        return {"status": "AUTH_FAILED", "key_info": key_info, "error": str(e)[:300]}
+    except anthropic.RateLimitError as e:
+        return {"status": "RATE_LIMITED", "key_info": key_info, "error": str(e)[:300]}
+    except Exception as e:
+        return {"status": "ERROR", "key_info": key_info, "error": str(e)[:300]}

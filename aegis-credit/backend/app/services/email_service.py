@@ -61,6 +61,178 @@ def _btn(url: str, label: str) -> str:
     )
 
 
+# ── Welcome ───────────────────────────────────────────────────────────────────
+
+def send_welcome_email(to_email: str, first_name: str, case_number: str) -> None:
+    greeting = f"Hi {first_name}," if first_name else "Hi,"
+    subject = "Welcome to Your Cruel & Associates Client Portal"
+    html = HEADER + f"""
+      <p style="color:#374151;font-size:15px;line-height:1.6">{greeting}</p>
+      <p style="color:#374151;font-size:15px;line-height:1.6">
+        Your client portal account has been created. Your case number is
+        <strong>{case_number}</strong>.
+      </p>
+      <p style="color:#374151;font-size:15px;line-height:1.6">
+        <strong>Next steps to get started:</strong>
+      </p>
+      <ol style="color:#374151;font-size:14px;line-height:2;padding-left:20px">
+        <li>Upload all three credit reports (Experian, Equifax &amp; TransUnion)</li>
+        <li>Upload a government-issued photo ID</li>
+        <li>Upload proof of address (utility bill, bank statement, etc.)</li>
+      </ol>
+      <p style="color:#374151;font-size:14px;line-height:1.6">
+        We'll review your documents and get your dispute process started. You can
+        track your case status, download letters, and message us through your portal at any time.
+      </p>
+      {_btn(f"{PORTAL_URL}/documents", "Upload My Documents")}
+      <p style="color:#6b7280;font-size:13px;line-height:1.6">
+        Questions? Reply to this email or call us at (864) 318-9951.
+      </p>
+    """ + FOOTER
+    plain = (
+        f"{greeting}\n\nYour portal account is active. Case number: {case_number}\n\n"
+        f"Next steps:\n1. Upload all 3 credit reports\n2. Upload a photo ID\n"
+        f"3. Upload proof of address\n\nPortal: {PORTAL_URL}/documents\n\n"
+        f"{BRAND_PLAIN} · {CONTACT}"
+    )
+    _send(to_email, subject, html, plain)
+
+
+# ── Document uploaded (admin alert) ──────────────────────────────────────────
+
+def send_document_uploaded_admin_alert(
+    admin_email: str,
+    client_name: str,
+    client_email: str,
+    doc_type: str,
+    filename: str,
+    case_number: str,
+) -> None:
+    doc_label = doc_type.replace("_", " ").title()
+    subject = f"New Document Uploaded — {client_name} ({case_number})"
+    html = HEADER + f"""
+      <p style="color:#374151;font-size:15px;line-height:1.6">
+        A client has uploaded a new document that needs your review.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin:16px 0">
+        <tr style="border-bottom:1px solid #e5e7eb">
+          <td style="padding:8px 0;color:#6b7280;width:140px">Client</td>
+          <td style="padding:8px 0;font-weight:600">{client_name}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #e5e7eb">
+          <td style="padding:8px 0;color:#6b7280">Email</td>
+          <td style="padding:8px 0">{client_email}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #e5e7eb">
+          <td style="padding:8px 0;color:#6b7280">Case</td>
+          <td style="padding:8px 0">{case_number}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #e5e7eb">
+          <td style="padding:8px 0;color:#6b7280">Document Type</td>
+          <td style="padding:8px 0">{doc_label}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#6b7280">File</td>
+          <td style="padding:8px 0">{filename}</td>
+        </tr>
+      </table>
+      {_btn("https://cruelandassociates.site/admin/portal", "Review in Admin Portal")}
+    """ + FOOTER
+    plain = (
+        f"New document uploaded:\n"
+        f"Client: {client_name} ({client_email})\n"
+        f"Case: {case_number}\n"
+        f"Type: {doc_label}\n"
+        f"File: {filename}\n\n"
+        f"Review: https://cruelandassociates.site/admin/portal\n\n"
+        f"{BRAND_PLAIN}"
+    )
+    _send(admin_email, subject, html, plain)
+
+
+# ── Document reviewed (client alert) ─────────────────────────────────────────
+
+def send_document_reviewed_email(to_email: str, first_name: str, doc_type: str, filename: str) -> None:
+    greeting = f"Hi {first_name}," if first_name else "Hi,"
+    doc_label = doc_type.replace("_", " ").title()
+    subject = "Your Document Has Been Reviewed — Cruel & Associates"
+    html = HEADER + f"""
+      <p style="color:#374151;font-size:15px;line-height:1.6">{greeting}</p>
+      <p style="color:#374151;font-size:15px;line-height:1.6">
+        We've reviewed the following document you uploaded:
+      </p>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin:20px 0">
+        <span style="color:#166534;font-size:14px">
+          ✓ <strong>{doc_label}</strong> — {filename}
+        </span>
+      </div>
+      <p style="color:#374151;font-size:14px;line-height:1.6">
+        Your case is progressing. Check your portal for updates on your case status
+        and any additional documents we may need.
+      </p>
+      {_btn(f"{PORTAL_URL}/documents", "View My Documents")}
+      <p style="color:#6b7280;font-size:13px">
+        Questions? Call us at (864) 318-9951 or reply to this email.
+      </p>
+    """ + FOOTER
+    plain = (
+        f"{greeting}\n\nWe've reviewed your {doc_label} ({filename}).\n\n"
+        f"Check your portal for case updates: {PORTAL_URL}/documents\n\n"
+        f"{BRAND_PLAIN} · {CONTACT}"
+    )
+    _send(to_email, subject, html, plain)
+
+
+# ── Case status update (client alert) ────────────────────────────────────────
+
+_STATUS_MESSAGES = {
+    "pending":      ("Your case is in our queue", "We'll begin review shortly."),
+    "docs_needed":  ("Action Required: Documents Needed", "Please log in to your portal and upload the requested documents so we can continue processing your case."),
+    "under_review": ("Your Case Is Under Review", "Our team is actively reviewing your credit reports and preparing your dispute strategy."),
+    "active":       ("Your Disputes Are Active", "We have begun submitting dispute letters on your behalf. You can track progress and download letters from your portal."),
+    "completed":    ("Your Case Is Complete", "We have completed all dispute rounds for your case. Log in to download your final letters and review outcomes."),
+}
+
+def send_case_status_update_email(
+    to_email: str, first_name: str, portal_status: str, case_number: str
+) -> None:
+    greeting = f"Hi {first_name}," if first_name else "Hi,"
+    headline, body_msg = _STATUS_MESSAGES.get(
+        portal_status,
+        ("Your Case Has Been Updated", "Log in to your portal to see the latest status.")
+    )
+    status_label = {
+        "pending":      "Pending Review",
+        "docs_needed":  "Documents Needed",
+        "under_review": "Under Review",
+        "active":       "Active — Disputes in Progress",
+        "completed":    "Completed",
+    }.get(portal_status, portal_status.replace("_", " ").title())
+
+    subject = f"Case Update: {status_label} — Cruel & Associates"
+    html = HEADER + f"""
+      <p style="color:#374151;font-size:15px;line-height:1.6">{greeting}</p>
+      <p style="color:#374151;font-size:18px;font-weight:700;color:#0a2540">{headline}</p>
+      <p style="color:#374151;font-size:15px;line-height:1.6">{body_msg}</p>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;margin:20px 0">
+        <span style="color:#374151;font-size:14px">
+          Case <strong>{case_number}</strong> &nbsp;·&nbsp;
+          Status: <strong>{status_label}</strong>
+        </span>
+      </div>
+      {_btn(f"{PORTAL_URL}/dashboard", "View My Portal")}
+      <p style="color:#6b7280;font-size:13px">
+        Questions? Call (864) 318-9951 or reply to this email.
+      </p>
+    """ + FOOTER
+    plain = (
+        f"{greeting}\n\n{headline}\n\n{body_msg}\n\n"
+        f"Case: {case_number} · Status: {status_label}\n\n"
+        f"Portal: {PORTAL_URL}/dashboard\n\n{BRAND_PLAIN} · {CONTACT}"
+    )
+    _send(to_email, subject, html, plain)
+
+
 # ── Password reset ────────────────────────────────────────────────────────────
 
 def send_password_reset_email(to_email: str, reset_url: str, first_name: str = "") -> None:

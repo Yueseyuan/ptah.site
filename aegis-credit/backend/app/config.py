@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = "noreply@cruelandassociates.site"
+    ADMIN_NOTIFICATION_EMAIL: str = "yueseyuan.cruel@cruelandassociates.site"
 
 
 # Fall back to direct os.environ reads for critical keys if pydantic-settings

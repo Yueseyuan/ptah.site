@@ -14,6 +14,12 @@ from app.models import AegisClient, AegisCase, ClientDocument, CreditReport, Evi
 from app.dependencies import get_current_user, get_portal_client
 from app.config import settings
 from app.services.auth_service import hash_password, create_access_token
+from app.services.email_service import (
+    send_welcome_email,
+    send_document_uploaded_admin_alert,
+    send_document_reviewed_email,
+    send_case_status_update_email,
+)
 
 # Credit report doc_type → bureau name mapping
 _CREDIT_REPORT_TYPES = {
@@ -205,6 +211,10 @@ def client_register(data: ClientRegister, db: Session = Depends(get_db)):
         db.refresh(user)
 
         token = create_access_token({"sub": user.username, "role": "client"})
+        try:
+            send_welcome_email(client.email, client.first_name, case.case_number)
+        except Exception as _e:
+            print(f"[EMAIL] Welcome email failed: {_e}")
         return {
             "access_token": token,
             "token_type": "bearer",
@@ -369,6 +379,19 @@ def upload_document(
             db.add(evidence)
             db.commit()
 
+    try:
+        case_number = case.case_number if case else "N/A"
+        send_document_uploaded_admin_alert(
+            admin_email=settings.ADMIN_NOTIFICATION_EMAIL,
+            client_name=f"{client.first_name} {client.last_name}",
+            client_email=client.email,
+            doc_type=doc_type,
+            filename=file.filename or "unknown",
+            case_number=case_number,
+        )
+    except Exception as _e:
+        print(f"[EMAIL] Admin document alert failed: {_e}")
+
     return _doc_out(doc)
 
 
@@ -460,6 +483,18 @@ def update_portal_case_status(
     if portal_status == "active":
         case.status = "active"
     db.commit()
+    try:
+        client = db.query(AegisClient).filter(AegisClient.id == case.client_id).first()
+        portal_user = (
+            db.query(User).filter(User.id == client.portal_user_id).first()
+            if client and client.portal_user_id else None
+        )
+        if portal_user and client:
+            send_case_status_update_email(
+                portal_user.email, client.first_name, portal_status, case.case_number
+            )
+    except Exception as _e:
+        print(f"[EMAIL] Case status email failed: {_e}")
     return {"ok": True, "portal_status": portal_status}
 
 
@@ -477,6 +512,23 @@ def mark_document_reviewed(
         raise HTTPException(404, "Document not found")
     doc.reviewed = True
     db.commit()
+    try:
+        portal_user = (
+            db.query(User)
+            .join(AegisClient, AegisClient.portal_user_id == User.id)
+            .filter(AegisClient.id == doc.client_id)
+            .first()
+        )
+        client = db.query(AegisClient).filter(AegisClient.id == doc.client_id).first()
+        if portal_user and client:
+            send_document_reviewed_email(
+                portal_user.email,
+                client.first_name,
+                doc.doc_type,
+                doc.original_filename or "document",
+            )
+    except Exception as _e:
+        print(f"[EMAIL] Document reviewed email failed: {_e}")
     return {"ok": True}
 
 

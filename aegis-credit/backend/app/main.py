@@ -359,8 +359,8 @@ def diagnose(response: Response):
 
             insp = sa_inspect(engine)
             existing = set(insp.get_table_names())
-            required = ["users", "aegis_clients", "aegis_cases", "aegis_tradelines",
-                        "aegis_findings", "aegis_reports", "audit_logs", "client_documents"]
+            required = ["users", "aegis_clients", "aegis_cases", "tradelines",
+                        "findings", "generated_reports", "audit_logs", "client_documents"]
             db["tables_present"]  = sorted(existing)
             db["tables_missing"]  = [t for t in required if t not in existing]
             db["alembic_version"] = "present" if "alembic_version" in existing else "missing"

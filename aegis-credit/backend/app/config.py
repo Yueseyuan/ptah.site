@@ -47,6 +47,21 @@ if not settings.ANTHROPIC_API_KEY.strip():
     settings.ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY").strip()
 if not settings.STRIPE_SECRET_KEY.strip():
     settings.STRIPE_SECRET_KEY = _env("STRIPE_SECRET_KEY").strip()
+
+# Secondary fallback: if the primary variable names are being truncated/blocked by Railway
+# (observed when variable value arrives as <50 chars despite full key being set),
+# read from alternate variable names ANTHROPIC_KEY and STRIPE_SK instead.
+if len(settings.ANTHROPIC_API_KEY.strip()) < 50:
+    _alt_ant = _env("ANTHROPIC_KEY").strip()
+    if len(_alt_ant) >= 50:
+        settings.ANTHROPIC_API_KEY = _alt_ant
+        print("[CONFIG] ANTHROPIC_API_KEY loaded from ANTHROPIC_KEY (alternate name)")
+
+if len(settings.STRIPE_SECRET_KEY.strip()) < 50:
+    _alt_stripe = _env("STRIPE_SK").strip()
+    if len(_alt_stripe) >= 50:
+        settings.STRIPE_SECRET_KEY = _alt_stripe
+        print("[CONFIG] STRIPE_SECRET_KEY loaded from STRIPE_SK (alternate name)")
 if settings.DATABASE_URL.strip() == "sqlite:///./aegis.db":
     db_from_env = _env("DATABASE_URL").strip()
     if db_from_env:

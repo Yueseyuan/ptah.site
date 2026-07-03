@@ -242,8 +242,10 @@ if not os.environ.get("TESTING"):
     threading.Thread(target=_startup, daemon=True).start()
 
 # Startup diagnostics — visible in Railway deploy logs
-print(f"[ENV-RAW] ANTHROPIC_API_KEY in os.environ: {'YES' if os.environ.get('ANTHROPIC_API_KEY') else 'NO'}")
-print(f"[ENV-RAW] STRIPE_SECRET_KEY in os.environ: {'YES' if os.environ.get('STRIPE_SECRET_KEY') else 'NO'}")
+_ak_raw = os.environ.get('ANTHROPIC_API_KEY', '')
+_sk_raw = os.environ.get('STRIPE_SECRET_KEY', '')
+print(f"[ENV-RAW] ANTHROPIC_API_KEY: {len(_ak_raw)} chars (alt ANTHROPIC_KEY: {len(os.environ.get('ANTHROPIC_KEY',''))} chars)")
+print(f"[ENV-RAW] STRIPE_SECRET_KEY: {len(_sk_raw)} chars (alt STRIPE_SK: {len(os.environ.get('STRIPE_SK',''))} chars)")
 _raw_db = os.environ.get('DATABASE_URL', 'NOT SET')
 print(f"[ENV-RAW] DATABASE_URL in os.environ: {_raw_db[:40]}")
 # Show host+user without password for diagnosis
@@ -325,20 +327,26 @@ def diagnose(response: Response):
 
     env = {}
     ak = os.environ.get("ANTHROPIC_API_KEY", "")
+    ak_alt = os.environ.get("ANTHROPIC_KEY", "")
+    ak_eff = ak if len(ak) >= 100 else ak_alt
     env["ANTHROPIC_API_KEY"] = (
-        f"OK — {len(ak)} chars" if ak.startswith("sk-ant-api03-") and len(ak) >= 100
-        else f"INVALID/TRUNCATED — {len(ak)} chars (need ~108 starting sk-ant-api03-)"
+        f"OK — {len(ak_eff)} chars (from {'ANTHROPIC_KEY' if ak_eff == ak_alt and ak_eff else 'ANTHROPIC_API_KEY'})"
+        if ak_eff.startswith("sk-ant-api03-") and len(ak_eff) >= 100
+        else f"INVALID/TRUNCATED — primary={len(ak)} chars, alt ANTHROPIC_KEY={len(ak_alt)} chars"
     )
     if "INVALID" in env["ANTHROPIC_API_KEY"]:
-        issues.append("ANTHROPIC_API_KEY: get full key from console.anthropic.com")
+        issues.append("ANTHROPIC_API_KEY: set ANTHROPIC_KEY in Railway Variables with your full sk-ant-api03-... key")
 
     sk = os.environ.get("STRIPE_SECRET_KEY", "")
+    sk_alt = os.environ.get("STRIPE_SK", "")
+    sk_eff = sk if len(sk) > 50 else sk_alt
     env["STRIPE_SECRET_KEY"] = (
-        f"OK — {len(sk)} chars" if (sk.startswith("sk_live_") or sk.startswith("sk_test_")) and len(sk) > 50
-        else f"INVALID/TRUNCATED — {len(sk)} chars (need ~107 starting sk_live_ or sk_test_)"
+        f"OK — {len(sk_eff)} chars (from {'STRIPE_SK' if sk_eff == sk_alt and sk_eff else 'STRIPE_SECRET_KEY'})"
+        if (sk_eff.startswith("sk_live_") or sk_eff.startswith("sk_test_")) and len(sk_eff) > 50
+        else f"INVALID/TRUNCATED — primary={len(sk)} chars, alt STRIPE_SK={len(sk_alt)} chars"
     )
     if "INVALID" in env["STRIPE_SECRET_KEY"]:
-        issues.append("STRIPE_SECRET_KEY: get full key from dashboard.stripe.com → Developers → API Keys")
+        issues.append("STRIPE_SECRET_KEY: set STRIPE_SK in Railway Variables with your full sk_live_... key")
 
     db_url = os.environ.get("DATABASE_URL", "")
     env["DATABASE_URL"] = mask(db_url)[:80] if db_url else "NOT SET"

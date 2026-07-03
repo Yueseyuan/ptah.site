@@ -208,6 +208,10 @@ export const updatePortalCaseStatus = (caseId: number, portal_status: string) =>
   api.patch(`/api/portal/admin/case/${caseId}/status`, null, { params: { portal_status } }).then(r => r.data);
 export const markDocumentReviewed = (docId: number) =>
   api.patch(`/api/portal/admin/documents/${docId}/reviewed`).then(r => r.data);
+export const mergeClients = (keepId: number, deleteId: number) =>
+  api.post('/api/clients/admin/merge', null, { params: { keep_id: keepId, delete_id: deleteId } }).then(r => r.data);
+export const deleteClientAdmin = (id: number) =>
+  api.delete(`/api/clients/admin/delete/${id}`).then(r => r.data);
 
 // Organizations
 export const listOrganizations = () => api.get('/api/organizations/').then(r => r.data);

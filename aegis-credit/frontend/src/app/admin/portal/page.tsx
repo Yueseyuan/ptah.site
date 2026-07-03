@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import { listPendingPortalCases, updatePortalCaseStatus } from '@/lib/api';
+import { listPendingPortalCases, updatePortalCaseStatus, mergeClients, deleteClientAdmin } from '@/lib/api';
 
 interface PortalIntake {
   case_id: number;
@@ -34,6 +34,32 @@ export default function PortalIntakePage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<number | null>(null);
   const [filter, setFilter] = useState('all');
+  const [toolResult, setToolResult] = useState<string | null>(null);
+  const [toolRunning, setToolRunning] = useState<string | null>(null);
+
+  async function runMerge() {
+    if (!confirm('Merge client #3 into client #1 (keep Sean / Yueseyuan id:1, move all records from id:3, delete id:3)?')) return;
+    setToolRunning('merge'); setToolResult(null);
+    try {
+      const res = await mergeClients(1, 3);
+      setToolResult(`✓ Merged — ${JSON.stringify(res.rows_moved)}`);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      setToolResult(`✗ Error: ${err?.response?.data?.detail || String(e)}`);
+    } finally { setToolRunning(null); }
+  }
+
+  async function runDeleteGarbage() {
+    if (!confirm('Permanently delete client #2 (garbage/bot record) and all their data?')) return;
+    setToolRunning('delete'); setToolResult(null);
+    try {
+      const res = await deleteClientAdmin(2);
+      setToolResult(`✓ Deleted client #2 — ${JSON.stringify(res.child_rows_deleted)}`);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      setToolResult(`✗ Error: ${err?.response?.data?.detail || String(e)}`);
+    } finally { setToolRunning(null); }
+  }
 
   function load() {
     setLoading(true);
@@ -164,6 +190,47 @@ export default function PortalIntakePage() {
                 ))}
               </tbody>
             </table>
+          )}
+        </div>
+        {/* One-time data tools */}
+        <div className="card" style={{ marginTop: 24, borderColor: '#fde68a', background: '#fffbeb' }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#92400e', margin: '0 0 4px' }}>
+            Data Tools — One-time Cleanup
+          </h3>
+          <p style={{ fontSize: 12, color: '#92400e', margin: '0 0 16px' }}>
+            Run each action once. Buttons remain for audit purposes but will return "not found" after completion.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button
+              onClick={runMerge}
+              disabled={toolRunning !== null}
+              style={{
+                padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                background: '#0a2540', color: '#fff', border: 'none', opacity: toolRunning ? 0.6 : 1,
+              }}
+            >
+              {toolRunning === 'merge' ? 'Merging…' : 'Merge duplicate Yueseyuan (id:3 → id:1)'}
+            </button>
+            <button
+              onClick={runDeleteGarbage}
+              disabled={toolRunning !== null}
+              style={{
+                padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                background: '#dc2626', color: '#fff', border: 'none', opacity: toolRunning ? 0.6 : 1,
+              }}
+            >
+              {toolRunning === 'delete' ? 'Deleting…' : 'Delete garbage record (id:2)'}
+            </button>
+          </div>
+          {toolResult && (
+            <div style={{
+              marginTop: 12, padding: '8px 12px', borderRadius: 6, fontSize: 12, fontFamily: 'monospace',
+              background: toolResult.startsWith('✓') ? '#f0fdf4' : '#fef2f2',
+              color: toolResult.startsWith('✓') ? '#166534' : '#991b1b',
+              border: `1px solid ${toolResult.startsWith('✓') ? '#86efac' : '#fecaca'}`,
+            }}>
+              {toolResult}
+            </div>
           )}
         </div>
       </main>

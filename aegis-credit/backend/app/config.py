@@ -14,8 +14,10 @@ class Settings(BaseSettings):
     DEV_NO_AUTH: bool = False
     DATABASE_URL: str = "sqlite:///./aegis.db"
     ANTHROPIC_API_KEY: str = ""
+    DATA_DIR: str = ""           # set to /app/data in Railway for persistent volume
     UPLOAD_DIR: str = "uploads"
     REPORTS_DIR: str = "generated_reports"
+    EVIDENCE_DIR: str = "evidence_files"
     JWT_SECRET_KEY: str = "change-me-in-production-use-env-var"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 480
@@ -97,6 +99,17 @@ if _pghost and _pg_pw:
     _pgport = _env("PGPORT") or "5432"
     _pgdb   = _env("PGDATABASE") or _env("POSTGRES_DB") or "railway"
     settings.DATABASE_URL = f"postgresql://{_pguser}:{_qp2(_pg_pw)}@{_pghost}:{_pgport}/{_pgdb}"
+
+
+# If a persistent volume is mounted, root all file storage under it.
+# Railway: create a volume at /app/data and set DATA_DIR=/app/data in Variables.
+# Local dev: leave DATA_DIR empty and files go to relative paths (uploads/, etc.).
+if settings.DATA_DIR.strip():
+    _d = settings.DATA_DIR.strip().rstrip("/")
+    settings.UPLOAD_DIR   = f"{_d}/uploads"
+    settings.REPORTS_DIR  = f"{_d}/reports"
+    settings.EVIDENCE_DIR = f"{_d}/evidence"
+    print(f"[CONFIG] DATA_DIR={_d} — all file storage routed to persistent volume")
 
 
 def _validate_settings(s):

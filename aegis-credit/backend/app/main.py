@@ -235,6 +235,10 @@ if not os.environ.get("TESTING"):
     # This prevents health-check timeouts from rolling back deployments.
     import threading
     def _startup():
+        # Create persistent storage directories before anything else writes files
+        for _dir in [settings.UPLOAD_DIR, settings.REPORTS_DIR, settings.EVIDENCE_DIR]:
+            if _dir:
+                os.makedirs(_dir, exist_ok=True)
         run_migrations()
         repair_schema()
         _ensure_admin()

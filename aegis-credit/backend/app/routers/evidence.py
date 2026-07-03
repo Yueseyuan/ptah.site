@@ -10,7 +10,8 @@ from app.config import settings
 
 router = APIRouter(prefix="/api/evidence", tags=["evidence"])
 
-EVIDENCE_DIR = "evidence_files"
+def _evidence_dir() -> str:
+    return settings.EVIDENCE_DIR
 
 
 def _out(e: EvidenceItem) -> dict:
@@ -43,9 +44,10 @@ async def upload_evidence(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
-    os.makedirs(EVIDENCE_DIR, exist_ok=True)
+    evidence_dir = _evidence_dir()
+    os.makedirs(evidence_dir, exist_ok=True)
     safe_name = f"case_{case_id}_{file.filename}"
-    file_path = os.path.join(EVIDENCE_DIR, safe_name)
+    file_path = os.path.join(evidence_dir, safe_name)
     with open(file_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
     item = EvidenceItem(

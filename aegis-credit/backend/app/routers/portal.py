@@ -431,6 +431,51 @@ def portal_disputes(
     ]
 
 
+@router.get("/outcomes")
+def portal_outcomes(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Read-only outcomes and credit score progress for portal clients."""
+    from app.models import Outcome
+    client = db.query(AegisClient).filter(AegisClient.portal_user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(404, "No client profile found")
+    case = db.query(AegisCase).filter(AegisCase.client_id == client.id).order_by(AegisCase.id.desc()).first()
+    if not case:
+        return {"outcomes": [], "score_snapshots": []}
+    outcomes = db.query(Outcome).filter(Outcome.case_id == case.id).order_by(Outcome.achieved_date).all()
+    # Surface score snapshots from score_increase outcomes and any outcome that has before/after
+    snapshots = [
+        {
+            "date": o.achieved_date,
+            "bureau": o.bureau,
+            "score_before": o.score_before,
+            "score_after": o.score_after,
+        }
+        for o in outcomes
+        if o.score_before is not None or o.score_after is not None
+    ]
+    return {
+        "outcomes": [
+            {
+                "outcome_type": o.outcome_type,
+                "description": o.description,
+                "bureau": o.bureau,
+                "achieved_date": o.achieved_date,
+                "verified": o.verified,
+                "score_before": o.score_before,
+                "score_after": o.score_after,
+            }
+            for o in outcomes
+            if o.verified
+        ],
+        "score_snapshots": snapshots,
+        "total_deletions": sum(1 for o in outcomes if o.outcome_type == "deleted" and o.verified),
+        "total_verified": sum(1 for o in outcomes if o.verified),
+    }
+
+
 # Staff endpoint — list portal intake cases
 @router.get("/admin/pending")
 def pending_portal_cases(

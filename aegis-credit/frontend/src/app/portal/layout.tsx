@@ -92,6 +92,25 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <main style={{ maxWidth: 900, margin: '0 auto', padding: isPublic ? 0 : '32px 24px' }}>
         {children}
       </main>
+      {!isPublic && (
+        <footer style={{
+          borderTop: '1px solid #e2e8f0',
+          background: '#f8fafc',
+          padding: '16px 24px',
+          marginTop: 32,
+          textAlign: 'center',
+          fontSize: 11,
+          color: '#94a3b8',
+          lineHeight: 1.6,
+        }}>
+          <strong style={{ color: '#64748b' }}>Non-Attorney Notice:</strong>{' '}
+          Cruel &amp; Associates is a credit services organization, not a law firm. We do not provide legal advice
+          and do not represent you as your attorney. Our services consist of document preparation, consumer education,
+          and administrative dispute assistance. No outcome is guaranteed.{' '}
+          Services governed by the Credit Repair Organizations Act (15 U.S.C. §§1679–1679j).
+          You have the right to cancel within 3 business days of signing any service contract.
+        </footer>
+      )}
     </div>
   );
 }

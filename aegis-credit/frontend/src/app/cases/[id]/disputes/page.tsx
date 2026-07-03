@@ -46,6 +46,9 @@ export default function DisputesPage() {
   const [autoError, setAutoError] = useState('');
   const [autoSuccess, setAutoSuccess] = useState('');
   const [trackingEdit, setTrackingEdit] = useState<Record<number, string>>({});
+  const [logResponseRoundId, setLogResponseRoundId] = useState<number | null>(null);
+  const [responseDate, setResponseDate] = useState('');
+  const [responseItemStatuses, setResponseItemStatuses] = useState<Record<number, string>>({});
 
   function load() { listDisputeRounds(caseId).then(setRounds).finally(() => setLoading(false)); }
   useEffect(() => { load(); }, [caseId]);
@@ -136,6 +139,30 @@ export default function DisputesPage() {
     if (diffDays < 0) return { label: `OVERDUE by ${Math.abs(diffDays)}d`, color: '#fee2e2' };
     if (diffDays <= 7) return { label: `Due in ${diffDays}d`, color: '#fef3c7' };
     return null;
+  }
+
+  function openLogResponse(round: Round) {
+    setLogResponseRoundId(round.id);
+    setResponseDate(new Date().toISOString().slice(0, 10));
+    const initial: Record<number, string> = {};
+    round.items.forEach(item => { initial[item.id] = item.status; });
+    setResponseItemStatuses(initial);
+  }
+
+  async function saveLogResponse(round: Round) {
+    await updateDisputeRound(round.id, {
+      response_received_date: responseDate,
+      status: 'response_received',
+    });
+    await Promise.all(
+      round.items.map(item =>
+        responseItemStatuses[item.id] !== item.status
+          ? updateDisputeItem(item.id, { status: responseItemStatuses[item.id] })
+          : Promise.resolve()
+      )
+    );
+    setLogResponseRoundId(null);
+    load();
   }
 
   async function autoGenerate() {
@@ -236,6 +263,7 @@ export default function DisputesPage() {
                     {STATUSES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                   </select>
                   <button className="btn btn-primary btn-sm" onClick={() => downloadLetter(round.id, round)}>⬇ Download Letter</button>
+                  <button className="btn btn-outline btn-sm" onClick={() => openLogResponse(round)} title="Log bureau/creditor response and update item outcomes">📬 Log Response</button>
                   <button className="btn btn-outline btn-sm" onClick={() => setAddItemRoundId(addItemRoundId === round.id ? null : round.id)}>+ Item</button>
                 </div>
               </div>
@@ -263,6 +291,63 @@ export default function DisputesPage() {
                   <button className="btn btn-primary btn-sm" onClick={() => saveTracking(round.id)}>Save</button>
                 )}
               </div>
+
+              {logResponseRoundId === round.id && (
+                <div style={{ margin: '0 0 12px', padding: '14px 16px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8 }}>
+                  <h4 style={{ margin: '0 0 10px', color: '#166534', fontSize: 13 }}>📬 Log Bureau / Creditor Response</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                    <label style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      Response Received Date:
+                      <input
+                        type="date"
+                        value={responseDate}
+                        onChange={e => setResponseDate(e.target.value)}
+                        style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13 }}
+                      />
+                    </label>
+                    <span style={{ fontSize: 12, color: '#166534' }}>Round status will be set to &quot;Response Received&quot;</span>
+                  </div>
+                  {round.items.length > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', margin: '0 0 8px' }}>Update item outcomes:</p>
+                      <table style={{ width: '100%', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ background: '#dcfce7' }}>
+                            <th style={{ padding: '4px 8px', textAlign: 'left' }}>Creditor</th>
+                            <th style={{ padding: '4px 8px', textAlign: 'left' }}>Account</th>
+                            <th style={{ padding: '4px 8px', textAlign: 'left' }}>Outcome</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {round.items.map(item => (
+                            <tr key={item.id}>
+                              <td style={{ padding: '4px 8px' }}>{item.creditor_name}</td>
+                              <td style={{ padding: '4px 8px', fontFamily: 'monospace' }}>xxxx-{item.account_number_last4}</td>
+                              <td style={{ padding: '4px 8px' }}>
+                                <select
+                                  value={responseItemStatuses[item.id] ?? item.status}
+                                  onChange={e => setResponseItemStatuses(s => ({ ...s, [item.id]: e.target.value }))}
+                                  style={{ fontSize: 12, padding: '3px 6px', borderRadius: 4, border: '1px solid #d1d5db' }}
+                                >
+                                  <option value="pending">Pending (no change)</option>
+                                  <option value="deleted">Deleted ✓</option>
+                                  <option value="updated">Updated / Corrected ✓</option>
+                                  <option value="verified">Verified (bureau kept item)</option>
+                                  <option value="no_response">No Response</option>
+                                </select>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-primary btn-sm" onClick={() => saveLogResponse(round)}>Save Response</button>
+                    <button className="btn btn-outline btn-sm" onClick={() => setLogResponseRoundId(null)}>Cancel</button>
+                  </div>
+                </div>
+              )}
 
               {addItemRoundId === round.id && (
                 <form onSubmit={addItem} style={{ marginBottom: 12, padding: 12, background: 'var(--bg)', borderRadius: 'var(--radius)' }}>

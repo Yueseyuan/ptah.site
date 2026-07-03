@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { portalRegister, setPortalAuth } from '@/lib/portal-api';
+import CroaDisclosure from '@/components/CroaDisclosure';
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
@@ -20,6 +21,7 @@ export default function PortalRegisterPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [croaAccepted, setCroaAccepted] = useState(false);
 
   function set(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -49,6 +51,35 @@ export default function PortalRegisterPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (!croaAccepted) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#f5f7fa',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', padding: '40px 16px',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ fontSize: 32, marginBottom: 6 }}>⚖</div>
+          <h1 style={{ color: '#0a2540', fontSize: 20, fontWeight: 700, margin: 0 }}>
+            Cruel &amp; Associates — Client Portal
+          </h1>
+          <p style={{ color: '#64748b', marginTop: 6, fontSize: 13 }}>
+            Before creating your account, please review this required disclosure.
+          </p>
+        </div>
+        <CroaDisclosure
+          inline
+          onAccept={() => setCroaAccepted(true)}
+          onDecline={() => window.location.href = '/'}
+        />
+        <p style={{ marginTop: 16, fontSize: 12, color: '#94a3b8', textAlign: 'center' }}>
+          Already have an account?{' '}
+          <a href="/portal/login" style={{ color: '#1d4ed8' }}>Sign in</a>
+        </p>
+      </div>
+    );
   }
 
   return (

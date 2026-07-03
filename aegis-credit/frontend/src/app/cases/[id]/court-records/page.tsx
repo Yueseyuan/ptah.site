@@ -61,6 +61,20 @@ export default function CourtRecordsPage() {
         </div>
         <CaseNav caseId={caseId} />
 
+        <div style={{
+          background: '#fef2f2', border: '1px solid #fecaca',
+          borderRadius: 8, padding: '10px 14px', marginBottom: 16,
+          fontSize: 13, color: '#7f1d1d', display: 'flex', gap: 10, alignItems: 'flex-start',
+        }}>
+          <span style={{ fontWeight: 700, flexShrink: 0 }}>Non-Attorney Notice:</span>
+          <span>
+            Record Relief services are administrative only. Cruel &amp; Associates is not a law firm and does not
+            provide legal advice or representation. Expungement eligibility determinations are informational —
+            clients requiring legal representation must be referred to a licensed attorney.
+            Do not advise clients on legal strategy or court procedure.
+          </span>
+        </div>
+
         {showForm && (
           <div className="card" style={{ marginBottom: 16 }}>
             <h3>Add Court Record</h3>

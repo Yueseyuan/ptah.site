@@ -1,6 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { portalMe, billingStatus } from '@/lib/portal-api';
+import { portalMe, billingStatus, portalOutcomes } from '@/lib/portal-api';
+
+interface OutcomeSummary {
+  total_deletions: number;
+  total_verified: number;
+  score_snapshots: { date: string; bureau: string; score_before: number | null; score_after: number | null }[];
+  outcomes: { outcome_type: string; description: string; bureau: string; achieved_date: string; verified: boolean; score_before: number | null; score_after: number | null }[];
+}
 
 interface PortalData {
   user: { username: string; email: string };
@@ -35,6 +42,7 @@ const DOC_CHECKLIST = [
 export default function PortalDashboard() {
   const [data, setData] = useState<PortalData | null>(null);
   const [subStatus, setSubStatus] = useState<string | null>(null);
+  const [outcomeData, setOutcomeData] = useState<OutcomeSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -46,6 +54,9 @@ export default function PortalDashboard() {
     billingStatus()
       .then(billing => setSubStatus(billing.subscription_status))
       .catch(() => setSubStatus(null));
+    portalOutcomes()
+      .then(setOutcomeData)
+      .catch(() => setOutcomeData(null));
   }, []);
 
   if (loading) return <LoadingState />;
@@ -180,6 +191,82 @@ export default function PortalDashboard() {
           linkLabel="Send Email"
         />
       </div>
+
+      {/* Credit Score & Outcomes Progress */}
+      {outcomeData && (outcomeData.total_verified > 0 || outcomeData.score_snapshots.length > 0) && (
+        <div style={{
+          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12,
+          padding: '20px 24px', marginBottom: 24,
+        }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0a2540', margin: '0 0 16px' }}>
+            Results &amp; Score Progress
+          </h3>
+
+          {/* Summary stats */}
+          <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 120, textAlign: 'center', background: '#f0fdf4', borderRadius: 10, padding: '14px 10px' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#16a34a' }}>{outcomeData.total_deletions}</div>
+              <div style={{ fontSize: 12, color: '#166534', fontWeight: 600, marginTop: 2 }}>Items Deleted</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 120, textAlign: 'center', background: '#eff6ff', borderRadius: 10, padding: '14px 10px' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#1d4ed8' }}>{outcomeData.total_verified}</div>
+              <div style={{ fontSize: 12, color: '#1e40af', fontWeight: 600, marginTop: 2 }}>Verified Outcomes</div>
+            </div>
+            {outcomeData.score_snapshots.length > 0 && (() => {
+              const gains = outcomeData.score_snapshots.filter(s => s.score_before !== null && s.score_after !== null);
+              const totalGain = gains.reduce((sum, s) => sum + ((s.score_after ?? 0) - (s.score_before ?? 0)), 0);
+              return totalGain > 0 ? (
+                <div style={{ flex: 1, minWidth: 120, textAlign: 'center', background: '#faf5ff', borderRadius: 10, padding: '14px 10px' }}>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: '#7c3aed' }}>+{totalGain}</div>
+                  <div style={{ fontSize: 12, color: '#6d28d9', fontWeight: 600, marginTop: 2 }}>Score Points Gained</div>
+                </div>
+              ) : null;
+            })()}
+          </div>
+
+          {/* Score snapshots */}
+          {outcomeData.score_snapshots.length > 0 && (
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 10 }}>
+                Score Updates
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {outcomeData.score_snapshots.map((snap, i) => {
+                  const gain = (snap.score_after ?? 0) - (snap.score_before ?? 0);
+                  return (
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 14px', background: '#f8fafc', borderRadius: 8,
+                      border: '1px solid #e2e8f0', flexWrap: 'wrap', gap: 8,
+                    }}>
+                      <div>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#0a2540', textTransform: 'capitalize' }}>
+                          {snap.bureau || 'All Bureaus'}
+                        </span>
+                        {snap.date && (
+                          <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 10 }}>
+                            {snap.date}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
+                        {snap.score_before !== null && <span style={{ color: '#64748b' }}>{snap.score_before}</span>}
+                        {snap.score_before !== null && snap.score_after !== null && <span style={{ color: '#94a3b8' }}>→</span>}
+                        {snap.score_after !== null && <span style={{ color: '#0a2540' }}>{snap.score_after}</span>}
+                        {gain > 0 && (
+                          <span style={{ background: '#dcfce7', color: '#16a34a', fontSize: 12, padding: '2px 8px', borderRadius: 12, fontWeight: 700 }}>
+                            +{gain} pts
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Document Checklist */}
       <div style={{

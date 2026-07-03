@@ -135,6 +135,9 @@ export const portalUploadDocument = async (formData: FormData) => {
 export const portalDisputes = () =>
   portalApi.get('/api/portal/disputes').then(r => r.data);
 
+export const portalOutcomes = () =>
+  portalApi.get('/api/portal/outcomes').then(r => r.data);
+
 export const billingStatus = () =>
   portalApi.get('/api/portal/billing/status').then(r => r.data);
 

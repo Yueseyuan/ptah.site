@@ -70,10 +70,10 @@
       font-size: 13px; font-weight: 700; text-align: left;
       padding: 5px 4px; border-bottom: 1px solid #555;
     }
-    .txn-tbl thead th:last-child { text-align: right; padding-right: 0; }
+    .txn-tbl thead th:nth-last-child(-n+2) { text-align: right; padding-right: 0; }
     .txn-tbl tbody td { font-size: 13px; padding: 5px 4px; border-bottom: 1px solid #ccc; line-height: 1.4; }
     .txn-tbl tbody td:first-child { white-space: nowrap; }
-    .txn-tbl tbody td:last-child { text-align: right; white-space: nowrap; padding-right: 0; }
+    .txn-tbl tbody td:nth-last-child(-n+2) { text-align: right; white-space: nowrap; padding-right: 0; }
 
     .pg-num { text-align: center; font-size: 11px; color: #555; margin-top: 36px; }
 
@@ -146,30 +146,30 @@
       <tr>
         <th style="width:90px">Date</th>
         <th>Description</th>
-        <th>Amount</th>
+        <th style="width:82px">Amount</th><th style="width:90px">Balance</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>06/01/26</td><td>ACH CREDIT MERIDIAN LEGAL SERVICES INC PMT INV6001 REF4829301756</td><td>5,500.00</td></tr>
-      <tr><td>06/01/26</td><td>BLUEVINE MONTHLY SERVICE FEE JUN2026</td><td>-15.00</td></tr>
-      <tr><td>06/01/26</td><td>ACH PROCESSING FEE 026009593 06012026</td><td>-18.00</td></tr>
-      <tr><td>06/02/26</td><td>INCOMING WIRE TRANSFER ATLAS CAPITAL GROUP REF WIR20260602 8849201</td><td>6,200.00</td></tr>
-      <tr><td>06/03/26</td><td>ACH CREDIT CAROLINA REALTY SOLUTIONS LLC PMT INV6002 REF7293817450</td><td>4,700.00</td></tr>
-      <tr><td>06/03/26</td><td>BILL PMT WOODRUFF ROAD PROPERTIES LLC OFFICE RENT JUN2026 REF6304358746</td><td>-4,800.00</td></tr>
-      <tr><td>06/04/26</td><td>BLUEVINE PMT LINK CREDIT DISPUTE RESOLUTION PKG REF BV1141083</td><td>2,900.00</td></tr>
-      <tr><td>06/05/26</td><td>ACH CREDIT SPARTANBURG FINANCIAL PARTNERS INV6003 REF6748291063</td><td>6,400.00</td></tr>
-      <tr><td>06/05/26</td><td>OUTGOING DOMESTIC WIRE FEE 06052026</td><td>-25.00</td></tr>
-      <tr><td>06/08/26</td><td>INCOMING WIRE TRANSFER PINNACLE ASSET MANAGEMENT REF WIR20260608 9904825</td><td>5,200.00</td></tr>
-      <tr><td>06/09/26</td><td>ACH CREDIT HARTWELL CONSULTING GROUP PMT INV6004 REF8391047362</td><td>5,700.00</td></tr>
-      <tr><td>06/09/26</td><td>BILL PMT DUKE ENERGY CAROLINAS 800-777-9898 NC ACCT 5584227461002 06092026</td><td>-920.00</td></tr>
-      <tr><td>06/10/26</td><td>TAP TO PAY PTAH LLC POS TERMINAL 0274 GREENVILLE SC REF BV0610</td><td>1,500.00</td></tr>
-      <tr><td>06/11/26</td><td>BLUEVINE PMT LINK DIGITAL RECORDS REVIEW SVC REF BV2214395</td><td>3,100.00</td></tr>
-      <tr><td>06/11/26</td><td>DEBIT CARD STAPLES #1074 GREENVILLE SC 06-11 864-271-6400 1826</td><td>-445.00</td></tr>
-      <tr><td>06/12/26</td><td>ACH CREDIT UPSTATE CREDIT ADVISORS LLC PMT INV6005 REF7283910475</td><td>4,400.00</td></tr>
-      <tr><td>06/12/26</td><td>BILL PMT SPECTRUM BUSINESS 855-707-7328 MO ACCT 5464195642387904 06122026</td><td>-440.00</td></tr>
-      <tr><td>06/15/26</td><td>INCOMING WIRE TRANSFER COASTAL EQUITY PARTNERS REF WIR20260615 5535820</td><td>5,600.00</td></tr>
-      <tr><td>06/15/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 06152026</td><td>-4,300.00</td></tr>
-      <tr><td>06/16/26</td><td>ACH CREDIT FOOTHILLS DEVELOPMENT LLC PMT INV6006 REF9291047362</td><td>6,100.00</td></tr>
+      <tr><td>06/01/26</td><td>ACH CREDIT MERIDIAN LEGAL SERVICES INC PMT INV6001 REF4829301756</td><td>5,500.00</td><td>528,635.00</td></tr>
+      <tr><td>06/01/26</td><td>BLUEVINE MONTHLY SERVICE FEE JUN2026</td><td>-15.00</td><td>528,620.00</td></tr>
+      <tr><td>06/01/26</td><td>ACH PROCESSING FEE 026009593 06012026</td><td>-18.00</td><td>528,602.00</td></tr>
+      <tr><td>06/02/26</td><td>INCOMING WIRE TRANSFER ATLAS CAPITAL GROUP REF WIR20260602 8849201</td><td>6,200.00</td><td>534,802.00</td></tr>
+      <tr><td>06/03/26</td><td>ACH CREDIT CAROLINA REALTY SOLUTIONS LLC PMT INV6002 REF7293817450</td><td>4,700.00</td><td>539,502.00</td></tr>
+      <tr><td>06/03/26</td><td>BILL PMT WOODRUFF ROAD PROPERTIES LLC OFFICE RENT JUN2026 REF6304358746</td><td>-4,800.00</td><td>534,702.00</td></tr>
+      <tr><td>06/04/26</td><td>BLUEVINE PMT LINK CREDIT DISPUTE RESOLUTION PKG REF BV1141083</td><td>2,900.00</td><td>537,602.00</td></tr>
+      <tr><td>06/05/26</td><td>ACH CREDIT SPARTANBURG FINANCIAL PARTNERS INV6003 REF6748291063</td><td>6,400.00</td><td>544,002.00</td></tr>
+      <tr><td>06/05/26</td><td>OUTGOING DOMESTIC WIRE FEE 06052026</td><td>-25.00</td><td>543,977.00</td></tr>
+      <tr><td>06/08/26</td><td>INCOMING WIRE TRANSFER PINNACLE ASSET MANAGEMENT REF WIR20260608 9904825</td><td>5,200.00</td><td>549,177.00</td></tr>
+      <tr><td>06/09/26</td><td>ACH CREDIT HARTWELL CONSULTING GROUP PMT INV6004 REF8391047362</td><td>5,700.00</td><td>554,877.00</td></tr>
+      <tr><td>06/09/26</td><td>BILL PMT DUKE ENERGY CAROLINAS 800-777-9898 NC ACCT 5584227461002 06092026</td><td>-920.00</td><td>553,957.00</td></tr>
+      <tr><td>06/10/26</td><td>TAP TO PAY PTAH LLC POS TERMINAL 0274 GREENVILLE SC REF BV0610</td><td>1,500.00</td><td>555,457.00</td></tr>
+      <tr><td>06/11/26</td><td>BLUEVINE PMT LINK DIGITAL RECORDS REVIEW SVC REF BV2214395</td><td>3,100.00</td><td>558,557.00</td></tr>
+      <tr><td>06/11/26</td><td>DEBIT CARD STAPLES #1074 GREENVILLE SC 06-11 864-271-6400 1826</td><td>-445.00</td><td>558,112.00</td></tr>
+      <tr><td>06/12/26</td><td>ACH CREDIT UPSTATE CREDIT ADVISORS LLC PMT INV6005 REF7283910475</td><td>4,400.00</td><td>562,512.00</td></tr>
+      <tr><td>06/12/26</td><td>BILL PMT SPECTRUM BUSINESS 855-707-7328 MO ACCT 5464195642387904 06122026</td><td>-440.00</td><td>562,072.00</td></tr>
+      <tr><td>06/15/26</td><td>INCOMING WIRE TRANSFER COASTAL EQUITY PARTNERS REF WIR20260615 5535820</td><td>5,600.00</td><td>567,672.00</td></tr>
+      <tr><td>06/15/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 06152026</td><td>-4,300.00</td><td>563,372.00</td></tr>
+      <tr><td>06/16/26</td><td>ACH CREDIT FOOTHILLS DEVELOPMENT LLC PMT INV6006 REF9291047362</td><td>6,100.00</td><td>569,472.00</td></tr>
     </tbody>
   </table>
 
@@ -207,38 +207,38 @@
       <tr>
         <th style="width:90px">Date</th>
         <th>Description</th>
-        <th>Amount</th>
+        <th style="width:82px">Amount</th><th style="width:90px">Balance</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>06/17/26</td><td>BLUEVINE PMT LINK ECOM CREDIT RESOLUTION SVC REF BV3316475</td><td>2,700.00</td></tr>
-      <tr><td>06/18/26</td><td>TAP TO PAY PTAH LLC WORKSHOP REG GREENVILLE SC REF BV0618</td><td>1,300.00</td></tr>
-      <tr><td>06/19/26</td><td>ACH CREDIT GREENVILLE BUSINESS SOLUTIONS INV6007 REF1201748365</td><td>4,600.00</td></tr>
-      <tr><td>06/19/26</td><td>DEBIT CARD GOOGLE ADS 650-253-0000 CA 06-19 5374920183 1826</td><td>-2,700.00</td></tr>
-      <tr><td>06/22/26</td><td>INCOMING WIRE TRANSFER BLUE RIDGE CAPITAL GROUP REF WIR20260622 2259384</td><td>5,400.00</td></tr>
-      <tr><td>06/22/26</td><td>BILL PMT CLIO LEGAL SOFTWARE 888-858-2546 CA ACCT CL8827410 06222026</td><td>-1,200.00</td></tr>
-      <tr><td>06/23/26</td><td>ACH CREDIT ANDERSON COUNTY ENTERPRISES INV6008 REF8382910465</td><td>5,700.00</td></tr>
-      <tr><td>06/23/26</td><td>DEBIT CARD OFFICE DEPOT #4837 GREENVILLE SC 06-23 864-234-7100 1826</td><td>-480.00</td></tr>
-      <tr><td>06/24/26</td><td>BLUEVINE PMT LINK SUBSCRIPTION CREDIT SVC Q2 REF BV4421936</td><td>2,300.00</td></tr>
-      <tr><td>06/24/26</td><td>DEBIT CARD AMAZON.COM AMZN.COM/BILL WA 06-24 1826</td><td>-215.00</td></tr>
-      <tr><td>06/25/26</td><td>ACH CREDIT PALMETTO PROFESSIONAL SERVICES INV6009 REF4829104756</td><td>5,000.00</td></tr>
-      <tr><td>06/25/26</td><td>TAP TO PAY PTAH LLC RETAIL COUNTER GREENVILLE SC REF BV0625</td><td>1,200.00</td></tr>
-      <tr><td>06/25/26</td><td>DEBIT CARD CAPITAL GRILLE GREENVILLE SC 06-25 864-288-1010 1826</td><td>-1,140.00</td></tr>
-      <tr><td>06/26/26</td><td>INCOMING WIRE TRANSFER MAGNOLIA WEALTH GROUP REF WIR20260626 6641139</td><td>5,300.00</td></tr>
-      <tr><td>06/27/26</td><td>ACH CREDIT CHEROKEE FINANCIAL ADVISORS PMT INV6010 REF3938471056</td><td>5,900.00</td></tr>
-      <tr><td>06/27/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 06272026</td><td>-4,300.00</td></tr>
-      <tr><td>06/28/26</td><td>ACH CREDIT FOOTHILLS DEVELOPMENT LLC PMT INV6011 REF8291940365</td><td>6,500.00</td></tr>
-      <tr><td>06/29/26</td><td>INCOMING WIRE TRANSFER ATLAS CAPITAL GROUP REF WIR20260629 4423894</td><td>6,100.00</td></tr>
-      <tr><td>06/29/26</td><td>BLUEVINE PMT LINK CONSULTING SVC RETAINER PKG REF BV5529284</td><td>2,600.00</td></tr>
-      <tr><td>06/29/26</td><td>BILL PMT OGLETREE DEAKINS NASH SMOAK &amp; STEWART PC LEGAL RETAINER 06292026</td><td>-1,500.00</td></tr>
-      <tr><td>06/30/26</td><td>ACH CREDIT LAKEVIEW HOLDINGS LLC PMT INV6012 REF5829301756</td><td>6,200.00</td></tr>
-      <tr><td>06/30/26</td><td>ACH CREDIT PICKENS COUNTY RESOURCES INC PMT INV6013 REF9201947365</td><td>7,000.00</td></tr>
-      <tr><td>06/30/26</td><td>ACH CREDIT BILTMORE FINANCIAL GROUP PMT INV6014 REF7183940275</td><td>5,000.00</td></tr>
-      <tr><td>06/30/26</td><td>ACH CREDIT MAGNOLIA WEALTH GROUP PMT INV6015 REF2938571046</td><td>5,500.00</td></tr>
-      <tr><td>06/30/26</td><td>BILL PMT BLUECROSS BLUESHIELD SC HEALTH INS PREMIUM 803-788-0222 JUN2026</td><td>-1,008.00</td></tr>
-      <tr><td>06/30/26</td><td>DEBIT CARD USPS PO #0497810040 GREENVILLE SC 06-30 1826</td><td>-65.00</td></tr>
-      <tr><td>06/30/26</td><td>DEBIT CARD DIGITAL MARKETING SOLUTIONS GREENVILLE SC 06-30 1826</td><td>-2,900.00</td></tr>
-      <tr><td>06/30/26</td><td>DEBIT CARD MICROSOFT 365 BUSINESS 800-642-7676 WA 06-30 1826</td><td>-1,744.00</td></tr>
+      <tr><td>06/17/26</td><td>BLUEVINE PMT LINK ECOM CREDIT RESOLUTION SVC REF BV3316475</td><td>2,700.00</td><td>572,172.00</td></tr>
+      <tr><td>06/18/26</td><td>TAP TO PAY PTAH LLC WORKSHOP REG GREENVILLE SC REF BV0618</td><td>1,300.00</td><td>573,472.00</td></tr>
+      <tr><td>06/19/26</td><td>ACH CREDIT GREENVILLE BUSINESS SOLUTIONS INV6007 REF1201748365</td><td>4,600.00</td><td>578,072.00</td></tr>
+      <tr><td>06/19/26</td><td>DEBIT CARD GOOGLE ADS 650-253-0000 CA 06-19 5374920183 1826</td><td>-2,700.00</td><td>575,372.00</td></tr>
+      <tr><td>06/22/26</td><td>INCOMING WIRE TRANSFER BLUE RIDGE CAPITAL GROUP REF WIR20260622 2259384</td><td>5,400.00</td><td>580,772.00</td></tr>
+      <tr><td>06/22/26</td><td>BILL PMT CLIO LEGAL SOFTWARE 888-858-2546 CA ACCT CL8827410 06222026</td><td>-1,200.00</td><td>579,572.00</td></tr>
+      <tr><td>06/23/26</td><td>ACH CREDIT ANDERSON COUNTY ENTERPRISES INV6008 REF8382910465</td><td>5,700.00</td><td>585,272.00</td></tr>
+      <tr><td>06/23/26</td><td>DEBIT CARD OFFICE DEPOT #4837 GREENVILLE SC 06-23 864-234-7100 1826</td><td>-480.00</td><td>584,792.00</td></tr>
+      <tr><td>06/24/26</td><td>BLUEVINE PMT LINK SUBSCRIPTION CREDIT SVC Q2 REF BV4421936</td><td>2,300.00</td><td>587,092.00</td></tr>
+      <tr><td>06/24/26</td><td>DEBIT CARD AMAZON.COM AMZN.COM/BILL WA 06-24 1826</td><td>-215.00</td><td>586,877.00</td></tr>
+      <tr><td>06/25/26</td><td>ACH CREDIT PALMETTO PROFESSIONAL SERVICES INV6009 REF4829104756</td><td>5,000.00</td><td>591,877.00</td></tr>
+      <tr><td>06/25/26</td><td>TAP TO PAY PTAH LLC RETAIL COUNTER GREENVILLE SC REF BV0625</td><td>1,200.00</td><td>593,077.00</td></tr>
+      <tr><td>06/25/26</td><td>DEBIT CARD CAPITAL GRILLE GREENVILLE SC 06-25 864-288-1010 1826</td><td>-1,140.00</td><td>591,937.00</td></tr>
+      <tr><td>06/26/26</td><td>INCOMING WIRE TRANSFER MAGNOLIA WEALTH GROUP REF WIR20260626 6641139</td><td>5,300.00</td><td>597,237.00</td></tr>
+      <tr><td>06/27/26</td><td>ACH CREDIT CHEROKEE FINANCIAL ADVISORS PMT INV6010 REF3938471056</td><td>5,900.00</td><td>603,137.00</td></tr>
+      <tr><td>06/27/26</td><td>ADP PAYROLL FUNDING PTAH LLC 0318274651 06272026</td><td>-4,300.00</td><td>598,837.00</td></tr>
+      <tr><td>06/28/26</td><td>ACH CREDIT FOOTHILLS DEVELOPMENT LLC PMT INV6011 REF8291940365</td><td>6,500.00</td><td>605,337.00</td></tr>
+      <tr><td>06/29/26</td><td>INCOMING WIRE TRANSFER ATLAS CAPITAL GROUP REF WIR20260629 4423894</td><td>6,100.00</td><td>611,437.00</td></tr>
+      <tr><td>06/29/26</td><td>BLUEVINE PMT LINK CONSULTING SVC RETAINER PKG REF BV5529284</td><td>2,600.00</td><td>614,037.00</td></tr>
+      <tr><td>06/29/26</td><td>BILL PMT OGLETREE DEAKINS NASH SMOAK &amp; STEWART PC LEGAL RETAINER 06292026</td><td>-1,500.00</td><td>612,537.00</td></tr>
+      <tr><td>06/30/26</td><td>ACH CREDIT LAKEVIEW HOLDINGS LLC PMT INV6012 REF5829301756</td><td>6,200.00</td><td>618,737.00</td></tr>
+      <tr><td>06/30/26</td><td>ACH CREDIT PICKENS COUNTY RESOURCES INC PMT INV6013 REF9201947365</td><td>7,000.00</td><td>625,737.00</td></tr>
+      <tr><td>06/30/26</td><td>ACH CREDIT BILTMORE FINANCIAL GROUP PMT INV6014 REF7183940275</td><td>5,000.00</td><td>630,737.00</td></tr>
+      <tr><td>06/30/26</td><td>ACH CREDIT MAGNOLIA WEALTH GROUP PMT INV6015 REF2938571046</td><td>5,500.00</td><td>636,237.00</td></tr>
+      <tr><td>06/30/26</td><td>BILL PMT BLUECROSS BLUESHIELD SC HEALTH INS PREMIUM 803-788-0222 JUN2026</td><td>-1,008.00</td><td>635,229.00</td></tr>
+      <tr><td>06/30/26</td><td>DEBIT CARD USPS PO #0497810040 GREENVILLE SC 06-30 1826</td><td>-65.00</td><td>635,164.00</td></tr>
+      <tr><td>06/30/26</td><td>DEBIT CARD DIGITAL MARKETING SOLUTIONS GREENVILLE SC 06-30 1826</td><td>-2,900.00</td><td>632,264.00</td></tr>
+      <tr><td>06/30/26</td><td>DEBIT CARD MICROSOFT 365 BUSINESS 800-642-7676 WA 06-30 1826</td><td>-1,744.00</td><td>630,520.00</td></tr>
     </tbody>
   </table>
 
@@ -256,7 +256,7 @@
   <div class="sweep-heading">Summary of balances as of Jun. 30, 2026</div>
   <table class="sweep-tbl">
     <thead>
-      <tr><th>FDIC-Insured institution</th><th>Amount</th></tr>
+      <tr><th>FDIC-Insured institution</th><th style="width:82px">Amount</th><th style="width:90px">Balance</th></tr>
     </thead>
     <tbody>
       <tr><td>Coastal Community Bank</td><td>630,520.00</td></tr>

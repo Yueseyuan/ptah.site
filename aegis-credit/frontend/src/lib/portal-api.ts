@@ -3,6 +3,7 @@
 type FetchConfig = {
   params?: Record<string, string | number | boolean | undefined | null>;
   headers?: Record<string, string>;
+  responseType?: 'blob';
 };
 
 type ApiResponse<T = unknown> = { data: T; status: number };
@@ -72,17 +73,21 @@ async function portalFetch<T = unknown>(
     throw err;
   }
 
-  const data: T = await res.json() as T;
+  const data: T = config?.responseType === 'blob'
+    ? (await res.blob()) as T
+    : (await res.json()) as T;
   return { data, status: res.status };
 }
 
-const portalApi = {
+export const portalApi = {
   get:    <T = unknown>(path: string, config?: FetchConfig) =>
             portalFetch<T>('GET', path, undefined, config),
   post:   <T = unknown>(path: string, body?: unknown, config?: FetchConfig) =>
             portalFetch<T>('POST', path, body, config),
   patch:  <T = unknown>(path: string, body?: unknown, config?: FetchConfig) =>
             portalFetch<T>('PATCH', path, body, config),
+  delete: <T = unknown>(path: string, config?: FetchConfig) =>
+            portalFetch<T>('DELETE', path, undefined, config),
 };
 
 export interface RegisterData {

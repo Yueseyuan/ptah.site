@@ -130,15 +130,18 @@ def _serialize_line_items(items: Optional[List[LineItem]]) -> Optional[str]:
 @router.get("/")
 def list_invoices(
     client_id: Optional[int] = None,
+    service_case_id: Optional[int] = None,
     division: Optional[str] = None,
     status: Optional[str] = None,
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ):
-    """List invoices with optional filters: client_id, division slug, status."""
+    """List invoices with optional filters: client_id, service_case_id, division slug, status."""
     q = db.query(ServiceInvoice)
     if client_id is not None:
         q = q.filter(ServiceInvoice.client_id == client_id)
+    if service_case_id is not None:
+        q = q.filter(ServiceInvoice.service_case_id == service_case_id)
     if division is not None:
         q = q.filter(ServiceInvoice.division_slug == division)
     if status is not None:

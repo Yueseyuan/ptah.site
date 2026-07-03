@@ -314,7 +314,7 @@ export const getInvoicePdf = (id: number) => api.get(`/api/invoices/${id}/pdf`, 
 // Document Templates
 export const listTemplates = () => api.get('/api/templates').then(r => r.data);
 export const createTemplate = (data: Record<string, unknown>) => api.post('/api/templates', data).then(r => r.data);
-export const updateTemplate = (id: number, data: Record<string, unknown>) => api.patch(`/api/templates/${id}`, data).then(r => r.data);
+export const updateTemplate = (id: number, data: Record<string, unknown>) => api.put(`/api/templates/${id}`, data).then(r => r.data);
 export const deleteTemplate = (id: number) => api.delete(`/api/templates/${id}`);
 export const seedTemplates = () => api.post('/api/templates/seed', {}).then(r => r.data);
 export const previewTemplate = (id: number) => api.post(`/api/templates/${id}/preview`, {}).then(r => r.data);

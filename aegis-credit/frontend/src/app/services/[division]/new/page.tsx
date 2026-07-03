@@ -325,7 +325,7 @@ export default function NewServiceCasePage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          division,
+          division_slug: division,
           client_id: parseInt(clientId),
           notes,
           intake_data: intakeData,

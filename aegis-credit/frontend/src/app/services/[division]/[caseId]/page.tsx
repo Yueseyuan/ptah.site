@@ -9,11 +9,11 @@ import Sidebar from '@/components/Sidebar';
 interface ServiceCase {
   id: number;
   case_number: string;
-  division: string;
+  division_slug: string;
   status: string;
-  client_name: string;
+  client_name: string | null;
   client_id: number;
-  notes: string;
+  notes: string | null;
   intake_data: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -21,15 +21,16 @@ interface ServiceCase {
 
 interface Document {
   id: number;
-  doc_type: string;
-  filename: string;
+  title: string;
+  document_type: string;
+  status: string;
+  ai_generated: boolean;
   created_at: string;
-  instructions?: string;
 }
 
 interface Appointment {
   id: number;
-  title: string;
+  appointment_type: string;
   scheduled_at: string;
   location?: string;
   status: string;
@@ -39,7 +40,7 @@ interface Appointment {
 interface Invoice {
   id: number;
   invoice_number: string;
-  amount: number;
+  total: number;
   status: string;
   due_date?: string;
   created_at: string;
@@ -153,10 +154,14 @@ function GenerateDocModal({
     setLoading(true);
     setError('');
     try {
-      const res = await authFetch(`/api/service-cases/${caseId}/documents`, {
+      const res = await authFetch(`/api/documents/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doc_type: docType, instructions }),
+        body: JSON.stringify({
+          service_case_id: caseId,
+          document_type: docType,
+          custom_instructions: instructions || undefined,
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -215,29 +220,43 @@ function GenerateDocModal({
 
 // ── Schedule Appointment Modal ─────────────────────────────────────────────────
 
+const APPT_TYPES = ['consultation', 'signing', 'document_review', 'intake'];
+
 function ScheduleModal({
   caseId,
+  clientId,
+  divisionSlug,
   onClose,
   onScheduled,
 }: {
   caseId: number;
+  clientId: number;
+  divisionSlug: string;
   onClose: () => void;
   onScheduled: () => void;
 }) {
-  const [form, setForm] = useState({ title: '', scheduled_at: '', location: '', notes: '' });
+  const [form, setForm] = useState({ appointment_type: 'consultation', scheduled_at: '', location: '', notes: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title || !form.scheduled_at) { setError('Title and date/time are required.'); return; }
+    if (!form.scheduled_at) { setError('Date and time are required.'); return; }
     setLoading(true);
     setError('');
     try {
-      const res = await authFetch(`/api/service-cases/${caseId}/appointments`, {
+      const res = await authFetch(`/api/appointments/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          client_id: clientId,
+          service_case_id: caseId,
+          division_slug: divisionSlug,
+          appointment_type: form.appointment_type,
+          scheduled_at: form.scheduled_at,
+          location: form.location || undefined,
+          notes: form.notes || undefined,
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -264,13 +283,10 @@ function ScheduleModal({
         <h3 style={{ marginBottom: 18, color: 'var(--navy)' }}>Schedule Appointment</h3>
         <form onSubmit={submit}>
           <div className="form-group">
-            <label>Title *</label>
-            <input
-              value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              placeholder="e.g., Signing Session, Consultation Call"
-              required
-            />
+            <label>Type *</label>
+            <select value={form.appointment_type} onChange={e => setForm(f => ({ ...f, appointment_type: e.target.value }))}>
+              {APPT_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+            </select>
           </div>
           <div className="form-group">
             <label>Date & Time *</label>
@@ -317,10 +333,14 @@ function ScheduleModal({
 
 function CreateInvoiceModal({
   caseId,
+  clientId,
+  divisionSlug,
   onClose,
   onCreated,
 }: {
   caseId: number;
+  clientId: number;
+  divisionSlug: string;
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -331,13 +351,23 @@ function CreateInvoiceModal({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.amount) { setError('Amount is required.'); return; }
+    const amt = parseFloat(form.amount);
     setLoading(true);
     setError('');
     try {
-      const res = await authFetch(`/api/service-cases/${caseId}/invoices`, {
+      const res = await authFetch(`/api/invoices/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+        body: JSON.stringify({
+          client_id: clientId,
+          service_case_id: caseId,
+          division_slug: divisionSlug,
+          line_items: [{ description: form.description || 'Services rendered', quantity: 1, unit_price: amt, total: amt }],
+          subtotal: amt,
+          total: amt,
+          due_date: form.due_date || undefined,
+          status: 'draft',
+        }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -444,21 +474,21 @@ function ServiceCaseDetailInner() {
   }, [numericId]);
 
   const loadDocs = useCallback(() => {
-    return authFetch(`/api/service-cases/${numericId}/documents`)
+    return authFetch(`/api/documents/?service_case_id=${numericId}`)
       .then(r => r.ok ? r.json() : [])
       .then(setDocs)
       .catch(() => {});
   }, [numericId]);
 
   const loadAppointments = useCallback(() => {
-    return authFetch(`/api/service-cases/${numericId}/appointments`)
+    return authFetch(`/api/appointments/?service_case_id=${numericId}`)
       .then(r => r.ok ? r.json() : [])
       .then(setAppointments)
       .catch(() => {});
   }, [numericId]);
 
   const loadInvoices = useCallback(() => {
-    return authFetch(`/api/service-cases/${numericId}/invoices`)
+    return authFetch(`/api/invoices/?service_case_id=${numericId}`)
       .then(r => r.ok ? r.json() : [])
       .then(setInvoices)
       .catch(() => {});
@@ -476,7 +506,7 @@ function ServiceCaseDetailInner() {
     setSaving(true);
     try {
       const res = await authFetch(`/api/service-cases/${numericId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
@@ -494,7 +524,7 @@ function ServiceCaseDetailInner() {
     setNotesSaved(false);
     try {
       const res = await authFetch(`/api/service-cases/${numericId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes }),
       });
@@ -527,7 +557,7 @@ function ServiceCaseDetailInner() {
     );
   }
 
-  const divisionLabel = DIVISION_LABELS[division] || division;
+  const divisionLabel = DIVISION_LABELS[caseData.division_slug || division] || division;
 
   return (
     <div className="main-layout">
@@ -651,8 +681,9 @@ function ServiceCaseDetailInner() {
               <table>
                 <thead>
                   <tr>
+                    <th>Title</th>
                     <th>Type</th>
-                    <th>Filename</th>
+                    <th>Status</th>
                     <th>Created</th>
                     <th></th>
                   </tr>
@@ -660,22 +691,27 @@ function ServiceCaseDetailInner() {
                 <tbody>
                   {docs.map(d => (
                     <tr key={d.id}>
-                      <td style={{ fontWeight: 500 }}>{d.doc_type}</td>
-                      <td style={{ color: 'var(--muted)', fontSize: 12 }}>{d.filename || '—'}</td>
+                      <td style={{ fontWeight: 500 }}>{d.title}</td>
+                      <td style={{ color: 'var(--muted)', fontSize: 12 }}>{d.document_type}</td>
+                      <td>
+                        <span style={{
+                          fontSize: 11, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
+                          background: d.status === 'signed' ? '#d1fae5' : d.status === 'draft' ? '#f1f5f9' : '#fef3c7',
+                          color: d.status === 'signed' ? '#065f46' : d.status === 'draft' ? '#475569' : '#92400e',
+                        }}>{d.status}</span>
+                      </td>
                       <td style={{ color: 'var(--muted)', fontSize: 12 }}>
                         {new Date(d.created_at).toLocaleDateString()}
                       </td>
                       <td>
-                        {d.filename && (
-                          <a
-                            href={`/api/service-cases/${numericId}/documents/${d.id}/download`}
-                            className="btn btn-outline btn-sm"
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Download
-                          </a>
-                        )}
+                        <a
+                          href={`/api/documents/${d.id}/download`}
+                          className="btn btn-outline btn-sm"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Download
+                        </a>
                       </td>
                     </tr>
                   ))}
@@ -700,7 +736,7 @@ function ServiceCaseDetailInner() {
               <table>
                 <thead>
                   <tr>
-                    <th>Title</th>
+                    <th>Type</th>
                     <th>Date & Time</th>
                     <th>Location</th>
                     <th>Status</th>
@@ -709,7 +745,7 @@ function ServiceCaseDetailInner() {
                 <tbody>
                   {appointments.map(a => (
                     <tr key={a.id}>
-                      <td style={{ fontWeight: 500 }}>{a.title}</td>
+                      <td style={{ fontWeight: 500, textTransform: 'capitalize' }}>{a.appointment_type?.replace('_', ' ')}</td>
                       <td style={{ fontSize: 12 }}>
                         {new Date(a.scheduled_at).toLocaleString()}
                       </td>
@@ -757,7 +793,7 @@ function ServiceCaseDetailInner() {
                   {invoices.map(inv => (
                     <tr key={inv.id}>
                       <td style={{ fontWeight: 600 }}><code>{inv.invoice_number}</code></td>
-                      <td>${Number(inv.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td>${Number(inv.total).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td>
                         <span style={{
                           background: inv.status === 'paid' ? '#d1fae5' : inv.status === 'overdue' ? '#fee2e2' : '#fef3c7',
@@ -818,6 +854,8 @@ function ServiceCaseDetailInner() {
         {showSchedule && (
           <ScheduleModal
             caseId={numericId}
+            clientId={caseData.client_id}
+            divisionSlug={caseData.division_slug}
             onClose={() => setShowSchedule(false)}
             onScheduled={loadAppointments}
           />
@@ -825,6 +863,8 @@ function ServiceCaseDetailInner() {
         {showInvoice && (
           <CreateInvoiceModal
             caseId={numericId}
+            clientId={caseData.client_id}
+            divisionSlug={caseData.division_slug}
             onClose={() => setShowInvoice(false)}
             onCreated={loadInvoices}
           />

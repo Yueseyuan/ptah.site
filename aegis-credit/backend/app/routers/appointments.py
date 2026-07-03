@@ -111,6 +111,7 @@ def list_upcoming_appointments(
 @router.get("/")
 def list_appointments(
     client_id: Optional[int] = None,
+    service_case_id: Optional[int] = None,
     division: Optional[str] = None,
     status: Optional[str] = None,
     date_from: Optional[str] = None,
@@ -122,6 +123,8 @@ def list_appointments(
     q = db.query(Appointment)
     if client_id is not None:
         q = q.filter(Appointment.client_id == client_id)
+    if service_case_id is not None:
+        q = q.filter(Appointment.service_case_id == service_case_id)
     if division is not None:
         q = q.filter(Appointment.division_slug == division)
     if status is not None:

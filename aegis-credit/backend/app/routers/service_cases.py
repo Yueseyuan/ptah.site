@@ -1,5 +1,6 @@
+import json
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -90,7 +91,7 @@ class ServiceCaseCreate(BaseModel):
     client_id: int
     division_slug: str
     title: Optional[str] = None
-    intake_data: Optional[str] = None   # JSON blob
+    intake_data: Optional[Any] = None   # dict from frontend, serialised to JSON string
     notes: Optional[str] = None
     assigned_to: Optional[str] = None
     status: Optional[str] = "intake"
@@ -99,7 +100,7 @@ class ServiceCaseCreate(BaseModel):
 class ServiceCaseUpdate(BaseModel):
     title: Optional[str] = None
     status: Optional[str] = None
-    intake_data: Optional[str] = None
+    intake_data: Optional[Any] = None   # dict or JSON string
     notes: Optional[str] = None
     assigned_to: Optional[str] = None
 
@@ -130,15 +131,36 @@ def _gen_case_number(division_slug: str, year: int, record_id: int) -> str:
     return f"SVC-{prefix}-{year}-{record_id:04d}"
 
 
-def _out(sc: ServiceCase) -> dict:
+def _parse_intake(raw: Optional[str]) -> dict:
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, dict) else {}
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+def _serialize_intake(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value  # already serialized
+    return json.dumps(value)
+
+
+def _out(sc: ServiceCase, client: Optional[AegisClient] = None) -> dict:
     return {
         "id": sc.id,
         "client_id": sc.client_id,
+        "client_name": (
+            f"{client.first_name} {client.last_name}".strip() if client else None
+        ),
         "division_slug": sc.division_slug,
         "case_number": sc.case_number,
         "status": sc.status,
         "title": sc.title,
-        "intake_data": sc.intake_data,
+        "intake_data": _parse_intake(sc.intake_data),
         "notes": sc.notes,
         "assigned_to": sc.assigned_to,
         "created_at": sc.created_at.isoformat() if sc.created_at else None,
@@ -172,7 +194,14 @@ def list_service_cases(
         q = q.filter(ServiceCase.client_id == client_id)
     if status is not None:
         q = q.filter(ServiceCase.status == status)
-    return [_out(sc) for sc in q.order_by(ServiceCase.id.desc()).all()]
+    cases = q.order_by(ServiceCase.id.desc()).all()
+    client_map = {
+        c.id: c
+        for c in db.query(AegisClient).filter(
+            AegisClient.id.in_([sc.client_id for sc in cases])
+        ).all()
+    }
+    return [_out(sc, client_map.get(sc.client_id)) for sc in cases]
 
 
 @router.post("/", status_code=201)
@@ -199,7 +228,9 @@ def create_service_case(
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-    sc = ServiceCase(**data.model_dump())
+    payload = data.model_dump()
+    payload["intake_data"] = _serialize_intake(payload.get("intake_data"))
+    sc = ServiceCase(**payload)
     # Placeholder case_number — will be replaced after flush gives us the id.
     sc.case_number = "SVC-PENDING"
     db.add(sc)
@@ -209,7 +240,7 @@ def create_service_case(
     sc.case_number = _gen_case_number(sc.division_slug, year, sc.id)
     db.commit()
     db.refresh(sc)
-    return _out(sc)
+    return _out(sc, client)
 
 
 @router.get("/{service_case_id}")
@@ -222,7 +253,8 @@ def get_service_case(
     sc = db.query(ServiceCase).filter(ServiceCase.id == service_case_id).first()
     if not sc:
         raise HTTPException(status_code=404, detail="Service case not found")
-    return _out(sc)
+    client = db.query(AegisClient).filter(AegisClient.id == sc.client_id).first()
+    return _out(sc, client)
 
 
 @router.put("/{service_case_id}")
@@ -244,12 +276,27 @@ def update_service_case(
                    f"Must be one of: {', '.join(sorted(_VALID_STATUSES))}",
         )
 
-    for field, value in data.model_dump(exclude_unset=True).items():
+    updates = data.model_dump(exclude_unset=True)
+    if "intake_data" in updates:
+        updates["intake_data"] = _serialize_intake(updates["intake_data"])
+    for field, value in updates.items():
         setattr(sc, field, value)
 
     db.commit()
     db.refresh(sc)
-    return _out(sc)
+    client = db.query(AegisClient).filter(AegisClient.id == sc.client_id).first()
+    return _out(sc, client)
+
+
+@router.patch("/{service_case_id}")
+def patch_service_case(
+    service_case_id: int,
+    data: ServiceCaseUpdate,
+    db: Session = Depends(get_db),
+    _user: User = Depends(get_current_user),
+):
+    """Partial update — same as PUT but registered as PATCH for frontend compatibility."""
+    return update_service_case(service_case_id, data, db, _user)
 
 
 @router.delete("/{service_case_id}", status_code=204)

@@ -9,7 +9,7 @@ interface Template {
   id: number;
   name: string;
   description: string;
-  division: string;
+  division_slug: string;
   category: string;
   template_type: string;
   content: string;
@@ -19,7 +19,7 @@ interface Template {
 interface TemplateForm {
   name: string;
   description: string;
-  division: string;
+  division_slug: string;
   category: string;
   template_type: string;
   content: string;
@@ -28,22 +28,25 @@ interface TemplateForm {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DIVISIONS = ['Credit Repair', 'Debt Settlement', 'Legal', 'Consulting', 'Collections', 'Other', 'All'];
+const DIVISIONS = ['notary', 'credit', 'criminal', 'document', 'judgment', 'consulting'];
+const DIVISION_LABELS: Record<string, string> = {
+  notary: 'Mobile Notary', credit: 'Credit Restoration', criminal: 'Criminal Record Relief',
+  document: 'Document Preparation', judgment: 'Judgment & Asset Recovery', consulting: 'Business Consulting',
+};
 const CATEGORIES = ['Dispute Letter', 'Authorization', 'Agreement', 'Notice', 'Report', 'Other'];
 const TEMPLATE_TYPES = ['document', 'letter', 'email', 'contract', 'report', 'other'];
 
 const DIVISION_COLORS: Record<string, { bg: string; color: string }> = {
-  'Credit Repair':    { bg: '#dbeafe', color: '#1e40af' },
-  'Debt Settlement':  { bg: '#fef3c7', color: '#92400e' },
-  'Legal':            { bg: '#ede9fe', color: '#5b21b6' },
-  'Consulting':       { bg: '#d1fae5', color: '#065f46' },
-  'Collections':      { bg: '#fee2e2', color: '#991b1b' },
-  'Other':            { bg: '#f3f4f6', color: '#374151' },
-  'All':              { bg: '#f3f4f6', color: '#374151' },
+  notary:    { bg: '#dbeafe', color: '#1e40af' },
+  credit:    { bg: '#d1fae5', color: '#065f46' },
+  criminal:  { bg: '#fef3c7', color: '#92400e' },
+  document:  { bg: '#ede9fe', color: '#5b21b6' },
+  judgment:  { bg: '#fee2e2', color: '#991b1b' },
+  consulting:{ bg: '#f3f4f6', color: '#374151' },
 };
 
 const EMPTY_FORM: TemplateForm = {
-  name: '', description: '', division: '', category: '', template_type: 'document', content: '', variables: '',
+  name: '', description: '', division_slug: '', category: '', template_type: 'document', content: '', variables: '',
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -52,7 +55,7 @@ function DivisionBadge({ division }: { division: string }) {
   const s = DIVISION_COLORS[division] || { bg: '#f3f4f6', color: '#374151' };
   return (
     <span style={{ background: s.bg, color: s.color, borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
-      {division}
+      {DIVISION_LABELS[division] || division}
     </span>
   );
 }
@@ -84,7 +87,7 @@ function TemplateCard({ tpl, onEdit, onDelete }: { tpl: Template; onEdit: () => 
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--navy)', marginBottom: 4 }}>{tpl.name}</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            {tpl.division && <DivisionBadge division={tpl.division} />}
+            {tpl.division_slug && <DivisionBadge division={tpl.division_slug} />}
             {tpl.category && (
               <span style={{ fontSize: 11, color: 'var(--muted)', background: '#f8fafc', border: '1px solid var(--border)', borderRadius: 3, padding: '1px 6px' }}>
                 {tpl.category}
@@ -151,7 +154,7 @@ export default function TemplatesPage() {
 
   // Filtered
   const visible = templates.filter(t => {
-    if (filterDivision && t.division !== filterDivision) return false;
+    if (filterDivision && t.division_slug !== filterDivision) return false;
     if (filterCategory && t.category !== filterCategory) return false;
     return true;
   });
@@ -226,7 +229,7 @@ export default function TemplatesPage() {
     setSeeding(true);
     try {
       const result = await seedTemplates();
-      const count = Array.isArray(result) ? result.length : (result?.count ?? '?');
+      const count = result?.created ?? result?.count ?? (Array.isArray(result) ? result.length : '?');
       setSuccess(`Seeded ${count} default template(s).`);
       fetchTemplates();
       setTimeout(() => setSuccess(''), 5000);
@@ -243,7 +246,7 @@ export default function TemplatesPage() {
     setPreviewHtml('');
     try {
       const result = await previewTemplate(editTarget.id);
-      setPreviewHtml(result?.preview || result?.content || JSON.stringify(result));
+      setPreviewHtml(result?.rendered_text || result?.preview || result?.content || JSON.stringify(result));
     } catch {
       setPreviewHtml('Preview unavailable.');
     } finally {
@@ -256,7 +259,7 @@ export default function TemplatesPage() {
       setForm(prev => ({ ...prev, [k]: e.target.value }));
 
   // Unique divisions / categories for filters (from loaded data)
-  const availableDivisions = Array.from(new Set(templates.map(t => t.division).filter(Boolean)));
+  const availableDivisions = Array.from(new Set(templates.map(t => t.division_slug).filter(Boolean)));
   const availableCategories = Array.from(new Set(templates.map(t => t.category).filter(Boolean)));
 
   return (
@@ -354,9 +357,9 @@ export default function TemplatesPage() {
 
                 <div className="form-group">
                   <label>Division</label>
-                  <select value={form.division} onChange={field('division')}>
+                  <select value={form.division_slug} onChange={field('division_slug')}>
                     <option value="">— Select division —</option>
-                    {DIVISIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {DIVISIONS.map(d => <option key={d} value={d}>{DIVISION_LABELS[d] || d}</option>)}
                   </select>
                 </div>
 

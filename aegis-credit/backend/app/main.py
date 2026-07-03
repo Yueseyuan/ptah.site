@@ -200,6 +200,34 @@ def run_seeds():
         print(f"[WARNING] Seed functions failed ({e})")
 
 
+def _ensure_admin():
+    """Create a default admin user on first boot if none exists."""
+    try:
+        from app.database import SessionLocal
+        from app.models import User
+        from app.services.auth_service import hash_password
+        db = SessionLocal()
+        try:
+            if db.query(User).filter(User.role == "admin").count() == 0:
+                admin = User(
+                    username="admin",
+                    email="admin@cruelandassociates.site",
+                    full_name="Administrator",
+                    hashed_password=hash_password("Cruel2026!"),
+                    role="admin",
+                    is_active=True,
+                )
+                db.add(admin)
+                db.commit()
+                print("[STARTUP] Default admin created — username: admin  password: Cruel2026!")
+            else:
+                print("[STARTUP] Admin user already exists — skipping default creation")
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"[STARTUP] Could not ensure admin user: {e}")
+
+
 # Skip migrations during test runs (tests call create_all directly)
 if not os.environ.get("TESTING"):
     # Run all startup tasks in a background thread so uvicorn starts immediately
@@ -210,6 +238,7 @@ if not os.environ.get("TESTING"):
         run_migrations()
         repair_schema()
         run_seeds()
+        _ensure_admin()
     threading.Thread(target=_startup, daemon=True).start()
 
 # Startup diagnostics — visible in Railway deploy logs

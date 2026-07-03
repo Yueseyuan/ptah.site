@@ -298,6 +298,23 @@ export const consultAI = (caseId: number, data: { finding_id?: number; user_theo
 export const bulkUpdateFindings = (ids: number[], status: string) =>
   api.post('/api/findings/bulk-update', { ids, status }).then(r => r.data);
 
+// Attorney Referrals
+export const listReferrals = (params?: { client_id?: number; service_case_id?: number; status?: string; practice_area?: string }) =>
+  api.get('/api/referrals/', { params }).then(r => r.data);
+export const createReferral = (data: Record<string, unknown>) => api.post('/api/referrals/', data).then(r => r.data);
+export const updateReferral = (id: number, data: Record<string, unknown>) => api.put(`/api/referrals/${id}`, data).then(r => r.data);
+export const deleteReferral = (id: number) => api.delete(`/api/referrals/${id}`);
+export const generateReferralLetter = (id: number) => api.post(`/api/referrals/${id}/generate-letter`).then(r => r.data);
+
+// Notary Logs
+export const listNotaryLogs = (params?: { client_id?: number; date_from?: string; date_to?: string }) =>
+  api.get('/api/notary/logs', { params }).then(r => r.data);
+export const createNotaryLog = (data: Record<string, unknown>) => api.post('/api/notary/logs', data).then(r => r.data);
+export const updateNotaryLog = (id: number, data: Record<string, unknown>) => api.put(`/api/notary/logs/${id}`, data).then(r => r.data);
+export const deleteNotaryLog = (id: number) => api.delete(`/api/notary/logs/${id}`);
+export const getNotaryDailyReport = (date?: string) =>
+  api.get('/api/notary/daily-report', { params: date ? { date } : {} }).then(r => r.data);
+
 // Appointments
 export const listAppointments = () => api.get('/api/appointments').then(r => r.data);
 export const listUpcomingAppointments = () => api.get('/api/appointments/upcoming').then(r => r.data);

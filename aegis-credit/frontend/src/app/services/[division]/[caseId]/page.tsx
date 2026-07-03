@@ -46,6 +46,22 @@ interface Invoice {
   created_at: string;
 }
 
+interface Referral {
+  id: number;
+  client_id: number;
+  service_case_id: number | null;
+  attorney_name: string | null;
+  attorney_firm: string | null;
+  attorney_email: string | null;
+  attorney_phone: string | null;
+  practice_area: string | null;
+  reason: string | null;
+  status: string;
+  referral_letter_path: string | null;
+  notes: string | null;
+  referred_at: string | null;
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const DIVISION_LABELS: Record<string, string> = {
@@ -66,13 +82,18 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUSES = ['intake', 'active', 'on_hold', 'closed'];
 
-const TABS = [
+const BASE_TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'documents', label: 'Documents' },
   { id: 'appointments', label: 'Appointments' },
   { id: 'invoice', label: 'Invoice' },
   { id: 'notes', label: 'Notes' },
 ];
+
+const DIVISION_EXTRA_TABS: Record<string, { id: string; label: string }[]> = {
+  criminal: [{ id: 'referrals', label: 'Referrals' }],
+  notary:   [{ id: 'journal',   label: 'Notary Journal' }],
+};
 
 // ── Helper: authenticated fetch ────────────────────────────────────────────────
 
@@ -436,6 +457,142 @@ function CreateInvoiceModal({
   );
 }
 
+// ── Create Referral Modal ─────────────────────────────────────────────────────
+
+const PRACTICE_AREAS = [
+  'Criminal Defense',
+  'Expungement / Record Sealing',
+  'Post-Conviction Relief',
+  'Immigration',
+  'Employment Law',
+  'Civil Rights',
+  'Other',
+];
+
+const REFERRAL_STATUSES = ['pending', 'accepted', 'declined', 'completed'];
+
+function CreateReferralModal({
+  caseId,
+  clientId,
+  onClose,
+  onCreated,
+}: {
+  caseId: number;
+  clientId: number;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState({
+    attorney_name: '',
+    attorney_firm: '',
+    attorney_email: '',
+    attorney_phone: '',
+    practice_area: 'Criminal Defense',
+    reason: '',
+    notes: '',
+    status: 'pending',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.reason.trim()) { setError('Reason for referral is required.'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await authFetch('/api/referrals/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId,
+          service_case_id: caseId,
+          attorney_name: form.attorney_name || undefined,
+          attorney_firm: form.attorney_firm || undefined,
+          attorney_email: form.attorney_email || undefined,
+          attorney_phone: form.attorney_phone || undefined,
+          practice_area: form.practice_area || undefined,
+          reason: form.reason,
+          notes: form.notes || undefined,
+          status: form.status,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.message || `HTTP ${res.status}`);
+      }
+      onCreated();
+      onClose();
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to create referral.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const f = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm(prev => ({ ...prev, [k]: e.target.value }));
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', padding: 28, width: '100%', maxWidth: 540, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <h3 style={{ marginBottom: 18, color: 'var(--navy)' }}>Create Attorney Referral</h3>
+        <form onSubmit={submit}>
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Attorney Name</label>
+              <input value={form.attorney_name} onChange={f('attorney_name')} placeholder="Full name" />
+            </div>
+            <div className="form-group">
+              <label>Firm</label>
+              <input value={form.attorney_firm} onChange={f('attorney_firm')} placeholder="Law firm name" />
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Attorney Email</label>
+              <input type="email" value={form.attorney_email} onChange={f('attorney_email')} placeholder="attorney@firm.com" />
+            </div>
+            <div className="form-group">
+              <label>Attorney Phone</label>
+              <input type="tel" value={form.attorney_phone} onChange={f('attorney_phone')} placeholder="(555) 000-0000" />
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Practice Area</label>
+              <select value={form.practice_area} onChange={f('practice_area')}>
+                {PRACTICE_AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Status</label>
+              <select value={form.status} onChange={f('status')}>
+                {REFERRAL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Reason for Referral *</label>
+            <textarea rows={3} value={form.reason} onChange={f('reason')} placeholder="Describe why this client needs an attorney and what the attorney should know…" required />
+          </div>
+          <div className="form-group">
+            <label>Internal Notes</label>
+            <textarea rows={2} value={form.notes} onChange={f('notes')} placeholder="Any additional internal notes…" />
+          </div>
+          {error && <div className="alert-error">{error}</div>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Creating…' : 'Create Referral'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 function ServiceCaseDetailInner() {
@@ -448,16 +605,20 @@ function ServiceCaseDetailInner() {
   const [docs, setDocs] = useState<Document[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
   const [notes, setNotes] = useState('');
   const [notesSaved, setNotesSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [letterLoading, setLetterLoading] = useState<number | null>(null);
+  const [letterMsg, setLetterMsg] = useState('');
 
   // Modal state
   const [showGenDoc, setShowGenDoc] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [showCreateReferral, setShowCreateReferral] = useState(false);
 
   const numericId = parseInt(caseId);
 
@@ -494,12 +655,19 @@ function ServiceCaseDetailInner() {
       .catch(() => {});
   }, [numericId]);
 
+  const loadReferrals = useCallback(() => {
+    return authFetch(`/api/referrals/?service_case_id=${numericId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(setReferrals)
+      .catch(() => {});
+  }, [numericId]);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadCase(), loadDocs(), loadAppointments(), loadInvoices()])
+    Promise.all([loadCase(), loadDocs(), loadAppointments(), loadInvoices(), loadReferrals()])
       .catch(e => setError(e.message || 'Failed to load case.'))
       .finally(() => setLoading(false));
-  }, [loadCase, loadDocs, loadAppointments, loadInvoices]);
+  }, [loadCase, loadDocs, loadAppointments, loadInvoices, loadReferrals]);
 
   async function changeStatus(status: string) {
     if (!caseData) return;
@@ -533,6 +701,28 @@ function ServiceCaseDetailInner() {
       setSaving(false);
     }
   }
+
+  async function generateLetter(referralId: number) {
+    setLetterLoading(referralId);
+    setLetterMsg('');
+    try {
+      const res = await authFetch(`/api/referrals/${referralId}/generate-letter`, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.detail || body.message || `HTTP ${res.status}`);
+      setLetterMsg(`Letter generated${body.ai_generated ? ' (AI)' : ''}: ${body.title || 'Referral Letter'}`);
+      loadDocs();
+    } catch (err: unknown) {
+      setLetterMsg(`Error: ${(err as Error).message}`);
+    } finally {
+      setLetterLoading(null);
+    }
+  }
+
+  const tabs = [
+    ...BASE_TABS.slice(0, 4),
+    ...(DIVISION_EXTRA_TABS[division] || []),
+    BASE_TABS[4], // Notes always last
+  ];
 
   if (loading) {
     return (
@@ -602,7 +792,7 @@ function ServiceCaseDetailInner() {
 
         {/* Tab navigation */}
         <div className="case-nav">
-          {TABS.map(t => (
+          {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
@@ -627,6 +817,9 @@ function ServiceCaseDetailInner() {
               )}
               {t.id === 'invoice' && invoices.length > 0 && (
                 <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>({invoices.length})</span>
+              )}
+              {t.id === 'referrals' && referrals.length > 0 && (
+                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>({referrals.length})</span>
               )}
             </button>
           ))}
@@ -843,6 +1036,84 @@ function ServiceCaseDetailInner() {
           </div>
         )}
 
+        {/* ── Referrals tab ── */}
+        {activeTab === 'referrals' && (
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0 }}>Attorney Referrals</h3>
+              <button className="btn btn-primary btn-sm" onClick={() => setShowCreateReferral(true)}>
+                + Add Referral
+              </button>
+            </div>
+
+            {letterMsg && (
+              <div style={{
+                marginBottom: 12, padding: '10px 14px', borderRadius: 'var(--radius)',
+                background: letterMsg.startsWith('Error') ? '#fee2e2' : '#d1fae5',
+                color: letterMsg.startsWith('Error') ? '#991b1b' : '#065f46',
+                fontSize: 13,
+              }}>
+                {letterMsg}
+                <button onClick={() => setLetterMsg('')} style={{ marginLeft: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.7 }}>✕</button>
+              </div>
+            )}
+
+            {referrals.length === 0 ? (
+              <p className="empty">No attorney referrals yet.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {referrals.map(ref => (
+                  <div key={ref.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>
+                          {ref.attorney_name || 'Attorney TBD'}
+                          {ref.attorney_firm && <span style={{ color: 'var(--muted)', fontWeight: 400, fontSize: 13 }}> — {ref.attorney_firm}</span>}
+                        </div>
+                        {ref.practice_area && (
+                          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{ref.practice_area}</div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{
+                          fontSize: 11, padding: '2px 8px', borderRadius: 4, fontWeight: 600,
+                          background: ref.status === 'accepted' ? '#d1fae5' : ref.status === 'declined' ? '#fee2e2' : ref.status === 'completed' ? '#dbeafe' : '#fef3c7',
+                          color: ref.status === 'accepted' ? '#065f46' : ref.status === 'declined' ? '#991b1b' : ref.status === 'completed' ? '#1d4ed8' : '#92400e',
+                        }}>
+                          {ref.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {ref.reason && (
+                      <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 10, lineHeight: 1.5 }}>
+                        <span style={{ color: 'var(--muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reason: </span>
+                        {ref.reason}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>
+                      {ref.attorney_email && <span>✉ {ref.attorney_email}</span>}
+                      {ref.attorney_phone && <span>📞 {ref.attorney_phone}</span>}
+                      {ref.referred_at && <span>Added {new Date(ref.referred_at).toLocaleDateString()}</span>}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => generateLetter(ref.id)}
+                        disabled={letterLoading === ref.id}
+                      >
+                        {letterLoading === ref.id ? 'Generating…' : '📄 Generate Letter'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Modals */}
         {showGenDoc && (
           <GenerateDocModal
@@ -867,6 +1138,14 @@ function ServiceCaseDetailInner() {
             divisionSlug={caseData.division_slug}
             onClose={() => setShowInvoice(false)}
             onCreated={loadInvoices}
+          />
+        )}
+        {showCreateReferral && (
+          <CreateReferralModal
+            caseId={numericId}
+            clientId={caseData.client_id}
+            onClose={() => setShowCreateReferral(false)}
+            onCreated={loadReferrals}
           />
         )}
       </main>

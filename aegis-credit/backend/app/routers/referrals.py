@@ -149,15 +149,18 @@ def _call_ai(prompt: str) -> str:
 @router.get("/")
 def list_referrals(
     client_id: Optional[int] = None,
+    service_case_id: Optional[int] = None,
     status: Optional[str] = None,
     practice_area: Optional[str] = None,
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ):
-    """List attorney referrals with optional filters: client_id, status, practice_area."""
+    """List attorney referrals with optional filters: client_id, service_case_id, status, practice_area."""
     q = db.query(AttorneyReferral)
     if client_id is not None:
         q = q.filter(AttorneyReferral.client_id == client_id)
+    if service_case_id is not None:
+        q = q.filter(AttorneyReferral.service_case_id == service_case_id)
     if status is not None:
         q = q.filter(AttorneyReferral.status == status)
     if practice_area is not None:

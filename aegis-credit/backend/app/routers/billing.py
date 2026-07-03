@@ -12,8 +12,6 @@ from app.config import settings
 
 router = APIRouter(prefix="/api/portal/billing", tags=["billing"])
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
-
 
 def _sync_subscription(user: User, sub: stripe.Subscription, db: Session) -> None:
     """Update user's subscription fields from a Stripe Subscription object."""
@@ -48,41 +46,45 @@ def create_checkout_session(
     db: Session = Depends(get_db),
 ):
     """Create a Stripe Checkout session for the monthly subscription."""
-    if not settings.STRIPE_SECRET_KEY:
-        raise HTTPException(503, "Billing not configured")
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    if not stripe.api_key:
+        raise HTTPException(503, "Billing not configured — STRIPE_SECRET_KEY missing")
     if not settings.STRIPE_PRICE_ID:
-        raise HTTPException(503, "Subscription price not configured")
+        raise HTTPException(503, "Subscription price not configured — STRIPE_PRICE_ID missing")
 
     if current_user.subscription_status == "active":
         raise HTTPException(400, "You already have an active subscription")
 
     customer_id = current_user.stripe_customer_id
 
-    if not customer_id:
-        customer = stripe.Customer.create(
-            email=current_user.email,
-            name=current_user.full_name,
-            metadata={"user_id": str(current_user.id), "username": current_user.username},
-        )
-        customer_id = customer.id
-        current_user.stripe_customer_id = customer_id
-        db.commit()
+    try:
+        if not customer_id:
+            customer = stripe.Customer.create(
+                email=current_user.email,
+                name=current_user.full_name,
+                metadata={"user_id": str(current_user.id), "username": current_user.username},
+            )
+            customer_id = customer.id
+            current_user.stripe_customer_id = customer_id
+            db.commit()
 
-    session = stripe.checkout.Session.create(
-        customer=customer_id,
-        mode="subscription",
-        line_items=[{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
-        success_url=f"{settings.PORTAL_BASE_URL}/portal/dashboard?payment=success",
-        cancel_url=f"{settings.PORTAL_BASE_URL}/portal/billing",
-        client_reference_id=str(current_user.id),
-        subscription_data={
-            "metadata": {
-                "user_id": str(current_user.id),
-                "username": current_user.username,
-            }
-        },
-    )
-    return {"checkout_url": session.url}
+        session = stripe.checkout.Session.create(
+            customer=customer_id,
+            mode="subscription",
+            line_items=[{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
+            success_url=f"{settings.PORTAL_BASE_URL}/portal/dashboard?payment=success",
+            cancel_url=f"{settings.PORTAL_BASE_URL}/portal/billing",
+            client_reference_id=str(current_user.id),
+            subscription_data={
+                "metadata": {
+                    "user_id": str(current_user.id),
+                    "username": current_user.username,
+                }
+            },
+        )
+        return {"checkout_url": session.url}
+    except stripe.error.StripeError as e:
+        raise HTTPException(502, f"Stripe error: {e.user_message or str(e)}")
 
 
 @router.post("/customer-portal")
@@ -91,16 +93,20 @@ def customer_portal_session(
     db: Session = Depends(get_db),
 ):
     """Create a Stripe Customer Portal session so the client can manage/cancel."""
-    if not settings.STRIPE_SECRET_KEY:
-        raise HTTPException(503, "Billing not configured")
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    if not stripe.api_key:
+        raise HTTPException(503, "Billing not configured — STRIPE_SECRET_KEY missing")
     if not current_user.stripe_customer_id:
         raise HTTPException(400, "No billing account found")
 
-    session = stripe.billing_portal.Session.create(
-        customer=current_user.stripe_customer_id,
-        return_url=f"{settings.PORTAL_BASE_URL}/portal/billing",
-    )
-    return {"portal_url": session.url}
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=current_user.stripe_customer_id,
+            return_url=f"{settings.PORTAL_BASE_URL}/portal/billing",
+        )
+        return {"portal_url": session.url}
+    except stripe.error.StripeError as e:
+        raise HTTPException(502, f"Stripe error: {e.user_message or str(e)}")
 
 
 @router.post("/webhook", include_in_schema=False)

@@ -9,6 +9,11 @@ from app.database import get_db
 from app.models import User
 from app.dependencies import get_current_user
 from app.config import settings
+from app.services.email_service import (
+    send_subscription_confirmed_email,
+    send_payment_failed_email,
+    send_subscription_cancelled_email,
+)
 
 router = APIRouter(prefix="/api/portal/billing", tags=["billing"])
 
@@ -138,18 +143,32 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                 if sub_id:
                     sub = stripe.Subscription.retrieve(sub_id)
                     _sync_subscription(user, sub, db)
+                    next_billing = (
+                        user.subscription_period_end.strftime("%B %d, %Y")
+                        if user.subscription_period_end else "—"
+                    )
+                    first_name = (user.full_name or "").split()[0] if user.full_name else ""
+                    send_subscription_confirmed_email(user.email, first_name, next_billing)
 
     elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         sub = data
         customer_id = sub.get("customer")
         user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
         if user:
+            old_status = user.subscription_status
             user.stripe_subscription_id = sub["id"]
             user.subscription_status = sub["status"]
             period_end = sub.get("current_period_end")
             if period_end:
                 user.subscription_period_end = datetime.fromtimestamp(period_end)
             db.commit()
+            first_name = (user.full_name or "").split()[0] if user.full_name else ""
+            if sub["status"] in ("canceled", "cancelled") and old_status not in ("canceled", "cancelled"):
+                end_date = (
+                    user.subscription_period_end.strftime("%B %d, %Y")
+                    if user.subscription_period_end else "—"
+                )
+                send_subscription_cancelled_email(user.email, first_name, end_date)
 
     elif event_type == "invoice.payment_failed":
         customer_id = data.get("customer")
@@ -157,5 +176,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         if user:
             user.subscription_status = "past_due"
             db.commit()
+            first_name = (user.full_name or "").split()[0] if user.full_name else ""
+            send_payment_failed_email(user.email, first_name)
 
     return JSONResponse({"received": True})

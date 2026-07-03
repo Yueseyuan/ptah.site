@@ -3,17 +3,86 @@ import os
 import secrets
 import uuid
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AegisClient, AegisCase, ClientDocument, User, PasswordResetToken
+from app.models import AegisClient, AegisCase, ClientDocument, CreditReport, EvidenceItem, User, PasswordResetToken
 from app.dependencies import get_current_user, get_portal_client
 from app.config import settings
 from app.services.auth_service import hash_password, create_access_token
+
+# Credit report doc_type → bureau name mapping
+_CREDIT_REPORT_TYPES = {
+    "credit_report_experian": "experian",
+    "credit_report_equifax": "equifax",
+    "credit_report_transunion": "transunion",
+}
+
+# Evidence title map for identity/support docs
+_EVIDENCE_TITLES = {
+    "drivers_license": "Driver's License / State ID",
+    "proof_of_address": "Proof of Address",
+    "supporting_doc": "Supporting Document",
+    "other": "Client Document",
+}
+
+
+def _parse_portal_credit_report(report_id: int, case_id: int) -> None:
+    """Background task: parse a portal-uploaded credit report using the same pipeline as admin uploads."""
+    from app.database import SessionLocal
+    from app.models import CreditReport
+    from app.services.pdf_service import extract_text_from_pdf, detect_bureau_from_text
+    from app.services.ai_service import extract_report_data, extract_tradelines_from_text
+    from app.routers.reports import _save_tradelines, _save_inquiries, _save_personal_info
+
+    db = SessionLocal()
+    try:
+        report = db.query(CreditReport).filter(CreditReport.id == report_id).first()
+        if not report:
+            return
+
+        raw_text = extract_text_from_pdf(report.file_path)
+        if not report.bureau or report.bureau == "unknown":
+            detected = detect_bureau_from_text(raw_text)
+            if detected:
+                report.bureau = detected
+
+        report.raw_text = raw_text
+        report.parse_status = "parsed"
+        db.commit()
+
+        try:
+            extracted = extract_report_data(raw_text)
+            tradelines_data = extracted.get("tradelines", [])
+            inquiries_data = extracted.get("inquiries", [])
+            pi_data = extracted.get("personal_info", [])
+        except Exception:
+            tradelines_data = extract_tradelines_from_text(raw_text)
+            inquiries_data = []
+            pi_data = []
+
+        _save_tradelines(db, case_id, report, tradelines_data)
+        _save_inquiries(db, case_id, report_id, inquiries_data)
+        _save_personal_info(db, case_id, report_id, pi_data)
+        db.commit()
+        print(f"[PORTAL] Parsed credit report {report_id} for case {case_id}: "
+              f"{len(tradelines_data)} tradelines, {len(inquiries_data)} inquiries")
+    except Exception as e:
+        print(f"[PORTAL] Failed to parse credit report {report_id}: {e}")
+        try:
+            report = db.query(CreditReport).filter(CreditReport.id == report_id).first()
+            if report:
+                report.parse_status = "failed"
+                report.parse_error = str(e)
+                db.commit()
+        except Exception:
+            pass
+    finally:
+        db.close()
 
 router = APIRouter(prefix="/api/portal", tags=["portal"])
 
@@ -230,6 +299,7 @@ def list_documents(
 
 @router.post("/documents/upload")
 def upload_document(
+    background_tasks: BackgroundTasks,
     doc_type: str = Form(...),
     bureau: Optional[str] = Form(None),
     notes: Optional[str] = Form(None),
@@ -255,11 +325,14 @@ def upload_document(
     with open(file_path, "wb") as f:
         f.write(file.file.read())
 
+    # Auto-detect bureau for credit report types
+    resolved_bureau = bureau or _CREDIT_REPORT_TYPES.get(doc_type)
+
     doc = ClientDocument(
         case_id=case.id if case else None,
         client_id=client.id,
         doc_type=doc_type,
-        bureau=bureau,
+        bureau=resolved_bureau,
         original_filename=file.filename,
         file_path=file_path,
         notes=notes,
@@ -267,6 +340,35 @@ def upload_document(
     db.add(doc)
     db.commit()
     db.refresh(doc)
+
+    if case:
+        if doc_type in _CREDIT_REPORT_TYPES:
+            # Create a CreditReport record and queue parsing — same pipeline as admin upload
+            report = CreditReport(
+                case_id=case.id,
+                bureau=_CREDIT_REPORT_TYPES[doc_type],
+                file_path=file_path,
+                parse_status="pending",
+            )
+            db.add(report)
+            db.commit()
+            db.refresh(report)
+            background_tasks.add_task(_parse_portal_credit_report, report.id, case.id)
+            print(f"[PORTAL] Queued credit report parsing: case={case.id} bureau={report.bureau}")
+        elif doc_type in _EVIDENCE_TITLES:
+            # Add to case evidence so it shows in the Evidence tab
+            evidence = EvidenceItem(
+                case_id=case.id,
+                evidence_type="identity_document" if doc_type in ("drivers_license", "proof_of_address") else "correspondence",
+                title=_EVIDENCE_TITLES[doc_type],
+                description=notes or "Uploaded by client via portal",
+                file_path=file_path,
+                source="client_portal",
+                collected_at=datetime.utcnow().isoformat(),
+            )
+            db.add(evidence)
+            db.commit()
+
     return _doc_out(doc)
 
 

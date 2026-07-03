@@ -58,7 +58,10 @@ export default function PortalDocumentsPage() {
       if (selectedType?.bureau) fd.append('bureau', selectedType.bureau);
       if (notes) fd.append('notes', notes);
       await portalUploadDocument(fd);
-      setSuccess('Document uploaded successfully.');
+      const isCreditReport = docType.startsWith('credit_report');
+      setSuccess(isCreditReport
+        ? 'Credit report uploaded. We are extracting your tradelines and data automatically — this may take a moment.'
+        : 'Document uploaded successfully.');
       setFile(null);
       setNotes('');
       if (fileRef.current) fileRef.current.value = '';

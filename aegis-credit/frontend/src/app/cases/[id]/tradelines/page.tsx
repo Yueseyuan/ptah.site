@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
 import { listTradelines, updateTradeline, exportTradelinesCsv } from '@/lib/api';
-import axios from 'axios';
+import { getToken } from '@/lib/api';
 
 interface Tradeline {
   id: number; bureau: string; creditor_name: string; account_number_last4: string;
@@ -17,7 +17,6 @@ interface Tradeline {
 }
 
 const BUREAUS = ['experian', 'equifax', 'transunion', 'innovis'];
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 const blankForm = {
   bureau: 'experian', creditor_name: '', account_number_last4: '', account_type: 'credit_card',
@@ -71,7 +70,9 @@ export default function TradelinesPage() {
 
   function load() {
     listTradelines(caseId, bureauFilter || undefined).then(setTradelines).finally(() => setLoading(false));
-    axios.get(`${API}/api/reports/case/${caseId}`).then(r => setReports(r.data)).catch(() => {});
+    const tok = getToken();
+    fetch(`/api/reports/case/${caseId}`, { headers: tok ? { Authorization: `Bearer ${tok}` } : {} })
+      .then(r => r.ok ? r.json() : []).then(setReports).catch(() => {});
   }
   useEffect(() => { load(); }, [caseId, bureauFilter]);
 
@@ -91,19 +92,28 @@ export default function TradelinesPage() {
         setError(`No uploaded report found for ${form.bureau}. Upload a report for this bureau first, then add tradelines.`);
         setSaving(false); return;
       }
-      await axios.post(`${API}/api/tradelines/manual`, {
-        case_id: caseId,
-        report_id: reportForBureau.id,
-        bureau: form.bureau,
-        creditor_name: form.creditor_name,
-        account_number_last4: form.account_number_last4,
-        account_type: form.account_type,
-        open_date: form.open_date,
-        balance: form.balance ? parseFloat(form.balance) : null,
-        credit_limit: form.credit_limit ? parseFloat(form.credit_limit) : null,
-        payment_status: form.payment_status,
-        derogatory: form.derogatory,
+      const tok2 = getToken();
+      const manualRes = await fetch('/api/tradelines/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(tok2 ? { Authorization: `Bearer ${tok2}` } : {}) },
+        body: JSON.stringify({
+          case_id: caseId,
+          report_id: reportForBureau.id,
+          bureau: form.bureau,
+          creditor_name: form.creditor_name,
+          account_number_last4: form.account_number_last4,
+          account_type: form.account_type,
+          open_date: form.open_date,
+          balance: form.balance ? parseFloat(form.balance) : null,
+          credit_limit: form.credit_limit ? parseFloat(form.credit_limit) : null,
+          payment_status: form.payment_status,
+          derogatory: form.derogatory,
+        }),
       });
+      if (!manualRes.ok) {
+        const errData = await manualRes.json().catch(() => ({}));
+        throw Object.assign(new Error('Failed'), { response: { data: errData } });
+      }
       setForm({ ...blankForm });
       setShowForm(false);
       load();

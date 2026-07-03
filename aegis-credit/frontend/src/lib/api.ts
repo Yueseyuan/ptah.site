@@ -1,45 +1,89 @@
-import axios from 'axios';
+// fetch-based API client — replaces axios to avoid browser-extension XHR interference
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '',
-});
+type FetchConfig = {
+  params?: Record<string, string | number | boolean | undefined | null>;
+  headers?: Record<string, string>;
+  responseType?: 'blob';
+};
 
-// Inject JWT token on every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('aegis_token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+type ApiResponse<T = unknown> = { data: T; status: number };
 
-// On 401 or 403-with-client-role, clear token and redirect to login
-api.interceptors.response.use(
-  (r) => r,
-  (error) => {
-    if (typeof window !== 'undefined') {
-      const status = error.response?.status;
-      const role = localStorage.getItem('aegis_role');
-      if (status === 401 || (status === 403 && role === 'client')) {
-        localStorage.removeItem('aegis_token');
-        localStorage.removeItem('aegis_role');
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+function buildUrl(path: string, params?: FetchConfig['params']): string {
+  if (!params) return path;
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null) as [string, string | number | boolean][];
+  if (!entries.length) return path;
+  const qs = new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
+  return `${path}?${qs}`;
+}
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('aegis_token');
 }
-export function setToken(token: string) {
-  localStorage.setItem('aegis_token', token);
+export function setToken(token: string) { localStorage.setItem('aegis_token', token); }
+export function clearToken() { localStorage.removeItem('aegis_token'); }
+
+async function apiFetch<T = unknown>(
+  method: string,
+  path: string,
+  body?: unknown,
+  config?: FetchConfig,
+): Promise<ApiResponse<T>> {
+  const url = buildUrl(path, config?.params);
+  const headers: Record<string, string> = { ...(config?.headers || {}) };
+
+  const token = getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const init: RequestInit = { method, headers };
+
+  if (body !== undefined && body !== null) {
+    if (body instanceof FormData) {
+      init.body = body;
+    } else if (body instanceof URLSearchParams) {
+      init.body = body;
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    } else {
+      init.body = JSON.stringify(body);
+      headers['Content-Type'] = 'application/json';
+    }
+  }
+
+  const res = await fetch(url, init);
+
+  if (!res.ok) {
+    if (typeof window !== 'undefined') {
+      const role = localStorage.getItem('aegis_role');
+      if (res.status === 401 || (res.status === 403 && role === 'client')) {
+        localStorage.removeItem('aegis_token');
+        localStorage.removeItem('aegis_role');
+        window.location.href = '/login';
+      }
+    }
+    const err = new Error(`HTTP ${res.status}`) as Error & { response: { status: number } };
+    err.response = { status: res.status };
+    throw err;
+  }
+
+  const data: T = config?.responseType === 'blob'
+    ? (await res.blob()) as T
+    : (await res.json()) as T;
+
+  return { data, status: res.status };
 }
-export function clearToken() {
-  localStorage.removeItem('aegis_token');
-}
+
+const api = {
+  get:    <T = unknown>(path: string, config?: FetchConfig) =>
+            apiFetch<T>('GET', path, undefined, config),
+  post:   <T = unknown>(path: string, body?: unknown, config?: FetchConfig) =>
+            apiFetch<T>('POST', path, body, config),
+  put:    <T = unknown>(path: string, body?: unknown, config?: FetchConfig) =>
+            apiFetch<T>('PUT', path, body, config),
+  patch:  <T = unknown>(path: string, body?: unknown, config?: FetchConfig) =>
+            apiFetch<T>('PATCH', path, body, config),
+  delete: <T = unknown>(path: string, config?: FetchConfig) =>
+            apiFetch<T>('DELETE', path, undefined, config),
+};
 
 // Clients
 export const listClients = () => api.get('/api/clients/').then(r => r.data);

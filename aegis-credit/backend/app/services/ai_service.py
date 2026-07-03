@@ -420,7 +420,7 @@ def extract_report_data(raw_text: str) -> dict:
     message = _create_message(
         client,
         model=AI_MODEL,
-        max_tokens=8192,
+        max_tokens=16000,
         messages=[{"role": "user", "content": REPORT_EXTRACTION_PROMPT + raw_text[:60000]}],
     )
     result = _parse_json_object_response(message.content[0].text)

@@ -111,13 +111,6 @@ export default function ReportsPage() {
         <div className="page-header"><h1>Credit Reports</h1><p>Upload bureau credit report PDFs</p></div>
         <CaseNav caseId={caseId} />
 
-        <div className="alert-warning" style={{ marginBottom: 16 }}>
-          <b>AI Parsing Required:</b> Tradeline extraction uses the Claude AI API.
-          To enable: create a file at <code>aegis-credit/backend/.env</code> containing{' '}
-          <code>ANTHROPIC_API_KEY=your_key_here</code>, then restart the backend and click <b>Reparse</b>.
-          Get a key at <b>console.anthropic.com</b>.
-        </div>
-
         <div className="card" style={{ marginBottom: 16 }}>
           <h3>Upload New Report</h3>
           <div className="grid-2">

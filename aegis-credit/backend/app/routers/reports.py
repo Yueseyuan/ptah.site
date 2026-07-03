@@ -174,8 +174,8 @@ async def upload_report(
             tradelines_data = extracted.get("tradelines", [])
             inquiries_data = extracted.get("inquiries", [])
             pi_data = extracted.get("personal_info", [])
-        except Exception:
-            # Fall back to tradelines-only extraction
+        except Exception as exc:
+            print(f"[UPLOAD] extract_report_data failed, falling back: {exc}")
             tradelines_data = extract_tradelines_from_text(raw_text)
             inquiries_data = []
             pi_data = []
@@ -214,12 +214,15 @@ def reparse_report(report_id: int, db: Session = Depends(get_db)):
             raise HTTPException(500, f"Cannot extract text: {e}")
     try:
         # Extract all data
+        primary_error = None
         try:
             extracted = extract_report_data(report.raw_text)
             tradelines_data = extracted.get("tradelines", [])
             inquiries_data = extracted.get("inquiries", [])
             pi_data = extracted.get("personal_info", [])
-        except Exception:
+        except Exception as primary_exc:
+            primary_error = str(primary_exc)
+            print(f"[REPARSE] extract_report_data failed (report {report_id}): {primary_error}")
             tradelines_data = extract_tradelines_from_text(report.raw_text)
             inquiries_data = []
             pi_data = []
@@ -234,6 +237,7 @@ def reparse_report(report_id: int, db: Session = Depends(get_db)):
         _save_personal_info(db, report.case_id, report_id, pi_data)
 
         report.parse_status = "parsed"
+        report.parse_error = f"[fallback used: {primary_error}]" if primary_error else None
         db.commit()
     except Exception as e:
         report.parse_status = "failed"

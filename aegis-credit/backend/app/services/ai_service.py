@@ -141,7 +141,17 @@ Return ONLY the JSON array with no other text.
 
 
 def _api_key() -> str:
-    return settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY", "")
+    # Prefer the patched settings value if it looks like a full key
+    key = settings.ANTHROPIC_API_KEY
+    if key and len(key.strip()) >= 100:
+        return key.strip()
+    # Direct env fallback — checks ANTHROPIC_KEY (alternate) before ANTHROPIC_API_KEY
+    # in case the primary Railway variable is truncated/expired
+    for _name in ("ANTHROPIC_KEY", "ANTHROPIC_API_KEY"):
+        val = os.environ.get(_name, "").strip()
+        if val and len(val) >= 100:
+            return val
+    return key.strip() if key else ""
 
 
 def _client() -> anthropic.Anthropic:

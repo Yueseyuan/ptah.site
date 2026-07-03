@@ -52,9 +52,9 @@ if not settings.STRIPE_SECRET_KEY.strip():
 # Secondary fallback: if the primary variable names are being truncated/blocked by Railway
 # (observed when variable value arrives as <50 chars despite full key being set),
 # read from alternate variable names ANTHROPIC_KEY and STRIPE_SK instead.
-if len(settings.ANTHROPIC_API_KEY.strip()) < 50:
+if len(settings.ANTHROPIC_API_KEY.strip()) < 100:
     _alt_ant = _env("ANTHROPIC_KEY").strip()
-    if len(_alt_ant) >= 50:
+    if len(_alt_ant) >= 100:
         settings.ANTHROPIC_API_KEY = _alt_ant
         print("[CONFIG] ANTHROPIC_API_KEY loaded from ANTHROPIC_KEY (alternate name)")
 

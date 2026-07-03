@@ -5,7 +5,8 @@ import { listUsers, updateUser, registerUser } from '@/lib/api';
 
 interface User { id: number; username: string; email: string; full_name: string | null; role: string; is_active: boolean; created_at: string | null; }
 
-const ROLES = ['admin', 'investigator', 'reviewer', 'readonly'];
+const STAFF_ROLES = ['admin', 'investigator', 'reviewer', 'readonly'];
+const ROLES = STAFF_ROLES;
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -118,6 +119,9 @@ export default function UserManagementPage() {
                     <td style={{ padding: '10px 14px' }}>
                       <select value={u.role} disabled={savingId === u.id} onChange={e => handleRoleChange(u.id, e.target.value)}
                         style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 12 }}>
+                        {!STAFF_ROLES.includes(u.role) && (
+                          <option value={u.role} style={{ color: '#94a3b8' }}>{u.role} (portal)</option>
+                        )}
                         {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                       </select>
                     </td>

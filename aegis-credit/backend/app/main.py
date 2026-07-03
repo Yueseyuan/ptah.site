@@ -259,14 +259,10 @@ print(f"[CONFIG] JWT_SECRET_KEY: {'SET (custom)' if settings.JWT_SECRET_KEY not 
 
 app = FastAPI(title=settings.APP_NAME, version="1.0.0")
 
-_extra_origins = [o.strip() for o in settings.EXTRA_ORIGINS.split(",") if o.strip()]
-_allowed_origins = _extra_origins if _extra_origins else []
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_allowed_origins,
-    allow_origin_regex=r"http://localhost(:\d+)?|https://(www\.)?cruelandassociates\.site",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

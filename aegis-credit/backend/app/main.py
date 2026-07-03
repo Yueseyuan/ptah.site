@@ -237,8 +237,8 @@ if not os.environ.get("TESTING"):
     def _startup():
         run_migrations()
         repair_schema()
-        run_seeds()
         _ensure_admin()
+        run_seeds()
     threading.Thread(target=_startup, daemon=True).start()
 
 # Startup diagnostics — visible in Railway deploy logs

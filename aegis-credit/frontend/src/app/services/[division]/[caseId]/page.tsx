@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import api, { getToken, runServiceCaseResearch } from '@/lib/api';
+import api, { getToken, runServiceCaseResearch, scrapeSurplus, locateOwner, generateEmailCampaign, generateOveragesDoc } from '@/lib/api';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -605,6 +605,175 @@ function JudgmentWorkflowCard({
         </button>
         {saved && <span style={{ fontSize: 12, color: 'var(--success)' }}>Saved.</span>}
       </div>
+    </div>
+  );
+}
+
+// ── Overages Automation Panel ─────────────────────────────────────────────────
+
+const OVERAGE_DOCS = [
+  { key: 'assignment_of_rights',    label: 'Assignment of Rights' },
+  { key: 'assignment_of_judgment',  label: 'Assignment of Judgment' },
+  { key: 'fee_agreement',           label: 'Fee Agreement (60/40)' },
+  { key: 'power_of_attorney',       label: 'Power of Attorney' },
+  { key: 'purchase_agreement',      label: 'Purchase Agreement' },
+  { key: 'purchase_sale_agreement', label: 'Purchase & Sale Agreement' },
+  { key: 'quitclaim_deed',          label: 'Quitclaim Deed' },
+  { key: 'pre_estate_agreement',    label: 'Pre-Estate Agreement' },
+  { key: 'notary_affidavit',        label: 'Notary Affidavit' },
+  { key: 'contingency_agreement',   label: 'Contingency Agreement' },
+  { key: 'authorization',           label: 'Authorization to Recover' },
+  { key: 'non_lawyer_disclosure',   label: 'Non-Lawyer Disclosure' },
+];
+
+interface AgentResult { title: string; content: string; document_id: number; }
+
+function OveragesAutomationPanel({ caseId }: { caseId: number }) {
+  const [agentRunning, setAgentRunning] = useState<string | null>(null);
+  const [agentResults, setAgentResults] = useState<Record<string, AgentResult>>({});
+  const [docRunning, setDocRunning] = useState<string | null>(null);
+  const [docResults, setDocResults] = useState<Record<string, AgentResult>>({});
+  const [openResult, setOpenResult] = useState<string | null>(null);
+  const [agentError, setAgentError] = useState('');
+
+  async function runAgent(action: string, fn: () => Promise<AgentResult>) {
+    setAgentRunning(action);
+    setAgentError('');
+    try {
+      const r = await fn();
+      setAgentResults(prev => ({ ...prev, [action]: r }));
+      setOpenResult(action);
+    } catch (err: unknown) {
+      setAgentError(`${action}: ${(err as Error).message || 'Failed'}`);
+    } finally {
+      setAgentRunning(null);
+    }
+  }
+
+  async function runDoc(docKey: string) {
+    setDocRunning(docKey);
+    try {
+      const r = await generateOveragesDoc(caseId, docKey) as AgentResult;
+      setDocResults(prev => ({ ...prev, [docKey]: r }));
+      setOpenResult(`doc:${docKey}`);
+    } catch (err: unknown) {
+      setAgentError(`${docKey}: ${(err as Error).message || 'Failed'}`);
+    } finally {
+      setDocRunning(null);
+    }
+  }
+
+  const activeResult = openResult
+    ? openResult.startsWith('doc:')
+      ? docResults[openResult.slice(4)]
+      : agentResults[openResult]
+    : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
+
+      {/* Agent Actions */}
+      <div className="card">
+        <h4 style={{ marginBottom: 4, fontSize: 14 }}>AI Agent Actions</h4>
+        <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>
+          Agents scrub public records, locate the owner, and draft outreach — each takes 20–40 seconds.
+        </p>
+        {agentError && (
+          <div className="alert-error" style={{ marginBottom: 12, fontSize: 12 }}>
+            {agentError}
+            <button onClick={() => setAgentError('')} style={{ marginLeft: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 11 }}>✕</button>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-outline"
+            disabled={agentRunning !== null}
+            onClick={() => runAgent('scrape', () => scrapeSurplus(caseId) as Promise<AgentResult>)}
+          >
+            {agentRunning === 'scrape' ? '⏳ Scraping…' : '🔎 Scrape Surplus'}
+          </button>
+          <button
+            className="btn btn-outline"
+            disabled={agentRunning !== null}
+            onClick={() => runAgent('locate', () => locateOwner(caseId) as Promise<AgentResult>)}
+          >
+            {agentRunning === 'locate' ? '⏳ Locating…' : '📍 Locate Owner'}
+          </button>
+          <button
+            className="btn btn-outline"
+            disabled={agentRunning !== null}
+            onClick={() => runAgent('email', () => generateEmailCampaign(caseId) as Promise<AgentResult>)}
+          >
+            {agentRunning === 'email' ? '⏳ Writing…' : '✉️ Email Campaign'}
+          </button>
+        </div>
+        {agentRunning && (
+          <div style={{ marginTop: 10, fontSize: 12, color: 'var(--muted)' }}>
+            Searching public records — this may take 20–40 seconds…
+          </div>
+        )}
+
+        {/* Agent result tabs */}
+        {Object.keys(agentResults).length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+              {Object.entries(agentResults).map(([key, r]) => (
+                <button key={key}
+                  onClick={() => setOpenResult(openResult === key ? null : key)}
+                  className={openResult === key ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                >
+                  {r.title.length > 32 ? r.title.slice(0, 32) + '…' : r.title}
+                </button>
+              ))}
+            </div>
+            {openResult && !openResult.startsWith('doc:') && agentResults[openResult] && (
+              <div style={{ padding: '12px 14px', background: 'var(--surface)', borderRadius: 'var(--radius)', fontSize: 13, whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto', border: '1px solid var(--border)' }}>
+                {agentResults[openResult].content}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Document Generation */}
+      <div className="card">
+        <h4 style={{ marginBottom: 4, fontSize: 14 }}>Pre-Fill Documents</h4>
+        <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>
+          Instantly generate from templates using this case&apos;s intake data. Run{' '}
+          <strong>POST /api/templates/seed</strong> once if a template is missing.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+          {OVERAGE_DOCS.map(d => {
+            const done = !!docResults[d.key];
+            return (
+              <button
+                key={d.key}
+                className={done ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                disabled={docRunning !== null}
+                onClick={() => done ? setOpenResult(`doc:${d.key}`) : runDoc(d.key)}
+                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+              >
+                {docRunning === d.key ? '⏳ ' : done ? '✓ ' : '📄 '}
+                {d.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Doc result viewer */}
+        {openResult?.startsWith('doc:') && docResults[openResult.slice(4)] && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <strong style={{ fontSize: 13 }}>{docResults[openResult.slice(4)].title}</strong>
+              <button onClick={() => setOpenResult(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--muted)' }}>✕ Close</button>
+            </div>
+            <div style={{ padding: '12px 14px', background: 'var(--surface)', borderRadius: 'var(--radius)', fontSize: 12, whiteSpace: 'pre-wrap', maxHeight: 500, overflowY: 'auto', border: '1px solid var(--border)', fontFamily: 'monospace', lineHeight: 1.6 }}>
+              {docResults[openResult.slice(4)].content}
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
@@ -1656,11 +1825,14 @@ function ServiceCaseDetailInner() {
 
         {/* ── Overages Recovery Workflow tab ── */}
         {activeTab === 'workflow' && (
-          <OveragesWorkflowCard
-            caseId={numericId}
-            intakeData={caseData.intake_data || {}}
-            onSaved={loadCase}
-          />
+          <>
+            <OveragesWorkflowCard
+              caseId={numericId}
+              intakeData={caseData.intake_data || {}}
+              onSaved={loadCase}
+            />
+            <OveragesAutomationPanel caseId={numericId} />
+          </>
         )}
 
         {/* ── Referrals tab ── */}

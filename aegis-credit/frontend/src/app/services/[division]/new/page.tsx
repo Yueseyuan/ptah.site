@@ -17,6 +17,7 @@ const DIVISION_LABELS: Record<string, string> = {
   document: 'Document Preparation',
   judgment: 'Judgment & Asset Recovery',
   consulting: 'Business Consulting',
+  overages: 'Tax Overage Recovery',
 };
 
 function NotaryFields({ values, onChange }: { values: Record<string, string>; onChange: (k: string, v: string) => void }) {
@@ -285,6 +286,118 @@ function ConsultingFields({ values, onChange }: { values: Record<string, string>
   );
 }
 
+function OveragesFields({ values, onChange }: { values: Record<string, string>; onChange: (k: string, v: string) => void }) {
+  return (
+    <>
+      <div className="grid-2">
+        <div className="form-group">
+          <label>County</label>
+          <input
+            value={values.county || ''}
+            onChange={e => onChange('county', e.target.value)}
+            placeholder="e.g., Duval County, FL"
+          />
+        </div>
+        <div className="form-group">
+          <label>Tax Deed Number</label>
+          <input
+            value={values.tax_deed_number || ''}
+            onChange={e => onChange('tax_deed_number', e.target.value)}
+            placeholder="e.g., 2024-TD-001234"
+          />
+        </div>
+      </div>
+      <div className="grid-2">
+        <div className="form-group">
+          <label>Parcel / Folio Number</label>
+          <input
+            value={values.parcel_folio || ''}
+            onChange={e => onChange('parcel_folio', e.target.value)}
+            placeholder="e.g., 01-2345-678-0000"
+          />
+        </div>
+        <div className="form-group">
+          <label>Former Owner Name</label>
+          <input
+            value={values.owner_name || ''}
+            onChange={e => onChange('owner_name', e.target.value)}
+            placeholder="Name as it appears on deed"
+          />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Property Description</label>
+        <input
+          value={values.property_description || ''}
+          onChange={e => onChange('property_description', e.target.value)}
+          placeholder="Street address or legal description"
+        />
+      </div>
+      <div className="grid-2">
+        <div className="form-group">
+          <label>Opening Bid ($)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={values.opening_bid || ''}
+            onChange={e => onChange('opening_bid', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+        <div className="form-group">
+          <label>Sale Price ($)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={values.sale_price || ''}
+            onChange={e => onChange('sale_price', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+      <div className="grid-2">
+        <div className="form-group">
+          <label>Estimated Surplus ($)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={values.estimated_surplus || ''}
+            onChange={e => onChange('estimated_surplus', e.target.value)}
+            placeholder="Sale price minus opening bid"
+          />
+        </div>
+        <div className="form-group">
+          <label>Claim Status</label>
+          <select
+            value={values.claim_status || ''}
+            onChange={e => onChange('claim_status', e.target.value)}
+          >
+            <option value="">— Select —</option>
+            <option value="unclaimed">Unclaimed</option>
+            <option value="in_progress">In Progress</option>
+            <option value="filed">Filed with County</option>
+            <option value="approved">Approved</option>
+            <option value="disbursed">Disbursed</option>
+            <option value="denied">Denied</option>
+          </select>
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Case Complexity</label>
+        <select
+          value={values.case_complexity || ''}
+          onChange={e => onChange('case_complexity', e.target.value)}
+        >
+          <option value="">— Select —</option>
+          <option value="simple">Simple — no known liens or competing claimants</option>
+          <option value="moderate">Moderate — possible liens or locate difficulty</option>
+          <option value="complex">Complex — competing claimants or legal hold</option>
+        </select>
+      </div>
+    </>
+  );
+}
+
 export default function NewServiceCasePage() {
   const { division } = useParams<{ division: string }>();
   const router = useRouter();
@@ -294,7 +407,9 @@ export default function NewServiceCasePage() {
   const [intakeData, setIntakeData] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [disclosureAccepted, setDisclosureAccepted] = useState(division !== 'judgment');
+  const [disclosureAccepted, setDisclosureAccepted] = useState(
+    division !== 'judgment' && division !== 'overages'
+  );
   const [disclosureChecked, setDisclosureChecked] = useState(false);
 
   const divisionLabel = DIVISION_LABELS[division] || division;
@@ -359,6 +474,8 @@ export default function NewServiceCasePage() {
         return <JudgmentFields values={intakeData} onChange={setIntakeField} />;
       case 'consulting':
         return <ConsultingFields values={intakeData} onChange={setIntakeField} />;
+      case 'overages':
+        return <OveragesFields values={intakeData} onChange={setIntakeField} />;
       default:
         return (
           <p style={{ color: 'var(--muted)', fontSize: 13 }}>
@@ -369,13 +486,14 @@ export default function NewServiceCasePage() {
   }
 
   if (!disclosureAccepted) {
+    const isOverages = division === 'overages';
     return (
       <div className="main-layout">
         <Sidebar />
         <main className="main-content">
           <div className="page-header">
             <h1>Non-Lawyer Disclosure</h1>
-            <p>Required before opening a commercial judgment recovery case</p>
+            <p>Required before opening a {isOverages ? 'tax overage recovery' : 'commercial judgment recovery'} case</p>
           </div>
           <div className="card" style={{ maxWidth: 680 }}>
             <div style={{
@@ -386,20 +504,41 @@ export default function NewServiceCasePage() {
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text)' }}>
               <p><strong>Cruel &amp; Associates is NOT a law firm and does NOT provide legal advice or legal representation.</strong></p>
-              <p>
-                The Company provides commercial judgment recovery, asset investigation, and related administrative support services only.
-                Company staff are not licensed attorneys and cannot:
-              </p>
-              <ul style={{ paddingLeft: 24, marginBottom: 12 }}>
-                <li>Represent clients in court</li>
-                <li>Provide legal advice on rights or obligations</li>
-                <li>Interpret statutes or court orders</li>
-                <li>File documents with a court without attorney supervision</li>
-              </ul>
-              <p>
-                Clients are encouraged to consult with a licensed attorney regarding any legal questions, enforcement actions requiring court filings,
-                or matters where legal representation is required.
-              </p>
+              {isOverages ? (
+                <>
+                  <p>
+                    The Company assists former property owners in identifying and recovering tax deed surplus funds (excess proceeds)
+                    from county clerks on a contingency basis. Company staff are NOT licensed attorneys and cannot:
+                  </p>
+                  <ul style={{ paddingLeft: 24, marginBottom: 12 }}>
+                    <li>Represent clients in court or any legal proceeding</li>
+                    <li>Provide legal advice on rights or obligations</li>
+                    <li>Guarantee recovery of any funds</li>
+                    <li>Interpret statutes, court orders, or title matters</li>
+                  </ul>
+                  <p>
+                    Surplus fund recovery may involve competing claimants, lienholders, or other parties with legal priority.
+                    You are encouraged to consult a licensed attorney if you have concerns before proceeding.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    The Company provides commercial judgment recovery, asset investigation, and related administrative support services only.
+                    Company staff are not licensed attorneys and cannot:
+                  </p>
+                  <ul style={{ paddingLeft: 24, marginBottom: 12 }}>
+                    <li>Represent clients in court</li>
+                    <li>Provide legal advice on rights or obligations</li>
+                    <li>Interpret statutes or court orders</li>
+                    <li>File documents with a court without attorney supervision</li>
+                  </ul>
+                  <p>
+                    Clients are encouraged to consult with a licensed attorney regarding any legal questions, enforcement actions requiring court filings,
+                    or matters where legal representation is required.
+                  </p>
+                </>
+              )}
               <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 16 }}>
                 This disclosure is required under applicable state law and company compliance policy.
               </p>

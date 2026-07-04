@@ -42,6 +42,7 @@ from app.routers.notary import router as notary_router
 from app.routers.referrals import router as referrals_router
 from app.routers.judgment_ai import router as judgment_ai_router
 from app.routers.consulting_ai import router as consulting_ai_router
+from app.routers.overages_ai import router as overages_ai_router
 
 
 def repair_schema():
@@ -312,6 +313,7 @@ app.include_router(notary_router)
 app.include_router(referrals_router)
 app.include_router(judgment_ai_router)
 app.include_router(consulting_ai_router)
+app.include_router(overages_ai_router)
 
 
 @app.get("/api/health")

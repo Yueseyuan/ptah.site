@@ -303,6 +303,8 @@ export const generateJudgmentRecoveryPlan = (serviceCaseId: number) =>
   api.post(`/api/judgment/${serviceCaseId}/recovery-plan`).then(r => r.data);
 export const generateConsultingAdvisory = (serviceCaseId: number) =>
   api.post(`/api/consulting/${serviceCaseId}/advise`).then(r => r.data);
+export const scoreOveragesLead = (serviceCaseId: number) =>
+  api.post(`/api/overages/${serviceCaseId}/score-lead`).then(r => r.data);
 
 // Attorney Referrals
 export const listReferrals = (params?: { client_id?: number; service_case_id?: number; status?: string; practice_area?: string }) =>

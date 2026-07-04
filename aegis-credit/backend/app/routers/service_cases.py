@@ -77,6 +77,16 @@ DIVISIONS = [
         ),
         "icon": "briefcase",
     },
+    {
+        "slug": "overages",
+        "name": "Tax Overage Recovery",
+        "description": (
+            "Asset recovery services for tax deed surplus funds — helping former property "
+            "owners reclaim excess proceeds from tax sales through authorized claim filing, "
+            "county research, and end-to-end case management on a contingency basis."
+        ),
+        "icon": "landmark",
+    },
 ]
 
 _VALID_SLUGS = {d["slug"] for d in DIVISIONS}

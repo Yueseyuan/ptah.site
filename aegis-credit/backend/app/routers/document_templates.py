@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/templates", tags=["document_templates"])
 # Pydantic schemas
 # ---------------------------------------------------------------------------
 
-VALID_DIVISIONS = {"notary", "credit", "criminal", "document", "judgment", "consulting"}
+VALID_DIVISIONS = {"notary", "credit", "criminal", "document", "judgment", "consulting", "overages"}
 VALID_CATEGORIES = {"agreement", "letter", "report", "log", "form", "packet"}
 VALID_TEMPLATE_TYPES = {"intake", "generated"}
 
@@ -830,6 +830,193 @@ DEFAULT_TEMPLATES: List[dict] = [
             "DISCLAIMER: This plan is for informational purposes only and does "
             "not constitute legal or financial advice.\n\n"
             "Consultant: {{assigned_to}}\n{{company_name}}\n{{company_phone}}"
+        ),
+    },
+    # ── OVERAGES ──────────────────────────────────────────────────────────────
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Non-Lawyer Disclosure (Tax Overage Recovery)",
+        "description": "Required disclosure that Cruel & Associates is not a law firm for excess proceeds cases.",
+        "category": "form",
+        "content": (
+            "NON-LAWYER DISCLOSURE — TAX OVERAGE RECOVERY\n"
+            "Cruel & Associates\n\n"
+            "Date: {{date}}\n"
+            "Former Owner: {{full_name}}\n"
+            "Case No.: {{case_number}}\n"
+            "County: {{county}}\n\n"
+            "IMPORTANT NOTICE — PLEASE READ CAREFULLY\n\n"
+            "Cruel & Associates (\"Company\") is NOT a law firm and does NOT provide "
+            "legal advice or legal representation.\n\n"
+            "The Company assists former property owners in identifying and recovering "
+            "tax deed surplus funds (excess proceeds) from county clerks on a "
+            "contingency basis. Company staff are NOT licensed attorneys and cannot:\n"
+            "  • Represent you in court or any legal proceeding\n"
+            "  • Provide legal advice on your rights or obligations\n"
+            "  • Guarantee recovery of any funds\n"
+            "  • Interpret statutes, court orders, or title matters\n\n"
+            "Surplus fund recovery may involve competing claimants, lienholders, "
+            "or other parties with legal priority. You are encouraged to consult a "
+            "licensed attorney before proceeding if you have concerns.\n\n"
+            "By signing below, you confirm that you have read and understood this "
+            "disclosure and wish to proceed.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Former Owner)\t\t{{assigned_to}} (Company Representative)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}}\n{{company_address}}\n{{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Asset Recovery Contingency Agreement",
+        "description": "Contingency fee agreement for tax deed surplus fund recovery services.",
+        "category": "agreement",
+        "content": (
+            "TAX OVERAGE RECOVERY — CONTINGENCY AGREEMENT\n\n"
+            "This Agreement is entered into as of {{date}} between "
+            "{{company_name}} (\"Recovery Company\") and {{full_name}} (\"Client\").\n\n"
+            "1. SURPLUS FUND CLAIM\n"
+            "County: {{county}}\n"
+            "Parcel / Folio: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Property: {{property_description}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "2. SCOPE OF SERVICES\n"
+            "Recovery Company will research the surplus claim, prepare documentation, "
+            "assist Client in completing and submitting the claim to the appropriate "
+            "county authority, and coordinate all follow-up until funds are released.\n\n"
+            "3. CONTINGENCY FEE\n"
+            "Client agrees to pay Recovery Company a fee equal to {{fee}} of all "
+            "surplus funds successfully recovered on Client's behalf. No fee is owed "
+            "if no funds are recovered.\n\n"
+            "4. AUTHORIZATION\n"
+            "Client authorizes Recovery Company to communicate with the county clerk, "
+            "tax collector, and other government offices on Client's behalf regarding "
+            "this specific surplus claim.\n\n"
+            "5. NOT A LAW FIRM\n"
+            "Recovery Company is NOT a law firm. If legal complications arise — "
+            "including competing claims requiring court resolution — an attorney "
+            "referral will be made. Attorney fees, if any, are separate and not "
+            "included in this agreement.\n\n"
+            "6. TERM\n"
+            "This Agreement remains in effect until the claim is resolved, funds are "
+            "disbursed, the claim is denied, or either party provides written notice "
+            "of termination.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{assigned_to}} (Recovery Company)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}}\n{{company_address}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Authorization to Recover Funds",
+        "description": "Client authorization allowing Cruel & Associates to act on their behalf with the county.",
+        "category": "form",
+        "content": (
+            "AUTHORIZATION TO RECOVER SURPLUS FUNDS\n\n"
+            "Date: {{date}}\n"
+            "Case No.: {{case_number}}\n\n"
+            "I, {{full_name}}, the former owner of the property described below, "
+            "hereby authorize {{company_name}} to act as my authorized representative "
+            "for the purpose of recovering tax deed surplus funds held by:\n\n"
+            "County: {{county}}\n"
+            "Property Address / Description: {{property_description}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "This authorization permits {{company_name}} to:\n"
+            "  • Request and obtain records from the county clerk and tax collector\n"
+            "  • Submit surplus fund claim forms on my behalf\n"
+            "  • Communicate with county officials regarding this claim\n"
+            "  • Receive and disburse recovered funds per the contingency agreement\n\n"
+            "This authorization does NOT grant {{company_name}} authority to sign "
+            "legal pleadings, appear in court, or provide legal advice on my behalf.\n\n"
+            "Valid government-issued ID on file: [ ] Yes  [ ] No\n\n"
+            "_____________________________\n"
+            "{{full_name}} (Former Owner)\n"
+            "Date: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Surplus Recovery Client Intake Sheet",
+        "description": "Intake form capturing all required case details for a tax overage recovery case.",
+        "category": "form",
+        "content": (
+            "SURPLUS RECOVERY CLIENT INTAKE SHEET\n"
+            "{{company_name}}\n\n"
+            "Case No.: {{case_number}}\n"
+            "Date: {{date}}\n"
+            "Intake Specialist: {{assigned_to}}\n\n"
+            "=== CLIENT INFORMATION ===\n"
+            "Former Owner Name: {{full_name}}\n"
+            "Phone: {{phone}}\n"
+            "Email: {{email}}\n"
+            "Mailing Address: {{address}}\n\n"
+            "=== PROPERTY INFORMATION ===\n"
+            "County: {{county}}\n"
+            "Property Description: {{property_description}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Tax Sale Date: ___________\n"
+            "Opening Bid: $___________\n"
+            "Final Sale Price: $___________\n"
+            "Estimated Surplus: $___________\n\n"
+            "=== CASE QUALIFIERS ===\n"
+            "Is client the recorded owner at time of sale?  [ ] Yes  [ ] No  [ ] Unknown\n"
+            "Are there known liens or mortgages on the property?  [ ] Yes  [ ] No  [ ] Unknown\n"
+            "Any bankruptcy history?  [ ] Yes  [ ] No\n"
+            "Any known competing claimants?  [ ] Yes  [ ] No\n"
+            "Claim filed previously?  [ ] Yes (date: _________)  [ ] No\n"
+            "Claim deadline (if known): ___________\n\n"
+            "=== DOCUMENTS COLLECTED ===\n"
+            "  [ ] Government-issued ID\n"
+            "  [ ] Proof of ownership (deed, tax records)\n"
+            "  [ ] Non-Lawyer Disclosure signed\n"
+            "  [ ] Contingency Agreement signed\n"
+            "  [ ] Authorization to Recover Funds signed\n\n"
+            "Notes: {{notes}}\n\n"
+            "Completed by: {{assigned_to}}\n{{company_name}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Overage Case Status Report",
+        "description": "Periodic status report for a tax overage recovery case sent to the former owner.",
+        "category": "report",
+        "content": (
+            "CASE STATUS REPORT — TAX OVERAGE RECOVERY\n"
+            "{{company_name}}\n\n"
+            "Client: {{full_name}}\n"
+            "Case No.: {{case_number}}\n"
+            "County: {{county}}\n"
+            "Report Date: {{date}}\n"
+            "Recovery Specialist: {{assigned_to}}\n\n"
+            "PROPERTY SUMMARY\n"
+            "Parcel / Folio: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "CURRENT WORKFLOW STEP\n"
+            "Status: ___________\n"
+            "Claim Filed:  [ ] Yes (date: _________)  [ ] Pending  [ ] No\n"
+            "County Response Received:  [ ] Yes  [ ] Pending  [ ] No\n\n"
+            "RECENT ACTIVITY\n"
+            "{{notes}}\n\n"
+            "NEXT STEPS\n"
+            "1. ___________\n"
+            "2. ___________\n\n"
+            "IMPORTANT: {{company_name}} is not a law firm and does not provide legal "
+            "advice. If competing claimants or legal complexities arise, an attorney "
+            "referral will be recommended.\n\n"
+            "Questions? {{company_phone}} | {{company_email}}\n\n"
+            "{{company_name}}\n{{company_address}}"
         ),
     },
 ]

@@ -87,6 +87,7 @@ const DIVISION_LABELS: Record<string, string> = {
   document: 'Document Preparation',
   judgment: 'Judgment & Asset Recovery',
   consulting: 'Business Consulting',
+  overages: 'Tax Overage Recovery',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -110,6 +111,7 @@ const DIVISION_EXTRA_TABS: Record<string, { id: string; label: string }[]> = {
   criminal: [{ id: 'referrals', label: 'Referrals' }],
   notary:   [{ id: 'journal',   label: 'Notary Journal' }],
   judgment: [{ id: 'referrals', label: 'Referrals' }],
+  overages: [{ id: 'workflow',  label: 'Recovery Workflow' }],
 };
 
 // ── Helper: authenticated fetch ────────────────────────────────────────────────
@@ -602,6 +604,177 @@ function JudgmentWorkflowCard({
             {scoreNum >= 70 ? 'High collectability' : scoreNum >= 40 ? 'Moderate collectability' : 'Low collectability'}
           </div>
         )}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save Workflow'}
+        </button>
+        {saved && <span style={{ fontSize: 12, color: 'var(--success)' }}>Saved.</span>}
+      </div>
+    </div>
+  );
+}
+
+// ── Overages Workflow Card ────────────────────────────────────────────────────
+
+const OVERAGES_STEPS = [
+  { n: 1,  label: 'Lead Source',        desc: 'County spreadsheet review — identify potential surplus case' },
+  { n: 2,  label: 'Case Verification',  desc: 'Confirm surplus exists and is still unclaimed with the county' },
+  { n: 3,  label: 'Owner Research',     desc: 'Pull property records, confirm former owner and parcel/folio' },
+  { n: 4,  label: 'Skip Trace',         desc: 'Locate current contact information for the former owner' },
+  { n: 5,  label: 'Outreach',           desc: 'Phone, text, and email contact with the former owner' },
+  { n: 6,  label: 'Agreement Signed',   desc: 'Contingency agreement and non-lawyer disclosure executed' },
+  { n: 7,  label: 'Authorization',      desc: 'Authorization to act on behalf of owner signed' },
+  { n: 8,  label: 'Claim Assistance',   desc: 'Prepare and submit surplus fund claim to county' },
+  { n: 9,  label: 'Recovery',           desc: 'Funds received from county and disbursement confirmed' },
+  { n: 10, label: 'Fee Collected',      desc: 'Company contingency fee disbursed, case closed' },
+];
+
+const DEFAULT_FEE_PCT = 35;
+
+function OveragesWorkflowCard({
+  caseId,
+  intakeData,
+  onSaved,
+}: {
+  caseId: number;
+  intakeData: Record<string, unknown>;
+  onSaved: () => void;
+}) {
+  const currentStep = Number(intakeData.workflow_step) || 1;
+  const [pendingStep, setPendingStep] = useState(currentStep);
+  const [feePct, setFeePct] = useState(
+    intakeData.fee_percentage != null ? String(intakeData.fee_percentage) : String(DEFAULT_FEE_PCT)
+  );
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setPendingStep(Number(intakeData.workflow_step) || 1);
+    setFeePct(intakeData.fee_percentage != null ? String(intakeData.fee_percentage) : String(DEFAULT_FEE_PCT));
+  }, [intakeData]);
+
+  async function save() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
+      const res = await fetch(`/api/service-cases/${caseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          intake_data: { ...intakeData, workflow_step: pendingStep, fee_percentage: feePct ? Number(feePct) : DEFAULT_FEE_PCT },
+        }),
+      });
+      if (res.ok) { setSaved(true); onSaved(); }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const surplus = parseFloat(String(intakeData.estimated_surplus || '0')) || 0;
+  const pct = parseFloat(feePct) || DEFAULT_FEE_PCT;
+  const estimatedFee = surplus * (pct / 100);
+  const netToClient = surplus - estimatedFee;
+
+  return (
+    <div className="card">
+      <h3 style={{ marginBottom: 16 }}>10-Step Recovery Workflow</h3>
+
+      {/* Step progress */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 20, overflowX: 'auto' }}>
+        {OVERAGES_STEPS.map(step => {
+          const isDone = step.n < pendingStep;
+          const isActive = step.n === pendingStep;
+          return (
+            <button
+              key={step.n}
+              onClick={() => { setPendingStep(step.n); setSaved(false); }}
+              title={step.desc}
+              style={{
+                flex: '1 1 0',
+                minWidth: 72,
+                padding: '10px 4px',
+                border: 'none',
+                borderBottom: isActive ? '3px solid var(--navy)' : isDone ? '3px solid #10b981' : '3px solid var(--border)',
+                background: isActive ? 'var(--navy-light, #eff6ff)' : 'transparent',
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{
+                width: 26, height: 26, borderRadius: '50%', margin: '0 auto 5px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700,
+                background: isActive ? 'var(--navy)' : isDone ? '#10b981' : 'var(--border)',
+                color: isActive || isDone ? 'white' : 'var(--muted)',
+              }}>
+                {isDone ? '✓' : step.n}
+              </div>
+              <div style={{ fontSize: 9, fontWeight: isActive ? 700 : 400, color: isActive ? 'var(--navy)' : 'var(--muted)', lineHeight: 1.2 }}>
+                {step.label}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active step description */}
+      <div style={{ background: 'var(--surface-alt, #f8fafc)', borderRadius: 'var(--radius)', padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
+        <strong>Step {pendingStep}: {OVERAGES_STEPS[pendingStep - 1]?.label}</strong>
+        <div style={{ color: 'var(--muted)', marginTop: 4 }}>{OVERAGES_STEPS[pendingStep - 1]?.desc}</div>
+      </div>
+
+      {/* Fee calculator */}
+      <div style={{ background: 'var(--surface-alt, #f8fafc)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
+          Fee Calculator
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-end' }}>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>
+              Estimated Surplus
+            </label>
+            <div style={{ fontWeight: 700, fontSize: 18, fontVariantNumeric: 'tabular-nums' }}>
+              ${surplus > 0 ? surplus.toLocaleString('en-US', { minimumFractionDigits: 2 }) : '—'}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--muted)' }}>from intake data</div>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>
+              Fee % (default 35%)
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="50"
+              step="0.5"
+              value={feePct}
+              onChange={e => { setFeePct(e.target.value); setSaved(false); }}
+              style={{ width: 72, padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 14, fontWeight: 600 }}
+            />
+          </div>
+          {surplus > 0 && (
+            <>
+              <div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>Est. Company Fee</div>
+                <div style={{ fontWeight: 700, fontSize: 18, color: '#1d4ed8', fontVariantNumeric: 'tabular-nums' }}>
+                  ${estimatedFee.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>Net to Client</div>
+                <div style={{ fontWeight: 700, fontSize: 18, color: '#10b981', fontVariantNumeric: 'tabular-nums' }}>
+                  ${netToClient.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1186,8 +1359,44 @@ function ServiceCaseDetailInner() {
               />
             )}
 
+            {/* Overages fee calculator (overview summary) */}
+            {division === 'overages' && (() => {
+              const surplus = parseFloat(String(caseData.intake_data?.estimated_surplus || '0')) || 0;
+              const feePct = parseFloat(String(caseData.intake_data?.fee_percentage || '35')) || 35;
+              return surplus > 0 ? (
+                <div className="card">
+                  <h3>Surplus Summary</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estimated Surplus</div>
+                      <div style={{ fontWeight: 700, fontSize: 22, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+                        ${surplus.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Est. Fee ({feePct}%)</div>
+                      <div style={{ fontWeight: 700, fontSize: 22, marginTop: 4, color: '#1d4ed8', fontVariantNumeric: 'tabular-nums' }}>
+                        ${(surplus * feePct / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net to Client</div>
+                      <div style={{ fontWeight: 700, fontSize: 22, marginTop: 4, color: '#10b981', fontVariantNumeric: 'tabular-nums' }}>
+                        ${(surplus * (1 - feePct / 100)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div style={{ alignSelf: 'center' }}>
+                      <button className="btn btn-outline btn-sm" onClick={() => setActiveTab('workflow')}>
+                        Open Workflow
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
             {/* Division-specific AI quick actions */}
-            {(division === 'judgment' || division === 'consulting') && (
+            {(division === 'judgment' || division === 'consulting' || division === 'overages') && (
               <div className="card">
                 <h3>AI Quick Actions</h3>
                 {aiActionMsg && (
@@ -1218,6 +1427,15 @@ function ServiceCaseDetailInner() {
                       onClick={() => runAiAction(`/api/consulting/${numericId}/advise`, 'Business Advisory')}
                     >
                       {aiActionLoading ? 'Generating…' : '🤖 Generate Business Advisory'}
+                    </button>
+                  )}
+                  {division === 'overages' && (
+                    <button
+                      className="btn btn-primary"
+                      disabled={aiActionLoading}
+                      onClick={() => runAiAction(`/api/overages/${numericId}/score-lead`, 'Lead Score')}
+                    >
+                      {aiActionLoading ? 'Scoring…' : '🤖 Score This Lead'}
                     </button>
                   )}
                   <button
@@ -1410,6 +1628,15 @@ function ServiceCaseDetailInner() {
               )}
             </div>
           </div>
+        )}
+
+        {/* ── Overages Recovery Workflow tab ── */}
+        {activeTab === 'workflow' && (
+          <OveragesWorkflowCard
+            caseId={numericId}
+            intakeData={caseData.intake_data || {}}
+            onSaved={loadCase}
+          />
         )}
 
         {/* ── Referrals tab ── */}

@@ -1,42 +1,43 @@
-# PROJECT.md — PTAH Consultants Website
+# PROJECT.md — APEX AI
 
-## Project Identity
+## Identity
 
 | Field | Value |
 |---|---|
-| Name | ptah.site |
-| Domain | ptah-het.com |
-| Type | Static consulting firm website |
-| Stack | HTML5 + Tailwind CSS (CDN) + Vanilla JS |
-| Repo | yueseyuan/ptah.site |
-| Branch | claude/ecc-repo-setup-jri49x → main |
+| Name | APEX AI |
+| Type | Local-first AI operating system for PTAH Consultants |
+| Backend | FastAPI + SQLite (dev) / PostgreSQL (server) |
+| Frontend | Next.js + React |
+| Desktop | Tauri (preferred) / Electron (optional) |
+| Repo | apex (separate from ptah.site) |
 
 ## Purpose
 
-Public-facing website for PTAH Consultants. Communicates the firm's value proposition, service offerings, insights, and client intake — converting visitors into qualified leads.
+APEX AI is a local-first AI operating system that powers PTAH Consultants' eight product modules. It provides a unified runtime for agents, skills, prompts, tools, workflows, and orchestration — with full audit trails, human approval gates, and model independence.
 
-## Current State (Phase 0)
+## Eight Product Modules
 
-- Single-page `index.html` with header, hero, insights grid, contact section, footer
-- Tailwind CDN (no build step)
-- Color palette: gunmetal `#2a3439`, lightgrey `#d3d3d3`, green accent `#00FF66`
-- Typography: Inter (Google Fonts)
-- Placeholder JS for language toggle and CTA routing
-- No backend, no forms, no analytics
+| Module | Description |
+|---|---|
+| Aegis Credit Intelligence | Credit analysis and risk assessment |
+| Business Intelligence | Business data analysis and insights |
+| Funding Intelligence | Funding opportunity identification |
+| Recovery Intelligence | Recovery strategy and planning |
+| Legal Intelligence | Legal document analysis and guidance |
+| Document Intelligence | Document processing and extraction |
+| Website Studio | Website design and generation |
+| Automation Studio | Business process automation |
 
-## Tooling Installed
+## Architecture Summary
 
-| Tool | Location | Purpose |
-|---|---|---|
-| ECC v2.0.0 | `~/.claude/` (via session hook) | Agent harness + rules + skills |
-| ui-ux-pro-max v2.5.0 | `.claude/skills/ui-ux-pro-max/` | Design intelligence for HTML/Tailwind |
-| 21st.dev Magic MCP | User MCP config | Component generation |
-| SessionStart hook | `.claude/hooks/session-start.sh` | Auto-installs ECC + Magic on web sessions |
+```
+apex/
+├── backend/          # FastAPI + SQLAlchemy + Alembic
+├── frontend/         # Next.js + React
+├── apex_data/        # Local data store (13 directories)
+└── docs/             # All governance documentation
+```
 
-## Target Outcome
+## Current Phase
 
-A polished, fast, accessible consulting firm website that:
-1. Passes Core Web Vitals (LCP < 2.5s, CLS < 0.1, INP < 200ms)
-2. Meets WCAG 2.2 AA accessibility
-3. Converts visitors through clear hierarchy and a single primary CTA per page
-4. Represents the PTAH brand with intentional visual design (not template defaults)
+Phase 1 — Foundation

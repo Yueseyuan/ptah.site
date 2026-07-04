@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
-import api, { getToken } from '@/lib/api';
+import api, { getToken, runServiceCaseResearch } from '@/lib/api';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -1064,6 +1064,9 @@ function ServiceCaseDetailInner() {
   const [letterMsg, setLetterMsg] = useState('');
   const [aiActionLoading, setAiActionLoading] = useState(false);
   const [aiActionMsg, setAiActionMsg] = useState('');
+  const [researchQuery, setResearchQuery] = useState('');
+  const [researchRunning, setResearchRunning] = useState(false);
+  const [researchResult, setResearchResult] = useState('');
 
   // Modal state
   const [showGenDoc, setShowGenDoc] = useState(false);
@@ -1190,6 +1193,22 @@ function ServiceCaseDetailInner() {
       setAiActionMsg(`Error: ${(err as Error).message}`);
     } finally {
       setAiActionLoading(false);
+    }
+  }
+
+  async function handleResearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!researchQuery.trim()) return;
+    setResearchRunning(true);
+    setResearchResult('');
+    try {
+      const result = await runServiceCaseResearch(numericId, researchQuery.trim());
+      setResearchResult(result.content);
+      setResearchQuery('');
+    } catch (err: unknown) {
+      setResearchResult(`Error: ${(err as Error).message}`);
+    } finally {
+      setResearchRunning(false);
     }
   }
 
@@ -1380,61 +1399,81 @@ function ServiceCaseDetailInner() {
               ) : null;
             })()}
 
-            {/* Division-specific AI quick actions */}
-            {(division === 'judgment' || division === 'consulting' || division === 'overages') && (
-              <div className="card">
-                <h3>AI Quick Actions</h3>
-                {aiActionMsg && (
-                  <div style={{
-                    marginBottom: 12, padding: '10px 14px', borderRadius: 'var(--radius)',
-                    background: aiActionMsg.startsWith('Error') ? '#fee2e2' : '#d1fae5',
-                    color: aiActionMsg.startsWith('Error') ? '#991b1b' : '#065f46',
-                    fontSize: 13,
-                  }}>
-                    {aiActionMsg}
-                    <button onClick={() => setAiActionMsg('')} style={{ marginLeft: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.7 }}>✕</button>
+            {/* AI Quick Actions — available for all divisions */}
+            <div className="card">
+              <h3>AI Quick Actions</h3>
+              {aiActionMsg && (
+                <div style={{
+                  marginBottom: 12, padding: '10px 14px', borderRadius: 'var(--radius)',
+                  background: aiActionMsg.startsWith('Error') ? '#fee2e2' : '#d1fae5',
+                  color: aiActionMsg.startsWith('Error') ? '#991b1b' : '#065f46',
+                  fontSize: 13,
+                }}>
+                  {aiActionMsg}
+                  <button onClick={() => setAiActionMsg('')} style={{ marginLeft: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.7 }}>✕</button>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+                {division === 'judgment' && (
+                  <button className="btn btn-primary" disabled={aiActionLoading}
+                    onClick={() => runAiAction(`/api/judgment/${numericId}/recovery-plan`, 'Recovery Plan')}>
+                    {aiActionLoading ? 'Generating…' : '🤖 Generate Recovery Plan'}
+                  </button>
+                )}
+                {division === 'consulting' && (
+                  <button className="btn btn-primary" disabled={aiActionLoading}
+                    onClick={() => runAiAction(`/api/consulting/${numericId}/advise`, 'Business Advisory')}>
+                    {aiActionLoading ? 'Generating…' : '🤖 Generate Business Advisory'}
+                  </button>
+                )}
+                {division === 'overages' && (
+                  <button className="btn btn-primary" disabled={aiActionLoading}
+                    onClick={() => runAiAction(`/api/overages/${numericId}/score-lead`, 'Lead Score')}>
+                    {aiActionLoading ? 'Scoring…' : '🤖 Score This Lead'}
+                  </button>
+                )}
+                <button className="btn btn-outline" onClick={() => setActiveTab('documents')}>
+                  View Documents
+                </button>
+              </div>
+
+              {/* Research Agent — inline for all divisions */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>🔍 Research Agent</div>
+                <form onSubmit={handleResearch} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={researchQuery}
+                    onChange={e => setResearchQuery(e.target.value)}
+                    placeholder="e.g. Find court records for this creditor in Florida…"
+                    disabled={researchRunning}
+                    style={{ flex: 1, minWidth: 240 }}
+                  />
+                  <button type="submit" className="btn btn-outline btn-sm"
+                    disabled={researchRunning || !researchQuery.trim()}>
+                    {researchRunning ? 'Researching…' : 'Run'}
+                  </button>
+                </form>
+                {researchRunning && (
+                  <p style={{ fontSize: 12, color: 'var(--muted)', margin: '8px 0 0' }}>
+                    Searching web sources — 15–30 seconds…
+                  </p>
+                )}
+                {researchResult && (
+                  <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--surface)', borderRadius: 'var(--radius)', fontSize: 13, whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto' }}>
+                    {researchResult}
+                    <button onClick={() => setResearchResult('')}
+                      style={{ display: 'block', marginTop: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--muted)' }}>
+                      Clear
+                    </button>
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {division === 'judgment' && (
-                    <button
-                      className="btn btn-primary"
-                      disabled={aiActionLoading}
-                      onClick={() => runAiAction(`/api/judgment/${numericId}/recovery-plan`, 'Recovery Plan')}
-                    >
-                      {aiActionLoading ? 'Generating…' : '🤖 Generate Recovery Plan'}
-                    </button>
-                  )}
-                  {division === 'consulting' && (
-                    <button
-                      className="btn btn-primary"
-                      disabled={aiActionLoading}
-                      onClick={() => runAiAction(`/api/consulting/${numericId}/advise`, 'Business Advisory')}
-                    >
-                      {aiActionLoading ? 'Generating…' : '🤖 Generate Business Advisory'}
-                    </button>
-                  )}
-                  {division === 'overages' && (
-                    <button
-                      className="btn btn-primary"
-                      disabled={aiActionLoading}
-                      onClick={() => runAiAction(`/api/overages/${numericId}/score-lead`, 'Lead Score')}
-                    >
-                      {aiActionLoading ? 'Scoring…' : '🤖 Score This Lead'}
-                    </button>
-                  )}
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => { setActiveTab('documents'); }}
-                  >
-                    View Documents
-                  </button>
-                </div>
-                <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, marginBottom: 0 }}>
-                  AI-generated documents are saved to the Documents tab automatically.
-                </p>
               </div>
-            )}
+              <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, marginBottom: 0 }}>
+                AI-generated documents are saved to the Documents tab automatically.
+              </p>
+            </div>
           </>
         )}
 

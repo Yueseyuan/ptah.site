@@ -18,6 +18,7 @@ const TABS = [
   { href: '/outcomes', label: 'Outcomes' },
   { href: '/personal-info', label: 'Personal Info' },
   { href: '/inquiries', label: 'Inquiries' },
+  { href: '/research', label: '🔍 Research' },
 ];
 
 export default function CaseNav({ caseId }: { caseId: number }) {

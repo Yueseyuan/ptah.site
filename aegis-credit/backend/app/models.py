@@ -524,7 +524,8 @@ class ServiceDocument(Base):
     """AI-generated document instance, ready for e-signature or download."""
     __tablename__ = "service_documents"
     id = Column(Integer, primary_key=True, index=True)
-    service_case_id = Column(Integer, ForeignKey("service_cases.id"))
+    service_case_id = Column(Integer, ForeignKey("service_cases.id"), nullable=True)
+    case_id = Column(Integer, ForeignKey("aegis_cases.id"), nullable=True)
     client_id = Column(Integer, ForeignKey("aegis_clients.id"))
     template_id = Column(Integer, ForeignKey("document_templates.id"), nullable=True)
     division_slug = Column(String)

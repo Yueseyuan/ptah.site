@@ -298,6 +298,16 @@ export const consultAI = (caseId: number, data: { finding_id?: number; user_theo
 export const bulkUpdateFindings = (ids: number[], status: string) =>
   api.post('/api/findings/bulk-update', { ids, status }).then(r => r.data);
 
+// Research Agent
+export const runCaseResearch = (caseId: number, query: string, context?: string) =>
+  api.post(`/api/research/case/${caseId}`, { query, context }).then(r => r.data);
+export const listCaseResearch = (caseId: number) =>
+  api.get(`/api/research/case/${caseId}`).then(r => r.data);
+export const runServiceCaseResearch = (serviceCaseId: number, query: string, context?: string) =>
+  api.post(`/api/research/service-case/${serviceCaseId}`, { query, context }).then(r => r.data);
+export const listServiceCaseResearch = (serviceCaseId: number) =>
+  api.get(`/api/research/service-case/${serviceCaseId}`).then(r => r.data);
+
 // Division AI endpoints
 export const generateJudgmentRecoveryPlan = (serviceCaseId: number) =>
   api.post(`/api/judgment/${serviceCaseId}/recovery-plan`).then(r => r.data);

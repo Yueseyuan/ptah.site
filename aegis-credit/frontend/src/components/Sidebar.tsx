@@ -25,6 +25,7 @@ const NAV_SECTIONS = [
       { href: '/services/document', label: 'Doc Preparation', icon: '📄' },
       { href: '/services/judgment', label: 'Asset Recovery', icon: '⚖️' },
       { href: '/services/consulting', label: 'Consulting', icon: '💼' },
+      { href: '/services/overages', label: 'Tax Overages', icon: '🏛️' },
     ],
   },
   {

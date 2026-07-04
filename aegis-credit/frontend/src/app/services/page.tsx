@@ -46,6 +46,12 @@ const DIVISIONS = [
     name: 'Business Consulting',
     description: 'LLC formation, business planning, and standard operating procedure development.',
   },
+  {
+    slug: 'overages',
+    icon: '🏛️',
+    name: 'Tax Overage Recovery',
+    description: 'Tax deed surplus fund recovery — locate former owners and file contingency claims on excess proceeds.',
+  },
 ];
 
 const STATUS_COLORS: Record<string, string> = {

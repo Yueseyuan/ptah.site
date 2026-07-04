@@ -44,6 +44,11 @@ const DIVISION_META: Record<string, { name: string; icon: string; description: s
     icon: '💼',
     description: 'LLC formation, business plans, and standard operating procedures.',
   },
+  overages: {
+    name: 'Tax Overage Recovery',
+    icon: '🏛️',
+    description: 'Tax deed surplus fund recovery — contingency claims for former property owners.',
+  },
 };
 
 const STATUS_COLORS: Record<string, string> = {

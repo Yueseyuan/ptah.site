@@ -115,6 +115,22 @@ _WEB_TOOLS: list[dict[str, Any]] = [
             "required": ["url"],
         },
     },
+    {
+        "name": "jina_read",
+        "description": (
+            "Fetch a URL and return clean, well-formatted Markdown using Jina Reader. "
+            "Better than fetch_url for research: extracts article body, strips ads/nav, "
+            "preserves headings and structure. Use for reading blog posts, docs, news articles, "
+            "product pages, or any URL you need to deeply understand."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {"type": "string", "description": "Full URL to read (https://...)"},
+            },
+            "required": ["url"],
+        },
+    },
 ]
 
 # ── Email tools ───────────────────────────────────────────────────────────────
@@ -147,6 +163,38 @@ _EMAIL_TOOLS: list[dict[str, Any]] = [
 # ── Video / audio generation tools ───────────────────────────────────────────
 
 _MEDIA_GEN_TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "generate_image",
+        "description": (
+            "Generate an image using Higgsfield AI. "
+            "Returns a URL to the generated image. "
+            "Models: nano_banana_2 (versatile, fast), flux_2 (FLUX quality), gpt_image_2 (GPT-based). "
+            "Aspect ratios: 1:1 (square), 16:9 (landscape), 9:16 (portrait), 4:3, 3:4. "
+            "Use for product images, social media visuals, backgrounds, thumbnails."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "description": "Detailed image description — style, subject, lighting, mood",
+                },
+                "model": {
+                    "type": "string",
+                    "enum": ["nano_banana_2", "flux_2", "gpt_image_2", "cinematic_studio_2_5"],
+                    "description": "Image model to use (default: nano_banana_2)",
+                    "default": "nano_banana_2",
+                },
+                "aspect_ratio": {
+                    "type": "string",
+                    "enum": ["1:1", "16:9", "9:16", "4:3", "3:4"],
+                    "description": "Image proportions",
+                    "default": "1:1",
+                },
+            },
+            "required": ["prompt"],
+        },
+    },
     {
         "name": "generate_video_clip",
         "description": (
@@ -282,11 +330,13 @@ FILE TOOLS:
 
 WEB TOOLS:
 - fetch_url(url, mode): fetch webpage as text/html/links
+- jina_read(url): fetch URL as clean Markdown (better for research and reading articles)
 
 EMAIL TOOLS:
 - send_email(to, subject, body, html=true): send via SendGrid
 
-VIDEO / AUDIO GENERATION:
+IMAGE / VIDEO / AUDIO GENERATION:
+- generate_image(prompt, model="nano_banana_2", aspect_ratio="1:1"): generate an image, returns URL
 - generate_video_clip(prompt, duration=6, genre="auto", aspect_ratio="9:16", sound="on"): generate a video clip, returns URL
 - generate_voiceover(text, voice="Sterling"): generate spoken audio, returns URL
 
@@ -316,9 +366,11 @@ def make_tool_executor(workspace: Path) -> Callable[[str, dict[str, Any]], Await
         if name == "create_directory":
             return ws_create_directory(workspace, args["path"])
 
-        # Web tool
+        # Web tools
         if name == "fetch_url":
             return await _fetch_url(args["url"], args.get("mode", "text"))
+        if name == "jina_read":
+            return await _jina_read(args["url"])
 
         # Email tool
         if name == "send_email":
@@ -327,6 +379,14 @@ def make_tool_executor(workspace: Path) -> Callable[[str, dict[str, Any]], Await
         # Social tool
         if name == "post_social":
             return await _post_social(args["platform"], args["text"], args.get("image_url"))
+
+        # Image generation
+        if name == "generate_image":
+            return await _generate_image(
+                args["prompt"],
+                args.get("model", "nano_banana_2"),
+                args.get("aspect_ratio", "1:1"),
+            )
 
         # Video / audio generation
         if name == "generate_video_clip":
@@ -354,6 +414,23 @@ def get_tools_system_addendum() -> str:
 
 
 # ── Tool implementations ──────────────────────────────────────────────────────
+
+async def _jina_read(url: str) -> str:
+    """Fetch a URL via Jina Reader and return clean Markdown."""
+    try:
+        import httpx
+        jina_url = f"https://r.jina.ai/{url}"
+        async with httpx.AsyncClient(
+            timeout=30.0,
+            follow_redirects=True,
+            headers={"Accept": "text/markdown", "User-Agent": "Mozilla/5.0 (compatible; APEX-Agent/1.0)"},
+        ) as client:
+            resp = await client.get(jina_url)
+            resp.raise_for_status()
+            return resp.text[:30_000]
+    except Exception as exc:
+        return f"Error reading {url} via Jina: {exc}"
+
 
 async def _fetch_url(url: str, mode: str = "text") -> str:
     """Fetch a URL and return content in the requested mode."""
@@ -420,6 +497,21 @@ _VOICE_IDS: dict[str, str] = {
     "Roman":     "7e63ac18-5fcd-4aba-8078-a86d4e11c127",
     "Julian":    "95429266-c0ac-4137-a209-63b8812b0f23",
 }
+
+
+async def _generate_image(
+    prompt: str,
+    model: str = "nano_banana_2",
+    aspect_ratio: str = "1:1",
+) -> str:
+    try:
+        from app.services.higgsfield_service import generate_image
+        result = await generate_image(prompt=prompt, model=model, aspect_ratio=aspect_ratio)
+        if result["ok"]:
+            return f"Image generated: {result['url']}"
+        return f"Image generation failed: {result['error']}"
+    except Exception as exc:
+        return f"Image generation error: {exc}"
 
 
 async def _generate_video_clip(

@@ -183,13 +183,13 @@ async def generate_video_clip(
         return {"ok": True, "url": _extract_url(record), "id": job_id}
 
 
-async def generate_voiceover(
-    text: str,
-    voice_id: str = VOICE_STERLING,
-    voice_type: str = "preset",
-    model: str = "text2speech_v2_elevenlabs",
+async def generate_image(
+    prompt: str,
+    model: str = "nano_banana_2",
+    aspect_ratio: str = "1:1",
+    resolution: str = "1k",
 ) -> dict[str, Any]:
-    """Generate a voiceover MP3. Returns {"ok": True, "url": "...", "id": "..."}."""
+    """Generate an image. Returns {"ok": True, "url": "...", "id": "..."}."""
     try:
         await _access_token()
     except FileNotFoundError as exc:
@@ -198,9 +198,95 @@ async def generate_voiceover(
     payload: dict[str, Any] = {
         "model": model,
         "params": {
+            "prompt": prompt,
+            "aspect_ratio": aspect_ratio,
+            "resolution": resolution,
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        job_id = await _create_job(client, payload)
+        record = await _poll_job(client, job_id)
+        return {"ok": True, "url": _extract_url(record), "id": job_id}
+
+
+async def generate_music(
+    prompt: str,
+    duration: int = 12,
+) -> dict[str, Any]:
+    """Generate background music with Sonilo. Returns {"ok": True, "url": "...", "id": "..."}."""
+    try:
+        await _access_token()
+    except FileNotFoundError as exc:
+        return {"ok": False, "error": str(exc)}
+
+    payload: dict[str, Any] = {
+        "model": "sonilo_music",
+        "params": {
+            "prompt": prompt,
+            "duration": duration,
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        job_id = await _create_job(client, payload)
+        record = await _poll_job(client, job_id)
+        results = record.get("results") or {}
+        return {
+            "ok": True,
+            "url": _extract_url(record),
+            "id": job_id,
+            "duration": results.get("durationSec"),
+        }
+
+
+async def generate_sfx(
+    prompt: str,
+) -> dict[str, Any]:
+    """Generate a sound effect with Mirelo. Returns {"ok": True, "url": "...", "id": "..."}."""
+    try:
+        await _access_token()
+    except FileNotFoundError as exc:
+        return {"ok": False, "error": str(exc)}
+
+    payload: dict[str, Any] = {
+        "model": "mirelo_text_to_audio",
+        "params": {
+            "prompt": prompt,
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        job_id = await _create_job(client, payload)
+        record = await _poll_job(client, job_id)
+        results = record.get("results") or {}
+        return {
+            "ok": True,
+            "url": _extract_url(record),
+            "id": job_id,
+            "duration": results.get("durationSec"),
+        }
+
+
+async def generate_voiceover(
+    text: str,
+    voice_id: str = VOICE_STERLING,
+    voice_type: str = "preset",
+    tts_model: str = "elevenlabs",
+) -> dict[str, Any]:
+    """Generate a voiceover MP3. Returns {"ok": True, "url": "...", "id": "..."}."""
+    try:
+        await _access_token()
+    except FileNotFoundError as exc:
+        return {"ok": False, "error": str(exc)}
+
+    payload: dict[str, Any] = {
+        "model": "text2speech_v2",
+        "params": {
             "prompt": text,
             "voice_id": voice_id,
             "voice_type": voice_type,
+            "model": tts_model,
         },
     }
 

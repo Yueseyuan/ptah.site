@@ -322,6 +322,19 @@ export interface VoiceoverResult {
   duration: number | null;
 }
 
+export interface ImageGenerateResult {
+  ok: boolean;
+  url: string | null;
+  id: string;
+}
+
+export interface MusicResult {
+  ok: boolean;
+  url: string | null;
+  id: string;
+  duration: number | null;
+}
+
 export interface HiggsfieldBalance {
   ok: boolean;
   balance?: number;
@@ -340,6 +353,16 @@ export const mediaStudioApi = {
   }) => api.post<VideoGenerateResult>("/media/generate/video", data),
   generateVoiceover: (data: { text: string; voice?: string }) =>
     api.post<VoiceoverResult>("/media/generate/voiceover", data),
+  generateImage: (data: {
+    prompt: string;
+    model?: string;
+    aspect_ratio?: string;
+    resolution?: string;
+  }) => api.post<ImageGenerateResult>("/media/generate/image", data),
+  generateMusic: (data: { prompt: string; duration?: number }) =>
+    api.post<MusicResult>("/media/generate/music", data),
+  generateSfx: (data: { prompt: string }) =>
+    api.post<MusicResult>("/media/generate/sfx", data),
 };
 
 // CL4R1T4S Agent Templates

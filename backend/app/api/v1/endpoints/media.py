@@ -29,6 +29,25 @@ class VoiceoverRequest(BaseModel):
     voice: Literal["Sterling", "Harrison", "Arthur", "Tallulah", "Vesper", "Roman", "Julian"] = "Sterling"
 
 
+class ImageGenerateRequest(BaseModel):
+    prompt: str
+    model: Literal[
+        "nano_banana_2", "flux_2", "gpt_image_2", "cinematic_studio_2_5",
+        "nano_banana_flash", "seedream_v4_5", "image_auto",
+    ] = "nano_banana_2"
+    aspect_ratio: Literal["1:1", "4:3", "3:4", "16:9", "9:16"] = "1:1"
+    resolution: Literal["1k", "2k", "4k"] = "1k"
+
+
+class MusicRequest(BaseModel):
+    prompt: str
+    duration: int = Field(default=12, ge=4, le=60)
+
+
+class SfxRequest(BaseModel):
+    prompt: str
+
+
 # ── Existing endpoints ────────────────────────────────────────────────────────
 
 @router.get("/status")
@@ -112,6 +131,50 @@ async def generate_voiceover(
         "Julian":   VOICE_JULIAN,
     }
     result = await _gen(text=req.text, voice_id=voice_map[req.voice])
+    if not result["ok"]:
+        raise HTTPException(status_code=502, detail=result["error"])
+    return result
+
+
+@router.post("/generate/image")
+async def generate_image(
+    req: ImageGenerateRequest,
+    _current_user: User = Depends(get_current_user),
+) -> dict:
+    """Generate an image with Higgsfield."""
+    from app.services.higgsfield_service import generate_image as _gen
+    result = await _gen(
+        prompt=req.prompt,
+        model=req.model,
+        aspect_ratio=req.aspect_ratio,
+        resolution=req.resolution,
+    )
+    if not result["ok"]:
+        raise HTTPException(status_code=502, detail=result["error"])
+    return result
+
+
+@router.post("/generate/music")
+async def generate_music(
+    req: MusicRequest,
+    _current_user: User = Depends(get_current_user),
+) -> dict:
+    """Generate background music with Sonilo."""
+    from app.services.higgsfield_service import generate_music as _gen
+    result = await _gen(prompt=req.prompt, duration=req.duration)
+    if not result["ok"]:
+        raise HTTPException(status_code=502, detail=result["error"])
+    return result
+
+
+@router.post("/generate/sfx")
+async def generate_sfx(
+    req: SfxRequest,
+    _current_user: User = Depends(get_current_user),
+) -> dict:
+    """Generate a sound effect with Mirelo."""
+    from app.services.higgsfield_service import generate_sfx as _gen
+    result = await _gen(prompt=req.prompt)
     if not result["ok"]:
         raise HTTPException(status_code=502, detail=result["error"])
     return result

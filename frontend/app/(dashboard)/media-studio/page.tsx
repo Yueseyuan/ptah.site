@@ -5,16 +5,18 @@ import {
   mediaStudioApi,
   VideoGenerateResult,
   VoiceoverResult,
+  ImageGenerateResult,
+  MusicResult,
   HiggsfieldBalance,
 } from "@/lib/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Film, Mic, Loader2, CheckCircle2, XCircle, Copy, Download,
-  Play, Coins, ChevronDown,
+  Play, Coins, ChevronDown, Image, Music,
 } from "lucide-react";
 
-type Tab = "video" | "voiceover";
+type Tab = "video" | "voiceover" | "image" | "music";
 
 const VOICES = [
   { id: "Sterling", label: "Sterling", desc: "Professional male, authoritative" },
@@ -27,6 +29,20 @@ const VOICES = [
 ];
 
 const GENRES = ["auto", "action", "suspense", "spectacle", "intimate", "comedy", "horror", "western"];
+
+const IMAGE_MODELS = [
+  { id: "nano_banana_2", label: "Nano Banana Pro", desc: "Fast, versatile" },
+  { id: "flux_2", label: "FLUX.2", desc: "High quality" },
+  { id: "gpt_image_2", label: "GPT Image 2", desc: "GPT-based" },
+  { id: "cinematic_studio_2_5", label: "Cinematic 2.5", desc: "Cinematic style" },
+];
+
+const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
+  { id: "video", label: "Video", Icon: Film },
+  { id: "image", label: "Image", Icon: Image },
+  { id: "voiceover", label: "Voiceover", Icon: Mic },
+  { id: "music", label: "Music & SFX", Icon: Music },
+];
 
 function BalanceBadge({ balance }: { balance: HiggsfieldBalance | null }) {
   if (!balance) return null;
@@ -91,6 +107,15 @@ function ResultCard({ url, label, duration }: { url: string; label: string; dura
   );
 }
 
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+      <XCircle size={14} className="text-red-400 mt-0.5 flex-shrink-0" />
+      <p className="text-xs text-red-400">{message}</p>
+    </div>
+  );
+}
+
 export default function MediaStudioPage() {
   const [tab, setTab] = useState<Tab>("video");
   const [balance, setBalance] = useState<HiggsfieldBalance | null>(null);
@@ -105,12 +130,31 @@ export default function MediaStudioPage() {
   const [videoResult, setVideoResult] = useState<VideoGenerateResult | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
 
+  // Image state
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [imageModel, setImageModel] = useState("nano_banana_2");
+  const [imageAspect, setImageAspect] = useState("1:1");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageResult, setImageResult] = useState<ImageGenerateResult | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+
   // Voiceover state
   const [script, setScript] = useState("");
   const [voice, setVoice] = useState("Sterling");
   const [voiceLoading, setVoiceLoading] = useState(false);
   const [voiceResult, setVoiceResult] = useState<VoiceoverResult | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  // Music / SFX state
+  const [musicPrompt, setMusicPrompt] = useState("");
+  const [musicDuration, setMusicDuration] = useState(12);
+  const [sfxPrompt, setSfxPrompt] = useState("");
+  const [musicLoading, setMusicLoading] = useState(false);
+  const [sfxLoading, setSfxLoading] = useState(false);
+  const [musicResult, setMusicResult] = useState<MusicResult | null>(null);
+  const [sfxResult, setSfxResult] = useState<MusicResult | null>(null);
+  const [musicError, setMusicError] = useState<string | null>(null);
+  const [sfxError, setSfxError] = useState<string | null>(null);
 
   useEffect(() => {
     mediaStudioApi.balance().then(setBalance).catch(() => setBalance({ ok: false }));
@@ -137,6 +181,25 @@ export default function MediaStudioPage() {
     }
   }
 
+  async function generateImage() {
+    if (!imagePrompt.trim() || imageLoading) return;
+    setImageLoading(true);
+    setImageResult(null);
+    setImageError(null);
+    try {
+      const res = await mediaStudioApi.generateImage({
+        prompt: imagePrompt.trim(),
+        model: imageModel,
+        aspect_ratio: imageAspect,
+      });
+      setImageResult(res);
+    } catch (e: unknown) {
+      setImageError(e instanceof Error ? e.message : "Generation failed");
+    } finally {
+      setImageLoading(false);
+    }
+  }
+
   async function generateVoiceover() {
     if (!script.trim() || voiceLoading) return;
     setVoiceLoading(true);
@@ -152,6 +215,36 @@ export default function MediaStudioPage() {
     }
   }
 
+  async function generateMusic() {
+    if (!musicPrompt.trim() || musicLoading) return;
+    setMusicLoading(true);
+    setMusicResult(null);
+    setMusicError(null);
+    try {
+      const res = await mediaStudioApi.generateMusic({ prompt: musicPrompt.trim(), duration: musicDuration });
+      setMusicResult(res);
+    } catch (e: unknown) {
+      setMusicError(e instanceof Error ? e.message : "Generation failed");
+    } finally {
+      setMusicLoading(false);
+    }
+  }
+
+  async function generateSfx() {
+    if (!sfxPrompt.trim() || sfxLoading) return;
+    setSfxLoading(true);
+    setSfxResult(null);
+    setSfxError(null);
+    try {
+      const res = await mediaStudioApi.generateSfx({ prompt: sfxPrompt.trim() });
+      setSfxResult(res);
+    } catch (e: unknown) {
+      setSfxError(e instanceof Error ? e.message : "Generation failed");
+    } finally {
+      setSfxLoading(false);
+    }
+  }
+
   return (
     <div className="p-8 max-w-2xl">
       {/* Header */}
@@ -162,7 +255,7 @@ export default function MediaStudioPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[--text-primary]">Media Studio</h1>
-            <p className="text-sm text-[--text-secondary]">Generate videos and voiceovers directly</p>
+            <p className="text-sm text-[--text-secondary]">Generate videos, images, and audio directly</p>
           </div>
         </div>
         <BalanceBadge balance={balance} />
@@ -170,18 +263,18 @@ export default function MediaStudioPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 p-1 bg-[--surface] rounded-xl border border-[--border]">
-        {(["video", "voiceover"] as Tab[]).map((t) => (
+        {TABS.map(({ id, label, Icon }) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={id}
+            onClick={() => setTab(id)}
             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-              tab === t
+              tab === id
                 ? "bg-[--accent] text-white shadow-sm"
                 : "text-[--text-secondary] hover:text-[--text-primary]"
             }`}
           >
-            {t === "video" ? <Film size={14} /> : <Mic size={14} />}
-            {t === "video" ? "Video" : "Voiceover"}
+            <Icon size={13} />
+            {label}
           </button>
         ))}
       </div>
@@ -203,7 +296,6 @@ export default function MediaStudioPage() {
             />
           </Card>
 
-          {/* Controls */}
           <div className="grid grid-cols-2 gap-3">
             <Card className="py-3">
               <p className="text-[10px] text-[--text-muted] uppercase tracking-wide mb-2 font-medium">Aspect Ratio</p>
@@ -290,16 +382,84 @@ export default function MediaStudioPage() {
             )}
           </Button>
 
-          {videoError && (
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-              <XCircle size={14} className="text-red-400 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-red-400">{videoError}</p>
-            </div>
-          )}
+          {videoError && <ErrorBanner message={videoError} />}
+          {videoResult?.url && <ResultCard url={videoResult.url} label="Video" />}
+        </div>
+      )}
 
-          {videoResult?.url && (
-            <ResultCard url={videoResult.url} label="Video" />
-          )}
+      {/* Image Tab */}
+      {tab === "image" && (
+        <div className="space-y-4">
+          <Card>
+            <label className="block text-xs font-medium text-[--text-secondary] mb-2">
+              Image Description
+            </label>
+            <textarea
+              value={imagePrompt}
+              onChange={(e) => setImagePrompt(e.target.value)}
+              disabled={imageLoading}
+              placeholder="Professional portrait of a confident entrepreneur in a modern office, dramatic side lighting, shallow depth of field…"
+              rows={4}
+              className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2.5 text-sm text-[--text-primary] placeholder-[--text-muted] resize-none focus:outline-none focus:border-[--accent]/50 transition-colors disabled:opacity-60"
+            />
+          </Card>
+
+          <Card>
+            <p className="text-xs font-medium text-[--text-secondary] mb-3">Model</p>
+            <div className="space-y-1.5">
+              {IMAGE_MODELS.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setImageModel(m.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-colors ${
+                    imageModel === m.id
+                      ? "bg-[--accent]/15 border border-[--accent]/30"
+                      : "bg-[--surface-2] border border-[--border] hover:border-[--accent]/20"
+                  }`}
+                >
+                  <span className={`text-sm font-medium ${imageModel === m.id ? "text-[--accent]" : "text-[--text-primary]"}`}>
+                    {m.label}
+                  </span>
+                  <span className="text-[10px] text-[--text-muted]">{m.desc}</span>
+                </button>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="py-3">
+            <p className="text-[10px] text-[--text-muted] uppercase tracking-wide mb-2 font-medium">Aspect Ratio</p>
+            <div className="flex gap-1.5">
+              {["1:1", "16:9", "9:16", "4:3", "3:4"].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setImageAspect(r)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    imageAspect === r
+                      ? "bg-[--accent] text-white"
+                      : "bg-[--surface-2] text-[--text-secondary] border border-[--border] hover:text-[--text-primary]"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </Card>
+
+          <Button
+            onClick={generateImage}
+            loading={imageLoading}
+            disabled={!imagePrompt.trim() || imageLoading}
+            className="w-full"
+          >
+            {imageLoading ? (
+              <><Loader2 size={14} className="animate-spin" /> Generating…</>
+            ) : (
+              <><Image size={14} /> Generate Image</>
+            )}
+          </Button>
+
+          {imageError && <ErrorBanner message={imageError} />}
+          {imageResult?.url && <ResultCard url={imageResult.url} label="Image" />}
         </div>
       )}
 
@@ -359,16 +519,117 @@ export default function MediaStudioPage() {
             )}
           </Button>
 
-          {voiceError && (
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-              <XCircle size={14} className="text-red-400 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-red-400">{voiceError}</p>
-            </div>
-          )}
-
+          {voiceError && <ErrorBanner message={voiceError} />}
           {voiceResult?.url && (
             <ResultCard url={voiceResult.url} label="Voiceover" duration={voiceResult.duration} />
           )}
+        </div>
+      )}
+
+      {/* Music & SFX Tab */}
+      {tab === "music" && (
+        <div className="space-y-6">
+          {/* Background Music section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 rounded-full bg-[--accent]" />
+              <p className="text-sm font-semibold text-[--text-primary]">Background Music</p>
+              <span className="text-[10px] text-[--text-muted] ml-1">via Sonilo</span>
+            </div>
+
+            <Card>
+              <label className="block text-xs font-medium text-[--text-secondary] mb-2">
+                Music Description
+              </label>
+              <textarea
+                value={musicPrompt}
+                onChange={(e) => setMusicPrompt(e.target.value)}
+                disabled={musicLoading}
+                placeholder="Cinematic orchestral build, hopeful and triumphant, rising strings with percussion, suitable for a brand promo…"
+                rows={3}
+                className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2.5 text-sm text-[--text-primary] placeholder-[--text-muted] resize-none focus:outline-none focus:border-[--accent]/50 transition-colors disabled:opacity-60"
+              />
+            </Card>
+
+            <Card className="py-3">
+              <p className="text-[10px] text-[--text-muted] uppercase tracking-wide mb-2 font-medium">
+                Duration — {musicDuration}s
+              </p>
+              <input
+                type="range"
+                min={4}
+                max={60}
+                step={4}
+                value={musicDuration}
+                onChange={(e) => setMusicDuration(Number(e.target.value))}
+                className="w-full accent-[--accent]"
+              />
+              <div className="flex justify-between text-[10px] text-[--text-muted] mt-1">
+                <span>4s</span><span>60s</span>
+              </div>
+            </Card>
+
+            <Button
+              onClick={generateMusic}
+              loading={musicLoading}
+              disabled={!musicPrompt.trim() || musicLoading}
+              className="w-full"
+            >
+              {musicLoading ? (
+                <><Loader2 size={14} className="animate-spin" /> Generating…</>
+              ) : (
+                <><Music size={14} /> Generate Music</>
+              )}
+            </Button>
+
+            {musicError && <ErrorBanner message={musicError} />}
+            {musicResult?.url && (
+              <ResultCard url={musicResult.url} label="Music" duration={musicResult.duration} />
+            )}
+          </div>
+
+          <div className="border-t border-[--border]" />
+
+          {/* Sound Effects section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 rounded-full bg-purple-400" />
+              <p className="text-sm font-semibold text-[--text-primary]">Sound Effects</p>
+              <span className="text-[10px] text-[--text-muted] ml-1">via Mirelo</span>
+            </div>
+
+            <Card>
+              <label className="block text-xs font-medium text-[--text-secondary] mb-2">
+                Sound Description
+              </label>
+              <textarea
+                value={sfxPrompt}
+                onChange={(e) => setSfxPrompt(e.target.value)}
+                disabled={sfxLoading}
+                placeholder="Glass breaking in a large marble hallway, reverb, slight echo…"
+                rows={3}
+                className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2.5 text-sm text-[--text-primary] placeholder-[--text-muted] resize-none focus:outline-none focus:border-[--accent]/50 transition-colors disabled:opacity-60"
+              />
+            </Card>
+
+            <Button
+              onClick={generateSfx}
+              loading={sfxLoading}
+              disabled={!sfxPrompt.trim() || sfxLoading}
+              className="w-full"
+            >
+              {sfxLoading ? (
+                <><Loader2 size={14} className="animate-spin" /> Generating…</>
+              ) : (
+                <><Music size={14} /> Generate SFX</>
+              )}
+            </Button>
+
+            {sfxError && <ErrorBanner message={sfxError} />}
+            {sfxResult?.url && (
+              <ResultCard url={sfxResult.url} label="SFX" duration={sfxResult.duration} />
+            )}
+          </div>
         </div>
       )}
     </div>

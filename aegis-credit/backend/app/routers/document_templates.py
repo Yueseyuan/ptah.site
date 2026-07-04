@@ -433,6 +433,342 @@ DEFAULT_TEMPLATES: List[dict] = [
             "Case Reference: {{case_number}}"
         ),
     },
+    # ── JUDGMENT (commercial recovery suite) ─────────────────────────────────
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Non-Lawyer Disclosure",
+        "description": "Required disclosure that Cruel & Associates is not a law firm and does not provide legal advice.",
+        "category": "form",
+        "content": (
+            "NON-LAWYER DISCLOSURE\n"
+            "Cruel & Associates — Commercial Judgment Recovery\n\n"
+            "Date: {{date}}\n"
+            "Client: {{full_name}}\n"
+            "Case No.: {{case_number}}\n\n"
+            "IMPORTANT NOTICE — PLEASE READ CAREFULLY\n\n"
+            "Cruel & Associates (\"Company\") is NOT a law firm and does NOT provide "
+            "legal advice or legal representation.\n\n"
+            "The Company provides commercial judgment recovery, asset investigation, "
+            "and related administrative support services only. The Company's staff "
+            "are not licensed attorneys and cannot:\n"
+            "  • Represent you in court\n"
+            "  • Provide legal advice on your rights or obligations\n"
+            "  • Interpret statutes or court orders\n"
+            "  • File documents with a court on your behalf without attorney supervision\n\n"
+            "You are encouraged to consult with a licensed attorney regarding any "
+            "legal questions, enforcement actions requiring court filings, or matters "
+            "where legal representation is required.\n\n"
+            "By signing below, you confirm that you have read and understood this "
+            "disclosure.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{assigned_to}} (Company Representative)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}}\n{{company_address}}\n{{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Commercial Judgment Recovery Agreement",
+        "description": "Engagement agreement for commercial judgment recovery services on a contingency or hybrid basis.",
+        "category": "agreement",
+        "content": (
+            "COMMERCIAL JUDGMENT RECOVERY AGREEMENT\n\n"
+            "This Agreement is entered into as of {{date}} between "
+            "{{company_name}} (\"Recovery Company\") and {{full_name}} (\"Client\").\n\n"
+            "1. SUBJECT JUDGMENT\n"
+            "Court: {{court_name}}\n"
+            "Docket No.: {{docket_number}}\n"
+            "Judgment Against: {{defendant_name}}\n"
+            "Original Amount: {{judgment_amount}}\n\n"
+            "2. SCOPE OF SERVICES\n"
+            "Recovery Company will use lawful post-judgment enforcement methods to "
+            "attempt recovery of the judgment balance, which may include asset "
+            "investigation, demand communications, settlement negotiations, and "
+            "coordination with licensed attorneys for court-based enforcement actions.\n\n"
+            "3. COMPENSATION\n"
+            "Client agrees to pay Recovery Company a contingency fee equal to "
+            "{{fee}} of all amounts recovered. No fee is owed if no recovery "
+            "is made.\n\n"
+            "4. AUTHORITY\n"
+            "Client authorizes Recovery Company to communicate with the debtor, "
+            "debtor's representatives, and third parties as necessary to pursue "
+            "recovery within the limits of applicable law.\n\n"
+            "5. NOT A LAW FIRM\n"
+            "Recovery Company is NOT a law firm. Any enforcement action requiring "
+            "court filings will be coordinated with or referred to a licensed attorney "
+            "at Client's cost.\n\n"
+            "6. TERM AND TERMINATION\n"
+            "This Agreement remains in effect until the judgment is recovered, "
+            "settled, deemed uncollectable, or either party provides 30 days' "
+            "written notice of termination.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{assigned_to}} (Recovery Company)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}}\n{{company_address}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Asset Investigation Authorization",
+        "description": "Client authorization for Cruel & Associates to conduct a debtor asset investigation.",
+        "category": "form",
+        "content": (
+            "ASSET INVESTIGATION AUTHORIZATION\n\n"
+            "Date: {{date}}\n"
+            "Client: {{full_name}}\n"
+            "Case No.: {{case_number}}\n\n"
+            "I, {{full_name}}, hereby authorize {{company_name}} to conduct an "
+            "asset investigation of the following judgment debtor:\n\n"
+            "Debtor Name: {{defendant_name}}\n"
+            "Judgment Amount: {{judgment_amount}}\n"
+            "Court: {{court_name}} | Docket: {{docket_number}}\n\n"
+            "The investigation may include searches of publicly available records, "
+            "including but not limited to: real property records, UCC filings, "
+            "corporate registration databases, court records, business license "
+            "databases, and other lawful public information sources.\n\n"
+            "I represent that I am authorized to collect on this judgment and "
+            "that I will use the investigation results only for lawful debt "
+            "collection purposes.\n\n"
+            "_____________________________\n"
+            "{{full_name}} (Client)\n"
+            "Date: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Judgment Evaluation Worksheet",
+        "description": "Internal worksheet for evaluating judgment collectability before accepting a case.",
+        "category": "form",
+        "content": (
+            "JUDGMENT EVALUATION WORKSHEET\n"
+            "{{company_name}} — Internal Use Only\n\n"
+            "Evaluator: {{assigned_to}} | Date: {{date}} | Case No.: {{case_number}}\n\n"
+            "=== JUDGMENT DETAILS ===\n"
+            "Creditor/Client: {{plaintiff_name}}\n"
+            "Debtor: {{defendant_name}}\n"
+            "Court: {{court_name}} | Docket: {{docket_number}}\n"
+            "Original Judgment Amount: {{judgment_amount}}\n"
+            "Accrued Interest/Costs: $___________\n"
+            "Total Estimated Balance: $___________\n"
+            "Judgment Date: ___________\n"
+            "Renewal Deadline: ___________\n\n"
+            "=== DEBTOR PROFILE ===\n"
+            "Business Type:  [ ] Corporation  [ ] LLC  [ ] Sole Prop  [ ] Individual\n"
+            "Operating Status:  [ ] Active  [ ] Inactive  [ ] Dissolved  [ ] Unknown\n"
+            "Bankruptcy History:  [ ] None  [ ] Discharged  [ ] Active  [ ] Unknown\n"
+            "Prior Collection Attempts:  [ ] None  [ ] Unsuccessful  [ ] Partial\n\n"
+            "=== ASSET INDICATORS ===\n"
+            "Real Property:  [ ] Confirmed  [ ] Possible  [ ] None  [ ] Unknown\n"
+            "Bank Accounts:  [ ] Confirmed  [ ] Possible  [ ] None  [ ] Unknown\n"
+            "Business Revenue:  [ ] Active  [ ] Limited  [ ] None  [ ] Unknown\n"
+            "Vehicles/Equipment:  [ ] Confirmed  [ ] Possible  [ ] None  [ ] Unknown\n"
+            "UCC Filings / Existing Liens: ___________\n\n"
+            "=== COLLECTABILITY SCORE ===\n"
+            "Score (1–100): _____ / 100\n"
+            "Recommended Action:\n"
+            "  [ ] Accept — high collectability\n"
+            "  [ ] Accept with investigation — moderate collectability\n"
+            "  [ ] Decline — insufficient assets\n"
+            "  [ ] Refer to counsel — complex enforcement required\n\n"
+            "Notes: {{notes}}\n\n"
+            "Evaluated by: {{assigned_to}}\n{{company_name}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Recovery Service Agreement (Hybrid Fee)",
+        "description": "Engagement agreement for hybrid flat investigation fee + contingency model.",
+        "category": "agreement",
+        "content": (
+            "RECOVERY SERVICE AGREEMENT — HYBRID FEE\n\n"
+            "Date: {{date}}\n"
+            "Client: {{full_name}} | Case No.: {{case_number}}\n\n"
+            "SUBJECT JUDGMENT\n"
+            "Court: {{court_name}} | Docket: {{docket_number}}\n"
+            "Debtor: {{defendant_name}} | Amount: {{judgment_amount}}\n\n"
+            "FEE STRUCTURE\n"
+            "1. Investigation Fee: {{fee}} (due upon signing; non-refundable)\n"
+            "   Covers: asset investigation, skip trace, public records search, "
+            "collectability assessment, and written recovery recommendation.\n\n"
+            "2. Contingency Fee: ___% of amounts recovered above the investigation fee.\n\n"
+            "SERVICES INCLUDED\n"
+            "• Debtor asset investigation\n"
+            "• Collectability assessment and written report\n"
+            "• Recovery strategy development\n"
+            "• Demand communication drafting\n"
+            "• Settlement negotiation support\n"
+            "• Attorney referral for court-based enforcement\n\n"
+            "NOT A LAW FIRM: {{company_name}} does not provide legal representation. "
+            "Court filings require a licensed attorney.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{assigned_to}} (Company)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Internal Case Checklist",
+        "description": "Staff checklist for tracking all required steps in a commercial judgment recovery case.",
+        "category": "form",
+        "content": (
+            "COMMERCIAL JUDGMENT RECOVERY — CASE CHECKLIST\n"
+            "{{company_name}} | Case No.: {{case_number}} | Client: {{full_name}}\n"
+            "Assigned To: {{assigned_to}} | Opened: {{date}}\n\n"
+            "STEP 1 — CLIENT INTAKE\n"
+            "  [ ] Judgment copy received\n"
+            "  [ ] Case number and court confirmed\n"
+            "  [ ] Debtor information collected\n"
+            "  [ ] Prior collection efforts documented\n"
+            "  [ ] Non-Lawyer Disclosure signed\n"
+            "  [ ] Engagement agreement executed\n\n"
+            "STEP 2 — JUDGMENT VERIFICATION\n"
+            "  [ ] Judgment validity confirmed\n"
+            "  [ ] Remaining balance verified\n"
+            "  [ ] Renewal requirements noted\n"
+            "  [ ] Jurisdiction and enforceability confirmed\n\n"
+            "STEP 3 — COLLECTABILITY ASSESSMENT\n"
+            "  [ ] Collectability Worksheet completed\n"
+            "  [ ] Collectability Score assigned: _____ / 100\n"
+            "  [ ] Decision made: Accept / Decline / Refer\n\n"
+            "STEP 4 — ASSET INVESTIGATION\n"
+            "  [ ] Real estate search completed\n"
+            "  [ ] Corporate/business records searched\n"
+            "  [ ] UCC filing search completed\n"
+            "  [ ] Bankruptcy history checked\n"
+            "  [ ] Investigation report prepared\n\n"
+            "STEP 5 — RECOVERY STRATEGY\n"
+            "  [ ] Demand letter sent (if appropriate)\n"
+            "  [ ] Settlement negotiations initiated\n"
+            "  [ ] Attorney referral made (if required)\n"
+            "  [ ] Enforcement action plan documented\n\n"
+            "STEP 6 — CASE MANAGEMENT\n"
+            "  [ ] Client updates sent\n"
+            "  [ ] Deadlines and renewal dates calendared\n"
+            "  [ ] All communications logged\n"
+            "  [ ] Costs tracked\n\n"
+            "STEP 7 — CASE CLOSURE\n"
+            "  [ ] Recovery amount documented\n"
+            "  [ ] Fees calculated and collected\n"
+            "  [ ] Settlement or satisfaction documented\n"
+            "  [ ] Final report prepared\n"
+            "  [ ] File closed and archived\n\n"
+            "Reviewed by: {{assigned_to}}\n{{company_name}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Settlement Agreement",
+        "description": "Template settlement agreement between creditor and debtor to resolve the judgment.",
+        "category": "agreement",
+        "content": (
+            "SETTLEMENT AGREEMENT AND RELEASE\n\n"
+            "This Settlement Agreement is entered into as of {{date}} between "
+            "{{plaintiff_name}} (\"Creditor\") and {{defendant_name}} (\"Debtor\").\n\n"
+            "RECITALS\n"
+            "Creditor holds a judgment against Debtor entered by {{court_name}}, "
+            "Docket No. {{docket_number}}, in the original amount of {{judgment_amount}} "
+            "(the \"Judgment\").\n\n"
+            "SETTLEMENT TERMS\n"
+            "1. Settlement Amount: Debtor agrees to pay Creditor the total sum of "
+            "$___________ (the \"Settlement Amount\") as full and final satisfaction "
+            "of the Judgment.\n\n"
+            "2. Payment Schedule:\n"
+            "   Payment 1: $___________ due on ___________\n"
+            "   Payment 2: $___________ due on ___________\n"
+            "   (Lump sum / installments as negotiated)\n\n"
+            "3. Release: Upon receipt of the full Settlement Amount, Creditor agrees "
+            "to file a Satisfaction of Judgment with {{court_name}} and release all "
+            "claims arising from the Judgment.\n\n"
+            "4. Default: If Debtor fails to make any payment when due, the full "
+            "Judgment balance becomes immediately due and payable.\n\n"
+            "5. No Admission: This settlement does not constitute an admission of "
+            "liability by either party.\n\n"
+            "IMPORTANT: This document is prepared by {{company_name}}, which is NOT "
+            "a law firm. Both parties are encouraged to have this agreement reviewed "
+            "by a licensed attorney before signing.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{plaintiff_name}} (Creditor)\t\t{{defendant_name}} (Debtor)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "Prepared by: {{company_name}} | {{company_phone}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Case Status Report",
+        "description": "Periodic status report sent to the client summarizing recovery activity.",
+        "category": "report",
+        "content": (
+            "CASE STATUS REPORT\n"
+            "{{company_name}} — Judgment Recovery Division\n\n"
+            "Client: {{full_name}}\n"
+            "Case No.: {{case_number}}\n"
+            "Report Date: {{date}}\n"
+            "Assigned Specialist: {{assigned_to}}\n\n"
+            "JUDGMENT SUMMARY\n"
+            "Debtor: {{defendant_name}}\n"
+            "Court: {{court_name}} | Docket: {{docket_number}}\n"
+            "Original Amount: {{judgment_amount}}\n\n"
+            "CURRENT STATUS\n"
+            "Workflow Step: ___________\n"
+            "Collectability Score: _____ / 100\n"
+            "Recovery to Date: $___________\n"
+            "Outstanding Balance: $___________\n\n"
+            "RECENT ACTIVITY\n"
+            "{{notes}}\n\n"
+            "NEXT STEPS\n"
+            "1. ___________\n"
+            "2. ___________\n"
+            "3. ___________\n\n"
+            "IMPORTANT NOTICE: {{company_name}} is not a law firm and does not "
+            "provide legal advice. Court-based enforcement actions require a "
+            "licensed attorney.\n\n"
+            "Questions? Contact us at {{company_phone}} or {{company_email}}.\n\n"
+            "{{company_name}}\n{{company_address}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Final Recovery Report",
+        "description": "Closing report documenting recovery outcome, fees, and case closure.",
+        "category": "report",
+        "content": (
+            "FINAL RECOVERY REPORT\n"
+            "{{company_name}} — Judgment Recovery Division\n\n"
+            "Client: {{full_name}}\n"
+            "Case No.: {{case_number}}\n"
+            "Closing Date: {{date}}\n"
+            "Assigned Specialist: {{assigned_to}}\n\n"
+            "JUDGMENT\n"
+            "Debtor: {{defendant_name}}\n"
+            "Court: {{court_name}} | Docket: {{docket_number}}\n"
+            "Original Judgment Amount: {{judgment_amount}}\n\n"
+            "RECOVERY SUMMARY\n"
+            "Total Recovered: $___________\n"
+            "Company Fee ({{fee}}): $___________\n"
+            "Net to Client: $___________\n"
+            "Recovery Method: ___________\n"
+            "Settlement / Full Payment: ___________\n\n"
+            "CASE NOTES\n"
+            "{{notes}}\n\n"
+            "CLOSURE ACTIONS COMPLETED\n"
+            "  [ ] Judgment satisfaction filed with court\n"
+            "  [ ] Final payment confirmed\n"
+            "  [ ] Client funds disbursed\n"
+            "  [ ] File archived\n\n"
+            "Thank you for trusting {{company_name}} with your recovery matter.\n\n"
+            "{{assigned_to}}\n{{company_name}}\n{{company_phone}} | {{company_email}}"
+        ),
+    },
     # ── CONSULTING ────────────────────────────────────────────────────────────
     {
         "division_slug": "consulting",

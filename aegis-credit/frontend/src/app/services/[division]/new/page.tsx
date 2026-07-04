@@ -294,6 +294,8 @@ export default function NewServiceCasePage() {
   const [intakeData, setIntakeData] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [disclosureAccepted, setDisclosureAccepted] = useState(division !== 'judgment');
+  const [disclosureChecked, setDisclosureChecked] = useState(false);
 
   const divisionLabel = DIVISION_LABELS[division] || division;
 
@@ -364,6 +366,71 @@ export default function NewServiceCasePage() {
           </p>
         );
     }
+  }
+
+  if (!disclosureAccepted) {
+    return (
+      <div className="main-layout">
+        <Sidebar />
+        <main className="main-content">
+          <div className="page-header">
+            <h1>Non-Lawyer Disclosure</h1>
+            <p>Required before opening a commercial judgment recovery case</p>
+          </div>
+          <div className="card" style={{ maxWidth: 680 }}>
+            <div style={{
+              background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 'var(--radius)',
+              padding: '14px 16px', marginBottom: 20,
+            }}>
+              <strong style={{ fontSize: 13 }}>IMPORTANT NOTICE — PLEASE READ CAREFULLY</strong>
+            </div>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text)' }}>
+              <p><strong>Cruel &amp; Associates is NOT a law firm and does NOT provide legal advice or legal representation.</strong></p>
+              <p>
+                The Company provides commercial judgment recovery, asset investigation, and related administrative support services only.
+                Company staff are not licensed attorneys and cannot:
+              </p>
+              <ul style={{ paddingLeft: 24, marginBottom: 12 }}>
+                <li>Represent clients in court</li>
+                <li>Provide legal advice on rights or obligations</li>
+                <li>Interpret statutes or court orders</li>
+                <li>File documents with a court without attorney supervision</li>
+              </ul>
+              <p>
+                Clients are encouraged to consult with a licensed attorney regarding any legal questions, enforcement actions requiring court filings,
+                or matters where legal representation is required.
+              </p>
+              <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 16 }}>
+                This disclosure is required under applicable state law and company compliance policy.
+              </p>
+            </div>
+            <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16 }}>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontSize: 14 }}>
+                <input
+                  type="checkbox"
+                  checked={disclosureChecked}
+                  onChange={e => setDisclosureChecked(e.target.checked)}
+                  style={{ marginTop: 3, flexShrink: 0 }}
+                />
+                <span>I have read and understand that Cruel &amp; Associates is NOT a law firm and does not provide legal advice or legal representation.</span>
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button
+                className="btn btn-primary"
+                disabled={!disclosureChecked}
+                onClick={() => setDisclosureAccepted(true)}
+              >
+                Accept &amp; Continue
+              </button>
+              <button className="btn btn-outline" onClick={() => router.back()}>
+                Back
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (

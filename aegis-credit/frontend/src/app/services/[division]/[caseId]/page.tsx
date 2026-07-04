@@ -474,6 +474,146 @@ function CreateInvoiceModal({
   );
 }
 
+// ── Judgment Workflow Card ────────────────────────────────────────────────────
+
+const WORKFLOW_STEPS = [
+  { n: 1, label: 'Client Intake',           desc: 'Collect judgment docs, court info, debtor data, prior efforts' },
+  { n: 2, label: 'Judgment Verification',   desc: 'Confirm validity, remaining balance, renewal, enforceability' },
+  { n: 3, label: 'Collectability Assessment', desc: 'Evaluate assets, assign collectability score (1–100)' },
+  { n: 4, label: 'Asset Investigation',     desc: 'Search public records: property, UCC, corporate, bankruptcy' },
+  { n: 5, label: 'Recovery Strategy',       desc: 'Demand letters, settlement talks, attorney coordination' },
+  { n: 6, label: 'Case Management',         desc: 'Track communications, deadlines, costs, recoveries' },
+  { n: 7, label: 'Case Closure',            desc: 'Document recovery, fees, satisfaction, final report' },
+];
+
+function JudgmentWorkflowCard({
+  caseId,
+  intakeData,
+  onSaved,
+}: {
+  caseId: number;
+  intakeData: Record<string, unknown>;
+  onSaved: () => void;
+}) {
+  const currentStep = Number(intakeData.workflow_step) || 1;
+  const collectabilityScore = intakeData.collectability_score != null ? String(intakeData.collectability_score) : '';
+
+  const [pendingStep, setPendingStep] = useState(currentStep);
+  const [score, setScore] = useState(collectabilityScore);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setPendingStep(Number(intakeData.workflow_step) || 1);
+    setScore(intakeData.collectability_score != null ? String(intakeData.collectability_score) : '');
+  }, [intakeData]);
+
+  async function save() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
+      const res = await fetch(`/api/service-cases/${caseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          intake_data: { ...intakeData, workflow_step: pendingStep, collectability_score: score ? Number(score) : null },
+        }),
+      });
+      if (res.ok) { setSaved(true); onSaved(); }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const scoreNum = parseFloat(score);
+  const scoreColor = !score ? '#6b7280' : scoreNum >= 70 ? '#10b981' : scoreNum >= 40 ? '#f59e0b' : '#ef4444';
+
+  return (
+    <div className="card">
+      <h3 style={{ marginBottom: 16 }}>Recovery Workflow</h3>
+
+      {/* Step progress */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 20, overflowX: 'auto' }}>
+        {WORKFLOW_STEPS.map((step, i) => {
+          const isDone = step.n < pendingStep;
+          const isActive = step.n === pendingStep;
+          return (
+            <button
+              key={step.n}
+              onClick={() => { setPendingStep(step.n); setSaved(false); }}
+              title={step.desc}
+              style={{
+                flex: '1 1 0',
+                minWidth: 80,
+                padding: '10px 6px',
+                border: 'none',
+                borderBottom: isActive ? '3px solid var(--navy)' : isDone ? '3px solid #10b981' : '3px solid var(--border)',
+                background: isActive ? 'var(--navy-light, #eff6ff)' : 'transparent',
+                cursor: 'pointer',
+                textAlign: 'center',
+                position: 'relative',
+              }}
+            >
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%', margin: '0 auto 6px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 700,
+                background: isActive ? 'var(--navy)' : isDone ? '#10b981' : 'var(--border)',
+                color: isActive || isDone ? 'white' : 'var(--muted)',
+              }}>
+                {isDone ? '✓' : step.n}
+              </div>
+              <div style={{ fontSize: 10, fontWeight: isActive ? 700 : 400, color: isActive ? 'var(--navy)' : 'var(--muted)', lineHeight: 1.2 }}>
+                {step.label}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active step description */}
+      <div style={{ background: 'var(--surface-alt, #f8fafc)', borderRadius: 'var(--radius)', padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
+        <strong>Step {pendingStep}: {WORKFLOW_STEPS[pendingStep - 1]?.label}</strong>
+        <div style={{ color: 'var(--muted)', marginTop: 4 }}>{WORKFLOW_STEPS[pendingStep - 1]?.desc}</div>
+      </div>
+
+      {/* Collectability score */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+        <div>
+          <label style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>
+            Collectability Score (1–100)
+          </label>
+          <input
+            type="number"
+            min="1"
+            max="100"
+            value={score}
+            onChange={e => { setScore(e.target.value); setSaved(false); }}
+            placeholder="—"
+            style={{ width: 80, padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 14, fontWeight: 700, color: scoreColor, fontVariantNumeric: 'tabular-nums' }}
+          />
+        </div>
+        {score && (
+          <div style={{ fontSize: 12, color: scoreColor, fontWeight: 600, paddingTop: 18 }}>
+            {scoreNum >= 70 ? 'High collectability' : scoreNum >= 40 ? 'Moderate collectability' : 'Low collectability'}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save Workflow'}
+        </button>
+        {saved && <span style={{ fontSize: 12, color: 'var(--success)' }}>Saved.</span>}
+      </div>
+    </div>
+  );
+}
+
 // ── Create Notary Log Modal ───────────────────────────────────────────────────
 
 function CreateNotaryLogModal({
@@ -1036,6 +1176,15 @@ function ServiceCaseDetailInner() {
               <h3>Intake Data</h3>
               <IntakeDisplay data={caseData.intake_data || {}} />
             </div>
+
+            {/* Judgment 7-step workflow tracker */}
+            {division === 'judgment' && (
+              <JudgmentWorkflowCard
+                caseId={numericId}
+                intakeData={caseData.intake_data || {}}
+                onSaved={loadCase}
+              />
+            )}
 
             {/* Division-specific AI quick actions */}
             {(division === 'judgment' || division === 'consulting') && (

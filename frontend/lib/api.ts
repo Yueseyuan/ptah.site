@@ -411,6 +411,44 @@ export const researchApi = {
   run: (question: string) => api.post<ResearchResult>("/research/run", { question }),
 };
 
+// RSS Feeds
+export interface RssFeed {
+  id: number;
+  name: string;
+  url: string;
+  goal_template: string;
+  poll_interval_minutes: number;
+  enabled: boolean;
+  last_checked_at: string | null;
+  last_item_guid: string | null;
+  run_count: number;
+  error_count: number;
+  last_error: string | null;
+  created_at: string;
+}
+
+export interface RssPreviewItem {
+  guid: string;
+  title: string;
+  link: string;
+  summary: string;
+}
+
+export const rssApi = {
+  list: () => api.get<RssFeed[]>("/rss/"),
+  create: (data: {
+    name: string;
+    url: string;
+    goal_template?: string;
+    poll_interval_minutes?: number;
+    enabled?: boolean;
+  }) => api.post<RssFeed>("/rss/", data),
+  update: (id: number, data: Partial<RssFeed>) => api.patch<RssFeed>(`/rss/${id}`, data),
+  delete: (id: number) => api.delete(`/rss/${id}`),
+  checkNow: (id: number) => api.post<RssFeed>(`/rss/${id}/check-now`),
+  preview: (id: number) => api.get<RssPreviewItem[]>(`/rss/${id}/preview`),
+};
+
 // YouTube Transcription
 export interface TranscribeResult {
   ok: boolean;

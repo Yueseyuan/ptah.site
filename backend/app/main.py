@@ -10,7 +10,9 @@ from app.api.v1.router import api_router
 async def lifespan(app: FastAPI):
     await init_db()
     from app.services.scheduler_service import start_scheduler, stop_scheduler
+    from app.services.rss_service import start_rss_polling
     await start_scheduler()
+    await start_rss_polling()
     yield
     await stop_scheduler()
 

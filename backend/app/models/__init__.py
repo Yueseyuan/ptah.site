@@ -35,6 +35,7 @@ from app.models.workflow import (
     WorkflowRunStatus, WorkflowStatus, WorkflowStep,
 )
 from app.models.user import User
+from app.models.rss_feed import RssFeed
 
 __all__ = [
     "Agent", "AgentCapability", "AgentCapabilityType",
@@ -48,4 +49,5 @@ __all__ = [
     "ContentType", "MemoryCollection", "MemoryEntry", "MemoryEntryTag",
     "MemoryLink", "MemoryLinkType", "MemoryTag", "MemoryVersion",
     "User",
+    "RssFeed",
 ]

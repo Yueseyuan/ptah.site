@@ -298,6 +298,12 @@ export const consultAI = (caseId: number, data: { finding_id?: number; user_theo
 export const bulkUpdateFindings = (ids: number[], status: string) =>
   api.post('/api/findings/bulk-update', { ids, status }).then(r => r.data);
 
+// Division AI endpoints
+export const generateJudgmentRecoveryPlan = (serviceCaseId: number) =>
+  api.post(`/api/judgment/${serviceCaseId}/recovery-plan`).then(r => r.data);
+export const generateConsultingAdvisory = (serviceCaseId: number) =>
+  api.post(`/api/consulting/${serviceCaseId}/advise`).then(r => r.data);
+
 // Attorney Referrals
 export const listReferrals = (params?: { client_id?: number; service_case_id?: number; status?: string; practice_area?: string }) =>
   api.get('/api/referrals/', { params }).then(r => r.data);

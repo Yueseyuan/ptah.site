@@ -109,6 +109,7 @@ const BASE_TABS = [
 const DIVISION_EXTRA_TABS: Record<string, { id: string; label: string }[]> = {
   criminal: [{ id: 'referrals', label: 'Referrals' }],
   notary:   [{ id: 'journal',   label: 'Notary Journal' }],
+  judgment: [{ id: 'referrals', label: 'Referrals' }],
 };
 
 // ── Helper: authenticated fetch ────────────────────────────────────────────────
@@ -763,6 +764,8 @@ function ServiceCaseDetailInner() {
   const [saving, setSaving] = useState(false);
   const [letterLoading, setLetterLoading] = useState<number | null>(null);
   const [letterMsg, setLetterMsg] = useState('');
+  const [aiActionLoading, setAiActionLoading] = useState(false);
+  const [aiActionMsg, setAiActionMsg] = useState('');
 
   // Modal state
   const [showGenDoc, setShowGenDoc] = useState(false);
@@ -873,6 +876,22 @@ function ServiceCaseDetailInner() {
       setLetterMsg(`Error: ${(err as Error).message}`);
     } finally {
       setLetterLoading(null);
+    }
+  }
+
+  async function runAiAction(endpoint: string, label: string) {
+    setAiActionLoading(true);
+    setAiActionMsg('');
+    try {
+      const res = await authFetch(endpoint, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.detail || body.message || `HTTP ${res.status}`);
+      setAiActionMsg(`${label} generated${body.ai_generated ? ' (AI)' : ''}. View it in the Documents tab.`);
+      loadDocs();
+    } catch (err: unknown) {
+      setAiActionMsg(`Error: ${(err as Error).message}`);
+    } finally {
+      setAiActionLoading(false);
     }
   }
 
@@ -1017,6 +1036,53 @@ function ServiceCaseDetailInner() {
               <h3>Intake Data</h3>
               <IntakeDisplay data={caseData.intake_data || {}} />
             </div>
+
+            {/* Division-specific AI quick actions */}
+            {(division === 'judgment' || division === 'consulting') && (
+              <div className="card">
+                <h3>AI Quick Actions</h3>
+                {aiActionMsg && (
+                  <div style={{
+                    marginBottom: 12, padding: '10px 14px', borderRadius: 'var(--radius)',
+                    background: aiActionMsg.startsWith('Error') ? '#fee2e2' : '#d1fae5',
+                    color: aiActionMsg.startsWith('Error') ? '#991b1b' : '#065f46',
+                    fontSize: 13,
+                  }}>
+                    {aiActionMsg}
+                    <button onClick={() => setAiActionMsg('')} style={{ marginLeft: 10, background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, opacity: 0.7 }}>✕</button>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {division === 'judgment' && (
+                    <button
+                      className="btn btn-primary"
+                      disabled={aiActionLoading}
+                      onClick={() => runAiAction(`/api/judgment/${numericId}/recovery-plan`, 'Recovery Plan')}
+                    >
+                      {aiActionLoading ? 'Generating…' : '🤖 Generate Recovery Plan'}
+                    </button>
+                  )}
+                  {division === 'consulting' && (
+                    <button
+                      className="btn btn-primary"
+                      disabled={aiActionLoading}
+                      onClick={() => runAiAction(`/api/consulting/${numericId}/advise`, 'Business Advisory')}
+                    >
+                      {aiActionLoading ? 'Generating…' : '🤖 Generate Business Advisory'}
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => { setActiveTab('documents'); }}
+                  >
+                    View Documents
+                  </button>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, marginBottom: 0 }}>
+                  AI-generated documents are saved to the Documents tab automatically.
+                </p>
+              </div>
+            )}
           </>
         )}
 

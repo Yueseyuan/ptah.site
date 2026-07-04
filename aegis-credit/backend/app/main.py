@@ -40,6 +40,8 @@ from app.routers.appointments import router as appointments_router
 from app.routers.service_invoices import router as service_invoices_router
 from app.routers.notary import router as notary_router
 from app.routers.referrals import router as referrals_router
+from app.routers.judgment_ai import router as judgment_ai_router
+from app.routers.consulting_ai import router as consulting_ai_router
 
 
 def repair_schema():
@@ -308,6 +310,8 @@ app.include_router(appointments_router)
 app.include_router(service_invoices_router)
 app.include_router(notary_router)
 app.include_router(referrals_router)
+app.include_router(judgment_ai_router)
+app.include_router(consulting_ai_router)
 
 
 @app.get("/api/health")

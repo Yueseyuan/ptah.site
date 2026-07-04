@@ -157,7 +157,14 @@ export default function MediaStudioPage() {
   const [sfxError, setSfxError] = useState<string | null>(null);
 
   useEffect(() => {
-    mediaStudioApi.balance().then(setBalance).catch(() => setBalance({ ok: false }));
+    async function fetchBalance() {
+      try {
+        setBalance(await mediaStudioApi.balance());
+      } catch {
+        setBalance({ ok: false });
+      }
+    }
+    void fetchBalance();
   }, []);
 
   async function generateVideo() {

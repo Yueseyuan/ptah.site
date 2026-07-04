@@ -44,6 +44,8 @@ from app.routers.judgment_ai import router as judgment_ai_router
 from app.routers.consulting_ai import router as consulting_ai_router
 from app.routers.overages_ai import router as overages_ai_router
 from app.routers.case_research import router as case_research_router
+from app.routers.data_pulls import router as data_pulls_router
+from app.routers.case_monitor import router as case_monitor_router
 
 
 def repair_schema():
@@ -257,6 +259,18 @@ if not os.environ.get("TESTING"):
         run_seeds()
     threading.Thread(target=_startup, daemon=True).start()
 
+# APScheduler — daily morning digest at 6 AM UTC
+if not os.environ.get("TESTING"):
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from app.jobs.monitor_job import generate_morning_digest
+        _scheduler = BackgroundScheduler(timezone="UTC")
+        _scheduler.add_job(generate_morning_digest, "cron", hour=6, minute=0, id="morning_digest", replace_existing=True)
+        _scheduler.start()
+        print("[SCHEDULER] Morning digest job scheduled at 06:00 UTC daily")
+    except Exception as _sched_err:
+        print(f"[SCHEDULER] Failed to start: {_sched_err}")
+
 # Startup diagnostics — visible in Railway deploy logs
 _ak_raw = os.environ.get('ANTHROPIC_API_KEY', '')
 _sk_raw = os.environ.get('STRIPE_SECRET_KEY', '')
@@ -324,6 +338,8 @@ app.include_router(judgment_ai_router)
 app.include_router(consulting_ai_router)
 app.include_router(overages_ai_router)
 app.include_router(case_research_router)
+app.include_router(data_pulls_router)
+app.include_router(case_monitor_router)
 
 
 @app.get("/api/health")

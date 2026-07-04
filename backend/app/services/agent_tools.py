@@ -292,6 +292,29 @@ _MEDIA_GEN_TOOLS: list[dict[str, Any]] = [
 
 _SOCIAL_TOOLS: list[dict[str, Any]] = [
     {
+        "name": "notify_channel",
+        "description": (
+            "Send a message to a configured communication channel (Telegram, Discord, Slack). "
+            "Use to deliver results, alerts, or updates back to a user or team channel. "
+            "Requires a channel_id from the /channels API — list configured channels to find IDs. "
+            "Useful at the end of long-running tasks to notify completion."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "channel_id": {
+                    "type": "integer",
+                    "description": "ID of the configured channel to send to",
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Message text to send (Markdown supported for Telegram)",
+                },
+            },
+            "required": ["channel_id", "message"],
+        },
+    },
+    {
         "name": "post_social",
         "description": (
             "Post content to a social media platform. "
@@ -362,6 +385,9 @@ IMAGE / VIDEO / AUDIO GENERATION:
 - generate_video_clip(prompt, duration=6, genre="auto", aspect_ratio="9:16", sound="on"): generate a video clip, returns URL
 - generate_voiceover(text, voice="Sterling"): generate spoken audio, returns URL
 
+MESSAGING CHANNELS:
+- notify_channel(channel_id, message): send message to a Telegram/Discord/Slack channel
+
 SOCIAL MEDIA TOOLS:
 - post_social(platform, text, image_url=null): post to twitter/linkedin/instagram/facebook
 
@@ -401,6 +427,8 @@ def make_tool_executor(workspace: Path) -> Callable[[str, dict[str, Any]], Await
             return await _send_email(args["to"], args["subject"], args["body"], args.get("html", True))
 
         # Social tool
+        if name == "notify_channel":
+            return await _notify_channel(int(args["channel_id"]), args["message"])
         if name == "post_social":
             return await _post_social(args["platform"], args["text"], args.get("image_url"))
 
@@ -570,6 +598,25 @@ async def _generate_voiceover(text: str, voice: str = "Sterling") -> str:
         return f"Voiceover generation failed: {result['error']}"
     except Exception as exc:
         return f"Voiceover generation error: {exc}"
+
+
+async def _notify_channel(channel_id: int, message: str) -> str:
+    try:
+        from sqlalchemy import select
+        from app.database import AsyncSessionLocal
+        from app.models.channel import Channel
+        from app.services.channel_service import send_to_channel
+
+        async with AsyncSessionLocal() as db:
+            ch = (await db.execute(select(Channel).where(Channel.id == channel_id))).scalar_one_or_none()
+        if not ch:
+            return f"Channel {channel_id} not found"
+        if not ch.enabled:
+            return f"Channel {channel_id} is disabled"
+        ok = await send_to_channel(ch.config, ch.channel_type, message)
+        return f"Message sent to {ch.name}" if ok else f"Failed to send to {ch.name}"
+    except Exception as exc:
+        return f"Channel notification error: {exc}"
 
 
 async def _transcribe_youtube(url: str) -> str:

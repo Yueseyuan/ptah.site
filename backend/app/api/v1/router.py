@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
-    agency, agents, approval, audit, auth, chief, claritas, context, health, knowledge, media,
+    agency, agents, approval, audit, auth, channels, chief, claritas, context, health, knowledge, media,
     memory, models, orchestrator, prompts, repo_review, research, rss, scheduler, skills, tools, workflows, workspace,
     youtube,
 )
@@ -30,3 +30,4 @@ api_router.include_router(scheduler.router, prefix="/scheduler", tags=["schedule
 api_router.include_router(research.router, prefix="/research", tags=["research"])
 api_router.include_router(youtube.router, prefix="/youtube", tags=["youtube"])
 api_router.include_router(rss.router, prefix="/rss", tags=["rss"])
+api_router.include_router(channels.router, prefix="/channels", tags=["channels"])

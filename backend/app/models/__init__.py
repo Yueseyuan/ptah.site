@@ -36,6 +36,7 @@ from app.models.workflow import (
 )
 from app.models.user import User
 from app.models.rss_feed import RssFeed
+from app.models.channel import Channel
 
 __all__ = [
     "Agent", "AgentCapability", "AgentCapabilityType",
@@ -50,4 +51,5 @@ __all__ = [
     "MemoryLink", "MemoryLinkType", "MemoryTag", "MemoryVersion",
     "User",
     "RssFeed",
+    "Channel",
 ]

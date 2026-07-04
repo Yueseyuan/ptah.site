@@ -411,6 +411,31 @@ export const researchApi = {
   run: (question: string) => api.post<ResearchResult>("/research/run", { question }),
 };
 
+// Communication Channels
+export interface Channel {
+  id: number;
+  name: string;
+  channel_type: "telegram" | "discord_webhook" | "slack_webhook" | "generic_webhook";
+  config: Record<string, unknown>;
+  enabled: boolean;
+  created_at: string;
+}
+
+export const channelsApi = {
+  list: () => api.get<Channel[]>("/channels/"),
+  create: (data: { name: string; channel_type: string; config: Record<string, unknown>; enabled?: boolean }) =>
+    api.post<Channel>("/channels/", data),
+  update: (id: number, data: Partial<{ name: string; config: Record<string, unknown>; enabled: boolean }>) =>
+    api.patch<Channel>(`/channels/${id}`, data),
+  delete: (id: number) => api.delete(`/channels/${id}`),
+  send: (id: number, message: string, chatId?: string) =>
+    api.post<{ ok: boolean; detail: string | null }>(`/channels/${id}/send`, { message, chat_id: chatId }),
+  test: (id: number) =>
+    api.post<{ ok: boolean; detail: string | null }>(`/channels/${id}/test`),
+  setWebhook: (id: number, webhookUrl: string) =>
+    api.post<{ ok: boolean; detail: string | null }>(`/channels/${id}/set-webhook`, { webhook_url: webhookUrl }),
+};
+
 // RSS Feeds
 export interface RssFeed {
   id: number;

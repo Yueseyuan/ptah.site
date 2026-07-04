@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bot, BookOpen, Brain, Calendar, Crown, Film, GitBranch, Home, LogOut,
-  Network, Rss, Settings, Star, Youtube
+  MessageSquare, Network, Rss, Settings, Star, Youtube
 } from "lucide-react";
 import { clearToken } from "@/lib/auth";
 
@@ -13,6 +13,7 @@ const nav = [
   { href: "/research", icon: BookOpen, label: "Research" },
   { href: "/youtube", icon: Youtube, label: "YouTube" },
   { href: "/rss", icon: Rss, label: "RSS Feeds" },
+  { href: "/channels", icon: MessageSquare, label: "Channels" },
   { href: "/media-studio", icon: Film, label: "Media Studio" },
   { href: "/scheduler", icon: Calendar, label: "Scheduler" },
   { href: "/dashboard", icon: Home, label: "Dashboard" },

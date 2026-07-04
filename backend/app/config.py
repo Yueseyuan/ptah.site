@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     facebook_access_token: str = ""
     instagram_business_account_id: str = ""
 
+    # ── Messaging Channels ────────────────────────────────────────────────────
+    # Telegram: get a bot token from @BotFather, set webhook via /channels API
+    telegram_bot_token: str = ""
+    # Webhook secret sent to Telegram's setWebhook (auto-generated if blank)
+    telegram_webhook_secret: str = ""
+
     # ── Higgsfield AI  (video + audio generation) ─────────────────────────────
     # Run `hf auth login` once, then set this to the credentials.json path.
     # Default: ~/.config/higgsfield/credentials.json (auto-detected if present)

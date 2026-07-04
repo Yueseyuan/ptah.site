@@ -43,6 +43,7 @@ from app.routers.referrals import router as referrals_router
 from app.routers.judgment_ai import router as judgment_ai_router
 from app.routers.consulting_ai import router as consulting_ai_router
 from app.routers.overages_ai import router as overages_ai_router
+from app.routers.case_research import router as case_research_router
 
 
 def repair_schema():
@@ -145,6 +146,14 @@ def repair_schema():
                         f"ALTER TABLE users ADD COLUMN {col_name} {col_def}",
                         f"Added users.{col_name}",
                     )
+
+        # Migration 008: case_id on service_documents for cross-linking research reports
+        if "service_documents" in existing_tables and "case_id" not in cols("service_documents"):
+            run_ddl(
+                "ALTER TABLE service_documents ADD COLUMN case_id INTEGER "
+                "REFERENCES aegis_cases(id)",
+                "Added service_documents.case_id",
+            )
 
         print("[REPAIR] Schema repair complete")
     except Exception as e:
@@ -314,6 +323,7 @@ app.include_router(referrals_router)
 app.include_router(judgment_ai_router)
 app.include_router(consulting_ai_router)
 app.include_router(overages_ai_router)
+app.include_router(case_research_router)
 
 
 @app.get("/api/health")

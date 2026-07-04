@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import api from '@/lib/api';
 
 interface Client {
   id: number;
@@ -415,12 +416,8 @@ export default function NewServiceCasePage() {
   const divisionLabel = DIVISION_LABELS[division] || division;
 
   useEffect(() => {
-    const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
-    fetch('/api/clients/', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(r => r.ok ? r.json() : [])
-      .then(setClients)
+    api.get<Client[]>('/api/clients/')
+      .then(r => setClients(r.data))
       .catch(() => {});
   }, []);
 
@@ -434,25 +431,12 @@ export default function NewServiceCasePage() {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
-      const res = await fetch('/api/service-cases', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          division_slug: division,
-          client_id: parseInt(clientId),
-          notes,
-          intake_data: intakeData,
-        }),
+      const { data } = await api.post<{ id: number }>('/api/service-cases', {
+        division_slug: division,
+        client_id: parseInt(clientId),
+        notes,
+        intake_data: intakeData,
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail || body.message || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
       router.push(`/services/${division}/${data.id}`);
     } catch (err: unknown) {
       const e = err as Error;

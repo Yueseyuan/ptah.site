@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import api from '@/lib/api';
 
 interface ServiceCase {
   id: number;
@@ -76,15 +77,8 @@ export default function DivisionPage() {
   useEffect(() => {
     if (!division) return;
     setLoading(true);
-    const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
-    fetch(`/api/service-cases?division=${encodeURIComponent(division)}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(setCases)
+    api.get<ServiceCase[]>(`/api/service-cases`, { params: { division } })
+      .then(r => setCases(r.data))
       .catch(e => setError(e.message || 'Failed to load cases.'))
       .finally(() => setLoading(false));
   }, [division]);

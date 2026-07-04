@@ -131,6 +131,27 @@ _WEB_TOOLS: list[dict[str, Any]] = [
             "required": ["url"],
         },
     },
+    {
+        "name": "transcribe_youtube",
+        "description": (
+            "Transcribe the spoken content of a YouTube video into text. "
+            "Works by fetching auto-generated or manual captions first (fast, no audio download). "
+            "Falls back to downloading audio and running Whisper transcription if captions are unavailable. "
+            "Use to: understand video content, extract spoken information, summarize YouTube tutorials, "
+            "get quotes from interviews or podcasts hosted on YouTube. "
+            "Accepts any youtube.com or youtu.be URL."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "YouTube video URL (youtube.com/watch?v=... or youtu.be/...)",
+                },
+            },
+            "required": ["url"],
+        },
+    },
 ]
 
 # ── Email tools ───────────────────────────────────────────────────────────────
@@ -331,6 +352,7 @@ FILE TOOLS:
 WEB TOOLS:
 - fetch_url(url, mode): fetch webpage as text/html/links
 - jina_read(url): fetch URL as clean Markdown (better for research and reading articles)
+- transcribe_youtube(url): transcribe a YouTube video to text (captions or Whisper)
 
 EMAIL TOOLS:
 - send_email(to, subject, body, html=true): send via SendGrid
@@ -371,6 +393,8 @@ def make_tool_executor(workspace: Path) -> Callable[[str, dict[str, Any]], Await
             return await _fetch_url(args["url"], args.get("mode", "text"))
         if name == "jina_read":
             return await _jina_read(args["url"])
+        if name == "transcribe_youtube":
+            return await _transcribe_youtube(args["url"])
 
         # Email tool
         if name == "send_email":
@@ -546,6 +570,25 @@ async def _generate_voiceover(text: str, voice: str = "Sterling") -> str:
         return f"Voiceover generation failed: {result['error']}"
     except Exception as exc:
         return f"Voiceover generation error: {exc}"
+
+
+async def _transcribe_youtube(url: str) -> str:
+    """Transcribe a YouTube video — captions first, Whisper fallback."""
+    try:
+        from app.services.youtube_transcript import transcribe_youtube
+        result = await transcribe_youtube(url)
+        if result.get("ok"):
+            method = result.get("method", "unknown")
+            transcript = result.get("transcript", "")
+            vid = result.get("video_id", "")
+            return f"[YouTube transcript via {method} — video: {vid}]\n\n{transcript}"
+        error = result.get("error", "Unknown error")
+        caption_err = result.get("caption_error")
+        if caption_err:
+            return f"Transcription failed. Captions: {caption_err}. Whisper: {error}"
+        return f"Transcription failed: {error}"
+    except Exception as exc:
+        return f"YouTube transcription error: {exc}"
 
 
 async def _run_bash(workspace: Path, command: str, timeout: int = 30) -> str:

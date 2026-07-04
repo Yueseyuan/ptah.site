@@ -411,6 +411,19 @@ export const researchApi = {
   run: (question: string) => api.post<ResearchResult>("/research/run", { question }),
 };
 
+// YouTube Transcription
+export interface TranscribeResult {
+  ok: boolean;
+  transcript: string | null;
+  method: string | null;
+  video_id: string | null;
+  error: string | null;
+}
+
+export const youtubeApi = {
+  transcribe: (url: string) => api.post<TranscribeResult>("/youtube/transcribe", { url }),
+};
+
 // skills.sh
 export interface SkillCatalogEntry {
   slug: string;

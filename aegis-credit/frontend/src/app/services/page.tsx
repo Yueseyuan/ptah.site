@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import api from '@/lib/api';
 
 interface DivisionStats {
   division: string;
@@ -66,14 +67,10 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
-    fetch('/api/service-cases/divisions', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(r => r.ok ? r.json() : [])
-      .then((data: DivisionStats[]) => {
+    api.get<DivisionStats[]>('/api/service-cases/divisions')
+      .then(r => {
         const m: Record<string, number> = {};
-        for (const d of data) m[d.division] = d.count;
+        for (const d of r.data) m[d.division] = d.count;
         setStats(m);
       })
       .catch(() => {})

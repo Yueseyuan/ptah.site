@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import api, { getToken } from '@/lib/api';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -117,7 +118,7 @@ const DIVISION_EXTRA_TABS: Record<string, { id: string; label: string }[]> = {
 // ── Helper: authenticated fetch ────────────────────────────────────────────────
 
 function authFetch(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
+  const token = getToken();
   return fetch(url, {
     ...options,
     headers: {
@@ -514,18 +515,10 @@ function JudgmentWorkflowCard({
     setSaving(true);
     setSaved(false);
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
-      const res = await fetch(`/api/service-cases/${caseId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          intake_data: { ...intakeData, workflow_step: pendingStep, collectability_score: score ? Number(score) : null },
-        }),
+      await api.put(`/api/service-cases/${caseId}`, {
+        intake_data: { ...intakeData, workflow_step: pendingStep, collectability_score: score ? Number(score) : null },
       });
-      if (res.ok) { setSaved(true); onSaved(); }
+      setSaved(true); onSaved();
     } finally {
       setSaving(false);
     }
@@ -659,18 +652,10 @@ function OveragesWorkflowCard({
     setSaving(true);
     setSaved(false);
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('aegis_token');
-      const res = await fetch(`/api/service-cases/${caseId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          intake_data: { ...intakeData, workflow_step: pendingStep, fee_percentage: feePct ? Number(feePct) : DEFAULT_FEE_PCT },
-        }),
+      await api.put(`/api/service-cases/${caseId}`, {
+        intake_data: { ...intakeData, workflow_step: pendingStep, fee_percentage: feePct ? Number(feePct) : DEFAULT_FEE_PCT },
       });
-      if (res.ok) { setSaved(true); onSaved(); }
+      setSaved(true); onSaved();
     } finally {
       setSaving(false);
     }

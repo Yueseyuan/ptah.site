@@ -53,14 +53,19 @@ async function apiFetch<T = unknown>(
 
   if (!res.ok) {
     if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('aegis_role');
-      if (res.status === 401 || (res.status === 403 && role === 'client')) {
+      const role = localStorage.getItem('aegis_role') || localStorage.getItem('portal_role');
+      const isLoginEndpoint = path === '/api/auth/login' || path === '/api/portal/login';
+      if (!isLoginEndpoint && (res.status === 401 || (res.status === 403 && role === 'client'))) {
+        // Clear all auth keys so the login page has a clean slate
         localStorage.removeItem('aegis_token');
         localStorage.removeItem('aegis_role');
+        localStorage.removeItem('portal_token');
+        localStorage.removeItem('portal_role');
         window.location.href = '/login';
       }
     }
-    const err = new Error(`HTTP ${res.status}`) as Error & { response: { status: number } };
+    const errBody = await res.json().catch(() => ({})) as { detail?: string; message?: string };
+    const err = new Error(errBody.detail || errBody.message || `HTTP ${res.status}`) as Error & { response: { status: number } };
     err.response = { status: res.status };
     throw err;
   }

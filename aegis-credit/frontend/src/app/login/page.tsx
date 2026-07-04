@@ -32,6 +32,8 @@ export default function LoginPage() {
     setError('');
     try {
       const data = await loginUser(username, password);
+      // Clear any stale keys before writing fresh ones
+      clearPortalAuth();
       setToken(data.access_token);
       setPortalAuth(data.access_token, data.role || '');
       if (data.role === 'client') {
@@ -39,8 +41,13 @@ export default function LoginPage() {
       } else {
         router.push('/cases');
       }
-    } catch {
-      setError('Invalid username or password.');
+    } catch (err: unknown) {
+      const e = err as Error & { response?: { status: number } };
+      if (e.response?.status === 401 || e.response?.status === 400) {
+        setError('Invalid username or password.');
+      } else {
+        setError(e.message || 'Sign in failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

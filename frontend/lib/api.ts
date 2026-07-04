@@ -400,6 +400,17 @@ export const agencyApi = {
   seed: () => api.post<AgencySeedResult>("/agency/seed"),
 };
 
+// Deep Research
+export interface ResearchResult {
+  report: string;
+  sources: string[];
+  sub_questions: string[];
+}
+
+export const researchApi = {
+  run: (question: string) => api.post<ResearchResult>("/research/run", { question }),
+};
+
 // skills.sh
 export interface SkillCatalogEntry {
   slug: string;

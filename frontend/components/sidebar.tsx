@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Bot, Brain, Calendar, Crown, Film, GitBranch, Home, LogOut,
+  Bot, BookOpen, Brain, Calendar, Crown, Film, GitBranch, Home, LogOut,
   Network, Settings, Star
 } from "lucide-react";
 import { clearToken } from "@/lib/auth";
 
 const nav = [
   { href: "/chief", icon: Crown, label: "Chief" },
+  { href: "/research", icon: BookOpen, label: "Research" },
   { href: "/media-studio", icon: Film, label: "Media Studio" },
   { href: "/scheduler", icon: Calendar, label: "Scheduler" },
   { href: "/dashboard", icon: Home, label: "Dashboard" },

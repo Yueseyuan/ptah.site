@@ -43,6 +43,7 @@ from app.routers.referrals import router as referrals_router
 from app.routers.judgment_ai import router as judgment_ai_router
 from app.routers.consulting_ai import router as consulting_ai_router
 from app.routers.overages_ai import router as overages_ai_router
+from app.routers.overages_automation import router as overages_automation_router
 from app.routers.case_research import router as case_research_router
 from app.routers.data_pulls import router as data_pulls_router
 from app.routers.case_monitor import router as case_monitor_router
@@ -337,6 +338,7 @@ app.include_router(referrals_router)
 app.include_router(judgment_ai_router)
 app.include_router(consulting_ai_router)
 app.include_router(overages_ai_router)
+app.include_router(overages_automation_router)
 app.include_router(case_research_router)
 app.include_router(data_pulls_router)
 app.include_router(case_monitor_router)

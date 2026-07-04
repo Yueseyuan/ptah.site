@@ -329,6 +329,14 @@ export const generateConsultingAdvisory = (serviceCaseId: number) =>
   api.post(`/api/consulting/${serviceCaseId}/advise`).then(r => r.data);
 export const scoreOveragesLead = (serviceCaseId: number) =>
   api.post(`/api/overages/${serviceCaseId}/score-lead`).then(r => r.data);
+export const scrapeSurplus = (serviceCaseId: number) =>
+  api.post(`/api/overages/${serviceCaseId}/scrape-surplus`).then(r => r.data);
+export const locateOwner = (serviceCaseId: number) =>
+  api.post(`/api/overages/${serviceCaseId}/locate-owner`).then(r => r.data);
+export const generateEmailCampaign = (serviceCaseId: number) =>
+  api.post(`/api/overages/${serviceCaseId}/email-campaign`).then(r => r.data);
+export const generateOveragesDoc = (serviceCaseId: number, docType: string) =>
+  api.post(`/api/overages/${serviceCaseId}/generate-doc`, { doc_type: docType }).then(r => r.data);
 
 // Attorney Referrals
 export const listReferrals = (params?: { client_id?: number; service_case_id?: number; status?: string; practice_area?: string }) =>

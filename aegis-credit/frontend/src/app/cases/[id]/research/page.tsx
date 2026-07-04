@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import CaseNav from '@/components/CaseNav';
-import { runCaseResearch, listCaseResearch } from '@/lib/api';
+import { runCaseResearch, listCaseResearch, runDataPull } from '@/lib/api';
 
 interface ResearchDoc {
   id: number;
@@ -48,6 +48,13 @@ export default function CaseResearchPage() {
   const [openId, setOpenId] = useState<number | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
+  // Data pulls state
+  const [pullSource, setPullSource] = useState('courts');
+  const [pullQuery, setPullQuery] = useState('');
+  const [pullParams, setPullParams] = useState<Record<string, string>>({});
+  const [pulling, setPulling] = useState(false);
+  const [pullResult, setPullResult] = useState('');
+
   useEffect(() => {
     listCaseResearch(caseId)
       .then(setDocs)
@@ -83,6 +90,30 @@ export default function CaseResearchPage() {
       setRunning(false);
     }
   }
+
+  async function handlePull(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pullQuery.trim()) return;
+    setPulling(true);
+    setPullResult('');
+    try {
+      const r = await runDataPull({ source: pullSource, query: pullQuery.trim(), params: pullParams, case_id: caseId });
+      setPullResult(r.content);
+      setPullQuery('');
+    } catch (err: unknown) {
+      setPullResult(`Error: ${(err as Error).message}`);
+    } finally {
+      setPulling(false);
+    }
+  }
+
+  const PULL_SOURCES = [
+    { value: 'courts',   label: 'Court Records',    placeholder: 'e.g. Capital One Bank or Smith John' },
+    { value: 'cfpb',     label: 'CFPB Complaints',  placeholder: 'e.g. Midland Funding or Navient' },
+    { value: 'property', label: 'Property Records', placeholder: 'Owner name or parcel number' },
+    { value: 'business', label: 'Business Registry',placeholder: 'Business name (LLC, Inc, etc.)' },
+  ];
+  const currentSource = PULL_SOURCES.find(s => s.value === pullSource)!;
 
   return (
     <div className="main-layout">
@@ -140,6 +171,61 @@ export default function CaseResearchPage() {
               )}
             </div>
           </form>
+        </div>
+
+        {/* Data Pulls */}
+        <div className="card" style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 4 }}>Public Data Sources</h3>
+          <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>
+            Direct pulls from CourtListener, CFPB complaint database, county property records, and state business registries.
+          </p>
+          <form onSubmit={handlePull}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+              {PULL_SOURCES.map(s => (
+                <button key={s.value} type="button"
+                  className={pullSource === s.value ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                  onClick={() => { setPullSource(s.value); setPullParams({}); }}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+              <input type="text" className="form-control" value={pullQuery}
+                onChange={e => setPullQuery(e.target.value)}
+                placeholder={currentSource.placeholder}
+                disabled={pulling} style={{ flex: 1, minWidth: 220 }} />
+              {pullSource === 'property' && (
+                <select className="form-control" style={{ width: 160 }}
+                  value={pullParams.county || 'broward'}
+                  onChange={e => setPullParams({ county: e.target.value })}>
+                  <option value="broward">Broward County</option>
+                  <option value="miami-dade">Miami-Dade</option>
+                  <option value="palm-beach">Palm Beach</option>
+                  <option value="orange">Orange County</option>
+                  <option value="hillsborough">Hillsborough</option>
+                </select>
+              )}
+              {pullSource === 'business' && (
+                <select className="form-control" style={{ width: 80 }}
+                  value={pullParams.state || 'FL'}
+                  onChange={e => setPullParams({ state: e.target.value })}>
+                  {['FL','TX','CA','NY','GA'].map(s => <option key={s}>{s}</option>)}
+                </select>
+              )}
+              <button type="submit" className="btn btn-outline btn-sm" disabled={pulling || !pullQuery.trim()}>
+                {pulling ? 'Pulling…' : 'Pull'}
+              </button>
+            </div>
+          </form>
+          {pullResult && (
+            <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--surface)', borderRadius: 'var(--radius)', fontSize: 13, whiteSpace: 'pre-wrap', maxHeight: 360, overflowY: 'auto' }}>
+              {pullResult}
+              <button onClick={() => setPullResult('')}
+                style={{ display: 'block', marginTop: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--muted)' }}>
+                Clear
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Research history */}

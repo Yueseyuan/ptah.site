@@ -308,6 +308,20 @@ export const runServiceCaseResearch = (serviceCaseId: number, query: string, con
 export const listServiceCaseResearch = (serviceCaseId: number) =>
   api.get(`/api/research/service-case/${serviceCaseId}`).then(r => r.data);
 
+// Data Pulls (Phase 2)
+export const runDataPull = (body: { source: string; query: string; params?: Record<string, string>; case_id?: number; service_case_id?: number }) =>
+  api.post('/api/data-pulls', body).then(r => r.data);
+export const listCaseDataPulls = (caseId: number) =>
+  api.get(`/api/data-pulls/case/${caseId}`).then(r => r.data);
+
+// Monitor / Digest (Phase 3)
+export const getLatestDigest = () =>
+  api.get('/api/monitor/digest/latest').then(r => r.data);
+export const generateDigest = () =>
+  api.post('/api/monitor/digest/generate').then(r => r.data);
+export const getAlerts = () =>
+  api.get('/api/monitor/alerts').then(r => r.data);
+
 // Division AI endpoints
 export const generateJudgmentRecoveryPlan = (serviceCaseId: number) =>
   api.post(`/api/judgment/${serviceCaseId}/recovery-plan`).then(r => r.data);

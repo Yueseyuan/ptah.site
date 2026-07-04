@@ -41,6 +41,7 @@ const NAV_SECTIONS = [
     items: [
       { href: '/legal', label: 'Legal Knowledge', icon: '⚖' },
       { href: '/learning', label: 'Learning Vault', icon: '🧠' },
+      { href: '/monitor', label: 'Case Monitor', icon: '📡' },
     ],
   },
   {

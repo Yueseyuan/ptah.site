@@ -62,6 +62,22 @@ interface Referral {
   referred_at: string | null;
 }
 
+interface NotaryLog {
+  id: number;
+  client_id: number;
+  service_case_id: number | null;
+  journal_number: string | null;
+  document_type: string | null;
+  signer_name: string | null;
+  signer_id_type: string | null;
+  num_signers: number | null;
+  notarized_at: string | null;
+  location: string | null;
+  fee_charged: number | null;
+  notes: string | null;
+  created_at: string | null;
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const DIVISION_LABELS: Record<string, string> = {
@@ -457,6 +473,139 @@ function CreateInvoiceModal({
   );
 }
 
+// ── Create Notary Log Modal ───────────────────────────────────────────────────
+
+function CreateNotaryLogModal({
+  caseId,
+  clientId,
+  onClose,
+  onCreated,
+}: {
+  caseId: number;
+  clientId: number;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState({
+    document_type: '',
+    signer_name: '',
+    signer_id_type: 'drivers_license',
+    signer_id_number: '',
+    num_signers: '1',
+    notarized_at: '',
+    location: '',
+    fee_charged: '',
+    notes: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.document_type.trim()) { setError('Document type is required.'); return; }
+    if (!form.signer_name.trim()) { setError('Signer name is required.'); return; }
+    if (!form.notarized_at) { setError('Date & time of notarization is required.'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await authFetch('/api/notary/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId,
+          service_case_id: caseId,
+          document_type: form.document_type,
+          signer_name: form.signer_name,
+          signer_id_type: form.signer_id_type,
+          signer_id_number: form.signer_id_number || undefined,
+          num_signers: parseInt(form.num_signers) || 1,
+          notarized_at: form.notarized_at,
+          location: form.location || undefined,
+          fee_charged: form.fee_charged ? parseFloat(form.fee_charged) : undefined,
+          notes: form.notes || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.message || `HTTP ${res.status}`);
+      }
+      onCreated();
+      onClose();
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to create journal entry.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const f = (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(prev => ({ ...prev, [k]: e.target.value }));
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', padding: 28, width: '100%', maxWidth: 520, boxShadow: '0 8px 32px rgba(0,0,0,0.15)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <h3 style={{ marginBottom: 18, color: 'var(--navy)' }}>Add Notary Journal Entry</h3>
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label>Document Type *</label>
+            <input value={form.document_type} onChange={f('document_type')} placeholder="e.g., Deed, Affidavit, Power of Attorney" required />
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Signer Name *</label>
+              <input value={form.signer_name} onChange={f('signer_name')} placeholder="Full legal name" required />
+            </div>
+            <div className="form-group">
+              <label>ID Type *</label>
+              <select value={form.signer_id_type} onChange={f('signer_id_type')}>
+                <option value="drivers_license">Driver&apos;s License</option>
+                <option value="passport">Passport</option>
+                <option value="state_id">State ID</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label>ID Number</label>
+              <input value={form.signer_id_number} onChange={f('signer_id_number')} placeholder="Optional" />
+            </div>
+            <div className="form-group">
+              <label>Number of Signers</label>
+              <input type="number" min="1" value={form.num_signers} onChange={f('num_signers')} />
+            </div>
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Date &amp; Time *</label>
+              <input type="datetime-local" value={form.notarized_at} onChange={f('notarized_at')} required />
+            </div>
+            <div className="form-group">
+              <label>Fee Charged ($)</label>
+              <input type="number" step="0.01" value={form.fee_charged} onChange={f('fee_charged')} placeholder="0.00" />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Location</label>
+            <input value={form.location} onChange={f('location')} placeholder="Address or 'Remote'" />
+          </div>
+          <div className="form-group">
+            <label>Notes</label>
+            <textarea rows={2} value={form.notes} onChange={f('notes')} placeholder="Any additional journal notes…" />
+          </div>
+          {error && <div className="alert-error">{error}</div>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Saving…' : 'Add Entry'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── Create Referral Modal ─────────────────────────────────────────────────────
 
 const PRACTICE_AREAS = [
@@ -606,6 +755,7 @@ function ServiceCaseDetailInner() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [notaryLogs, setNotaryLogs] = useState<NotaryLog[]>([]);
   const [notes, setNotes] = useState('');
   const [notesSaved, setNotesSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -619,6 +769,7 @@ function ServiceCaseDetailInner() {
   const [showSchedule, setShowSchedule] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [showCreateReferral, setShowCreateReferral] = useState(false);
+  const [showCreateNotaryLog, setShowCreateNotaryLog] = useState(false);
 
   const numericId = parseInt(caseId);
 
@@ -662,12 +813,19 @@ function ServiceCaseDetailInner() {
       .catch(() => {});
   }, [numericId]);
 
+  const loadNotaryLogs = useCallback(() => {
+    return authFetch(`/api/notary/logs?service_case_id=${numericId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(setNotaryLogs)
+      .catch(() => {});
+  }, [numericId]);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadCase(), loadDocs(), loadAppointments(), loadInvoices(), loadReferrals()])
+    Promise.all([loadCase(), loadDocs(), loadAppointments(), loadInvoices(), loadReferrals(), loadNotaryLogs()])
       .catch(e => setError(e.message || 'Failed to load case.'))
       .finally(() => setLoading(false));
-  }, [loadCase, loadDocs, loadAppointments, loadInvoices, loadReferrals]);
+  }, [loadCase, loadDocs, loadAppointments, loadInvoices, loadReferrals, loadNotaryLogs]);
 
   async function changeStatus(status: string) {
     if (!caseData) return;
@@ -820,6 +978,9 @@ function ServiceCaseDetailInner() {
               )}
               {t.id === 'referrals' && referrals.length > 0 && (
                 <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>({referrals.length})</span>
+              )}
+              {t.id === 'journal' && notaryLogs.length > 0 && (
+                <span style={{ marginLeft: 4, fontSize: 10, opacity: 0.7 }}>({notaryLogs.length})</span>
               )}
             </button>
           ))}
@@ -1114,6 +1275,52 @@ function ServiceCaseDetailInner() {
           </div>
         )}
 
+        {/* ── Notary Journal tab ── */}
+        {activeTab === 'journal' && (
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0 }}>Notary Journal</h3>
+              <button className="btn btn-primary btn-sm" onClick={() => setShowCreateNotaryLog(true)}>
+                + Add Entry
+              </button>
+            </div>
+            {notaryLogs.length === 0 ? (
+              <p className="empty">No journal entries for this case yet.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Journal #</th>
+                    <th>Document Type</th>
+                    <th>Signer</th>
+                    <th>Date &amp; Time</th>
+                    <th>Location</th>
+                    <th>Signers</th>
+                    <th>Fee</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {notaryLogs.map(log => (
+                    <tr key={log.id}>
+                      <td><code style={{ fontSize: 11 }}>{log.journal_number || '—'}</code></td>
+                      <td style={{ fontWeight: 500 }}>{log.document_type}</td>
+                      <td>{log.signer_name}</td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>
+                        {log.notarized_at ? new Date(log.notarized_at).toLocaleString() : '—'}
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)' }}>{log.location || '—'}</td>
+                      <td style={{ textAlign: 'center' }}>{log.num_signers ?? 1}</td>
+                      <td style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {log.fee_charged != null ? `$${Number(log.fee_charged).toFixed(2)}` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
         {/* Modals */}
         {showGenDoc && (
           <GenerateDocModal
@@ -1146,6 +1353,14 @@ function ServiceCaseDetailInner() {
             clientId={caseData.client_id}
             onClose={() => setShowCreateReferral(false)}
             onCreated={loadReferrals}
+          />
+        )}
+        {showCreateNotaryLog && (
+          <CreateNotaryLogModal
+            caseId={numericId}
+            clientId={caseData.client_id}
+            onClose={() => setShowCreateNotaryLog(false)}
+            onCreated={loadNotaryLogs}
           />
         )}
       </main>

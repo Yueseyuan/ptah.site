@@ -157,15 +157,18 @@ def daily_report(
 @router.get("/logs")
 def list_notary_logs(
     client_id: Optional[int] = None,
+    service_case_id: Optional[int] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     db: Session = Depends(get_db),
     _user: User = Depends(get_current_user),
 ):
-    """List notary journal logs with optional filters."""
+    """List notary journal logs with optional filters: client_id, service_case_id, date_from, date_to."""
     q = db.query(NotaryLog)
     if client_id is not None:
         q = q.filter(NotaryLog.client_id == client_id)
+    if service_case_id is not None:
+        q = q.filter(NotaryLog.service_case_id == service_case_id)
     if date_from is not None:
         try:
             dt_from = datetime.fromisoformat(date_from)

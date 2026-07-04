@@ -45,10 +45,14 @@ const TABS: { id: Tab; label: string; Icon: React.ElementType }[] = [
 ];
 
 function BalanceBadge({ balance }: { balance: HiggsfieldBalance | null }) {
-  if (!balance) return null;
+  if (!balance) return (
+    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] bg-[--surface-2] text-[--text-muted] border border-[--border]">
+      <Loader2 size={10} className="animate-spin" /> Checking…
+    </span>
+  );
   if (!balance.ok) return (
-    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] bg-red-500/10 text-red-400 border border-red-500/20">
-      <Coins size={10} /> No credentials
+    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20">
+      <Coins size={10} /> Setup required
     </span>
   );
   const credits = balance.credits ?? balance.balance ?? 0;
@@ -56,6 +60,48 @@ function BalanceBadge({ balance }: { balance: HiggsfieldBalance | null }) {
     <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] bg-green-500/10 text-green-400 border border-green-500/20">
       <Coins size={10} /> {credits} credits
     </span>
+  );
+}
+
+function SetupBanner({ balance }: { balance: HiggsfieldBalance | null }) {
+  if (!balance || balance.ok) return null;
+  return (
+    <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+      <p className="text-sm font-medium text-amber-300 mb-2">Higgsfield credentials not configured</p>
+      <p className="text-xs text-amber-400/80 mb-3">
+        Media Studio uses Higgsfield AI for video, image, voiceover, and music generation.
+        Set it up in 3 steps:
+      </p>
+      <ol className="space-y-1.5 text-xs text-amber-400/70 list-decimal list-inside">
+        <li>
+          Install CLI:{" "}
+          <code className="font-mono bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-300">
+            curl -fsSL https://raw.githubusercontent.com/higgsfield-ai/cli/main/install.sh | sh
+          </code>
+        </li>
+        <li>
+          Log in:{" "}
+          <code className="font-mono bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-300">
+            hf auth login
+          </code>{" "}
+          (opens browser OAuth)
+        </li>
+        <li>
+          Credentials auto-detected from{" "}
+          <code className="font-mono bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-300">
+            ~/.config/higgsfield/credentials.json
+          </code>
+          , or set{" "}
+          <code className="font-mono bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-300">
+            HIGGSFIELD_CREDENTIALS_PATH
+          </code>{" "}
+          in your backend <code className="font-mono bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-300">.env</code>
+        </li>
+      </ol>
+      {balance.error && (
+        <p className="mt-3 text-[10px] font-mono text-amber-500/60 break-all">{balance.error}</p>
+      )}
+    </div>
   );
 }
 
@@ -267,6 +313,8 @@ export default function MediaStudioPage() {
         </div>
         <BalanceBadge balance={balance} />
       </div>
+
+      <SetupBanner balance={balance} />
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 p-1 bg-[--surface] rounded-xl border border-[--border]">

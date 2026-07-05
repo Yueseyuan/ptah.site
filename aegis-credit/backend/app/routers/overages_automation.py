@@ -540,19 +540,46 @@ def email_campaign(
 # ---------------------------------------------------------------------------
 
 DOC_TYPE_MAP = {
-    "assignment_of_rights":    "Assignment of Rights",
-    "assignment_of_judgment":  "Assignment of Judgment",
-    "fee_agreement":           "Fee Agreement (60/40 Contingency)",
-    "power_of_attorney":       "Limited Power of Attorney (Surplus Claim)",
-    "purchase_agreement":      "Purchase Agreement (Surplus Rights)",
-    "purchase_sale_agreement": "Purchase and Sale Agreement",
-    "quitclaim_deed":          "Quitclaim Deed",
-    "pre_estate_agreement":    "Pre-Estate Agreement",
-    "notary_affidavit":        "Notary Affidavit (Surplus Claim)",
-    # Legacy templates
-    "contingency_agreement":   "Asset Recovery Contingency Agreement",
-    "authorization":           "Authorization to Recover Funds",
-    "non_lawyer_disclosure":   "Non-Lawyer Disclosure (Tax Overage Recovery)",
+    # Core assignment documents
+    "assignment_of_rights":              "Assignment of Rights",
+    "assignment_of_rights_full":         "Assignment of Rights (Full — Individual)",
+    "assignment_of_rights_partial_ind":  "Assignment of Rights (Partial — Individual, Not Notarized)",
+    "assignment_of_rights_partial_ent":  "Assignment of Rights (Partial — Entity)",
+    "assignment_of_judgment":            "Assignment of Judgment",
+    # Fee / contingency agreements
+    "fee_agreement":                     "Fee Agreement (60/40 Contingency)",
+    "fee_agreement_cost_cap":            "Fee Agreement (with Cost Cap)",
+    "contingency_agreement":             "Asset Recovery Contingency Agreement",
+    # Power of attorney
+    "power_of_attorney":                 "Limited Power of Attorney (Surplus Claim)",
+    "power_of_attorney_standard":        "Power of Attorney (Standard — Outside PA/GA)",
+    # Purchase / sale
+    "purchase_agreement":                "Purchase Agreement (Surplus Rights)",
+    "purchase_sale_agreement":           "Purchase and Sale Agreement",
+    # Real property
+    "quitclaim_deed":                    "Quitclaim Deed",
+    # Estate / inheritance
+    "pre_estate_agreement":              "Pre-Estate Agreement",
+    "inheritance_expectancy_full":       "Inheritance Expectancy Agreement (Full Irrevocable)",
+    "late_claim_addendum":               "Late Claim Addendum",
+    # Notary / affidavit
+    "notary_affidavit":                  "Notary Affidavit (Surplus Claim)",
+    # County claim forms
+    "county_claim_form":                 "County Tax Sale Overage Claim Form",
+    "county_claim_instructions":         "County Overage Claim — Filing Instructions",
+    # Client-facing / outreach
+    "authorization":                     "Authorization to Recover Funds",
+    "non_lawyer_disclosure":             "Non-Lawyer Disclosure (Tax Overage Recovery)",
+    "personal_pitch_letter":             "Personal Pitch Letter (Former Owner Outreach)",
+    "claimant_satisfaction_survey":      "Claimant Satisfaction Survey",
+    # Email templates
+    "email_overages_list":               "Email: Overages List Request (Standard)",
+    "email_foreclosure_list":            "Email: Mortgage Foreclosure Overages List Request",
+    "email_notice_of_claim":             "Email: Notice of Claim to Recovery Agency",
+    # Internal / admin
+    "disbursements_worksheet":           "Disbursements Worksheet",
+    "w9_request":                        "W-9 Request for Taxpayer Identification",
+    "case_status_report":                "Overage Case Status Report",
 }
 
 

@@ -142,6 +142,23 @@ def _default_sample(var_name: str) -> str:
         "judgment_amount": "$18,450.00",
         "defendant_name": "James R. Carter",
         "plaintiff_name": "Broward County Tax Collector",
+        # Extended overages / estate fields
+        "claim_amount": "$18,450.00",
+        "cost_cap": "$500.00",
+        "deceased_name": "Robert James Carter",
+        "deceased_date": "January 15, 2023",
+        "heir_relationship": "Son",
+        "escheat_date": "September 30, 2026",
+        "entity_name": "Carter Family Trust",
+        "signor_name": "James R. Carter, Jr.",
+        "signor_title": "Trustee",
+        "tax_deed_year": "2024",
+        "term": "August Term 2024",
+        "new_plaintiff_name": "Cruel & Associates Recovery LLC",
+        "attorney_id": "12248",
+        "attorney_firm": "Cruel & Associates",
+        "notary_fee": "$150.00",
+        "your_website": "www.cruelandassociates.com",
     }
     # Fuzzy fallback — try to match substrings
     lower = var_name.lower()
@@ -1500,6 +1517,1142 @@ DEFAULT_TEMPLATES: List[dict] = [
             "referral will be recommended.\n\n"
             "Questions? {{company_phone}} | {{company_email}}\n\n"
             "{{company_name}}\n{{company_address}}"
+        ),
+    },
+    # ── OVERAGES — additional source-document templates ────────────────────────
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Fee Agreement (with Cost Cap)",
+        "description": "Contingency fee agreement for surplus recovery with a capped cost advance provision.",
+        "category": "agreement",
+        "content": (
+            "FEE AGREEMENT — SURPLUS RECOVERY SERVICES\n"
+            "{{company_name}}\n\n"
+            "Date: {{date}}\n"
+            "Client: {{full_name}}\n"
+            "Case No.: {{case_number}}\n\n"
+            "PROPERTY / CLAIM INFORMATION\n"
+            "County: {{county}}, State: {{state}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "CONTINGENCY FEE\n"
+            "Client agrees to pay {{company_name}} a contingency fee equal to "
+            "{{fee_percentage}} of all surplus funds successfully recovered. "
+            "Client's net share shall be {{client_percentage}} of funds recovered. "
+            "No fee is owed if no funds are recovered.\n\n"
+            "COST ADVANCE CAP\n"
+            "{{company_name}} may advance reasonable out-of-pocket costs (filing fees, "
+            "recording fees, notary fees, and similar administrative costs) up to a "
+            "maximum of {{cost_cap}} on behalf of Client. These advances shall be "
+            "reimbursed to {{company_name}} from recovered funds prior to disbursement "
+            "of Client's share. Client shall not be required to pay costs in excess of "
+            "the {{cost_cap}} cap even if actual costs exceed that amount.\n\n"
+            "SCOPE OF SERVICES\n"
+            "Services include: researching the claim; preparing and submitting claim "
+            "documentation to the applicable county authority; coordinating follow-up "
+            "until funds are released; and disbursing proceeds per this Agreement.\n\n"
+            "NOT A LAW FIRM\n"
+            "{{company_name}} is NOT a law firm and does not provide legal advice. "
+            "Client is encouraged to consult a licensed attorney. If legal proceedings "
+            "are required, attorney fees shall be separate from this Agreement.\n\n"
+            "TERM & TERMINATION\n"
+            "This Agreement is effective upon signing and remains in effect until the "
+            "claim is resolved, funds are disbursed, the claim is formally denied, or "
+            "either party provides written notice of termination.\n\n"
+            "By signing below, Client acknowledges reading and understanding this "
+            "Agreement in its entirety.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{assigned_to}} ({{company_name}})\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_address}} | {{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Assignment of Rights (Full — Individual)",
+        "description": "Full irrevocable assignment of all surplus fund rights from an individual former owner.",
+        "category": "agreement",
+        "content": (
+            "ASSIGNMENT OF RIGHTS TO SURPLUS FUNDS\n"
+            "(FULL ASSIGNMENT — INDIVIDUAL)\n\n"
+            "This Assignment of Rights (\"Assignment\") is made and entered into as of "
+            "{{date}}, by and between {{full_name}}, whose address is {{address}} "
+            "(\"Assignor\"), and {{company_name}}, whose address is {{company_address}} "
+            "(\"Assignee\").\n\n"
+            "RECITALS\n"
+            "WHEREAS, Assignor was the former owner of record of the real property "
+            "described as:\n"
+            "  Property / Legal Description: {{property_description}}\n"
+            "  Parcel / Folio No.: {{parcel_folio}}\n"
+            "  County: {{county}}, State: {{state}}\n"
+            "  Tax Deed No.: {{tax_deed_number}} — {{tax_deed_year}}\n\n"
+            "WHEREAS, the above property was sold at a tax deed sale resulting in "
+            "surplus / excess proceeds (\"Surplus Funds\") in the estimated amount of "
+            "{{estimated_surplus}}, currently held by the {{county}} Clerk of Courts "
+            "or applicable governmental authority;\n\n"
+            "NOW, THEREFORE, in consideration of the mutual covenants herein and other "
+            "good and valuable consideration, the parties agree as follows:\n\n"
+            "1. FULL ASSIGNMENT\n"
+            "Assignor hereby irrevocably assigns, transfers, sets over, and conveys to "
+            "Assignee ALL of Assignor's right, title, and interest in and to the "
+            "Surplus Funds, including without limitation: (a) the right to file and "
+            "prosecute a claim; (b) the right to receive payment; (c) the right to "
+            "execute any and all documents required by the county or court; and (d) "
+            "the right to institute legal proceedings if necessary to recover the "
+            "Surplus Funds.\n\n"
+            "2. COMPENSATION\n"
+            "As full consideration for this Assignment, Assignee shall remit to "
+            "Assignor {{client_percentage}} of all Surplus Funds actually recovered, "
+            "net of documented recovery costs, within ten (10) business days of "
+            "receipt. Assignee shall retain {{fee_percentage}} as its recovery fee.\n\n"
+            "3. REPRESENTATIONS & WARRANTIES\n"
+            "Assignor represents and warrants that: (a) Assignor is the lawful owner "
+            "of the claim; (b) Assignor has full authority to execute this Assignment; "
+            "(c) Assignor has not previously assigned, pledged, or encumbered these "
+            "rights to any other party; (d) Assignor is not aware of any competing "
+            "claims, lien holders, or legal holds on the Surplus Funds except as "
+            "disclosed to Assignee in writing.\n\n"
+            "4. INDEMNIFICATION\n"
+            "Assignor agrees to indemnify and hold harmless Assignee from any claims "
+            "by third parties asserting rights to the Surplus Funds arising from facts "
+            "known to Assignor at the time of this Assignment.\n\n"
+            "5. NON-ATTORNEY DISCLOSURE\n"
+            "{{company_name}} is NOT a law firm and none of its representatives are "
+            "licensed attorneys. Nothing herein constitutes legal advice. Assignor "
+            "is strongly encouraged to consult a licensed attorney prior to signing.\n\n"
+            "6. GOVERNING LAW\n"
+            "This Assignment shall be governed by the laws of the State of {{state}}.\n\n"
+            "IN WITNESS WHEREOF, the parties have executed this Assignment as of the "
+            "date first written above.\n\n"
+            "ASSIGNOR:\n"
+            "_____________________________\n"
+            "{{full_name}}\n"
+            "Date: {{signature_date}}\n\n"
+            "STATE OF {{state}}\n"
+            "COUNTY OF {{county}}\n\n"
+            "Personally appeared the above-named {{full_name}}, known to me (or "
+            "satisfactorily proven), who executed the foregoing Assignment and "
+            "acknowledged it to be his/her free act and deed.\n\n"
+            "_____________________________\n"
+            "{{notary_name}}, Notary Public\n"
+            "Commission No.: {{notary_commission}}\n"
+            "My Commission Expires: {{notary_expiry}}\n"
+            "[NOTARY SEAL]\n\n"
+            "ASSIGNEE:\n"
+            "_____________________________\n"
+            "{{assigned_to}}, Authorized Representative\n"
+            "{{company_name}}\n"
+            "Date: {{signature_date}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Assignment of Rights (Partial — Individual, Not Notarized)",
+        "description": "Partial assignment of surplus fund rights from an individual — no notarization required.",
+        "category": "agreement",
+        "content": (
+            "PARTIAL ASSIGNMENT OF RIGHTS TO SURPLUS FUNDS\n"
+            "(INDIVIDUAL — NOT NOTARIZED)\n\n"
+            "Date: {{date}}\n"
+            "Case No.: {{case_number}}\n\n"
+            "PARTIES\n"
+            "Assignor: {{full_name}}, {{address}}\n"
+            "Assignee: {{company_name}}, {{company_address}}\n\n"
+            "PROPERTY INFORMATION\n"
+            "County: {{county}}, State: {{state}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "PARTIAL ASSIGNMENT\n"
+            "For good and valuable consideration, Assignor hereby assigns and "
+            "transfers to Assignee a partial interest in and to the surplus funds "
+            "produced by the above-referenced tax deed sale, specifically:\n"
+            "  Assignee's Share: {{fee_percentage}} of all funds recovered\n"
+            "  Assignor's Share: {{client_percentage}} of all funds recovered\n\n"
+            "Assignee is authorized to file the claim, communicate with county "
+            "officials, and receive the full amount of surplus funds on behalf of "
+            "both parties, with Assignor's share to be remitted within ten (10) "
+            "business days of receipt.\n\n"
+            "REPRESENTATIONS\n"
+            "Assignor certifies that: (a) Assignor has authority to assign these "
+            "rights; (b) no prior assignment has been made; (c) no competing claims "
+            "are known except as disclosed.\n\n"
+            "NON-ATTORNEY NOTICE\n"
+            "{{company_name}} is NOT a law firm. Assignor is encouraged to seek "
+            "independent legal counsel before signing.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Assignor)\t\t\t{{assigned_to}} (Assignee)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Assignment of Rights (Partial — Entity)",
+        "description": "Partial assignment of surplus fund rights from a corporate or trust entity.",
+        "category": "agreement",
+        "content": (
+            "PARTIAL ASSIGNMENT OF RIGHTS TO SURPLUS FUNDS\n"
+            "(ENTITY ASSIGNOR)\n\n"
+            "Date: {{date}}\n"
+            "Case No.: {{case_number}}\n\n"
+            "PARTIES\n"
+            "Assignor: {{entity_name}}, a {{state}} entity\n"
+            "  Authorized Signatory: {{signor_name}}, {{signor_title}}\n"
+            "  Address: {{address}}\n"
+            "Assignee: {{company_name}}, {{company_address}}\n\n"
+            "PROPERTY INFORMATION\n"
+            "County: {{county}}, State: {{state}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "PARTIAL ASSIGNMENT\n"
+            "For good and valuable consideration, Assignor (acting through its duly "
+            "authorized representative identified above) hereby assigns and transfers "
+            "to Assignee a partial interest in and to the surplus funds produced by "
+            "the above-referenced tax deed sale:\n"
+            "  Assignee's Share: {{fee_percentage}} of all funds recovered\n"
+            "  Assignor's Share: {{client_percentage}} of all funds recovered\n\n"
+            "Assignee is authorized to file the claim, communicate with the county "
+            "clerk, tax collector, and other governmental bodies, and receive the "
+            "full amount of surplus funds on behalf of all parties, with Assignor's "
+            "share remitted within ten (10) business days of receipt.\n\n"
+            "AUTHORITY OF SIGNATORY\n"
+            "{{signor_name}} represents that he/she is duly authorized to execute "
+            "this Assignment on behalf of {{entity_name}} and that the entity has "
+            "full power and authority to assign these rights.\n\n"
+            "REPRESENTATIONS\n"
+            "Assignor certifies: (a) Assignor holds valid title to the claim; "
+            "(b) no prior assignment has been made; (c) no competing claims are "
+            "known except as disclosed in writing to Assignee.\n\n"
+            "NON-ATTORNEY NOTICE\n"
+            "{{company_name}} is NOT a law firm. Assignor is encouraged to consult "
+            "a licensed attorney before signing.\n\n"
+            "ASSIGNOR — {{entity_name}}\n"
+            "By: _____________________________\n"
+            "Name: {{signor_name}}\n"
+            "Title: {{signor_title}}\n"
+            "Date: {{signature_date}}\n\n"
+            "STATE OF {{state}}\n"
+            "COUNTY OF {{county}}\n\n"
+            "Personally appeared {{signor_name}}, as {{signor_title}} of "
+            "{{entity_name}}, who acknowledged executing this Assignment on behalf "
+            "of the entity.\n\n"
+            "_____________________________\n"
+            "{{notary_name}}, Notary Public\n"
+            "Commission No.: {{notary_commission}}\n"
+            "My Commission Expires: {{notary_expiry}}\n"
+            "[NOTARY SEAL]\n\n"
+            "ASSIGNEE:\n"
+            "_____________________________\n"
+            "{{assigned_to}}, {{company_name}}\n"
+            "Date: {{signature_date}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "County Tax Sale Overage Claim Form",
+        "description": "Sworn claim form submitted to the county to recover tax sale surplus funds — adaptable to any county.",
+        "category": "form",
+        "content": (
+            "CLAIM FOR TAX SALE OVERAGE\n"
+            "{{county}}, State of {{state}}\n\n"
+            "MAP REFERENCE / PARCEL NO.: {{parcel_folio}}\n"
+            "YEAR OF SALE: {{tax_deed_year}}\n"
+            "PHYSICAL LOCATION OF PROPERTY: {{property_description}}\n"
+            "NAME OF DEFAULTING TAXPAYER(S): {{defendant_name}}\n"
+            "NAME OF OWNER(S) AT END OF REDEMPTION PERIOD: {{full_name}}\n"
+            "MAILING ADDRESS OF OWNER(S) CLAIMING OVERBID: {{address}}\n"
+            "NAME AND ADDRESS OF ANY MORTGAGE OR LIEN HOLDER(S): "
+            "_______________________________________________\n\n"
+            "STATE OF {{state}}\n"
+            "COUNTY OF {{county}}\n\n"
+            "PERSONALLY appeared the undersigned, who being sworn, says that this "
+            "claim is pursuant to applicable state law for the overage produced by a "
+            "delinquent tax sale. The tax sale is described in the deed from the Tax "
+            "Collector to the highest bidder, recorded in Deed Book _____, Page _____, "
+            "Register of Deeds Office for {{county}}, a copy of which is attached to "
+            "this claim. The amount over the full amount due in taxes, assessments, "
+            "penalties and costs, produced by the tax sale as shown by the Tax "
+            "Collector is the amount lawfully owing to the undersigned.\n\n"
+            "A copy of the deed or probate conveyance sheet showing ownership in the "
+            "undersigned is attached to verify to whom the refund check should be made "
+            "payable. The undersigned has been authorized to receive the refund check "
+            "on behalf of all. The undersigned indemnifies and holds {{county}}, its "
+            "agents and employees harmless against claims by any other persons for "
+            "such overage and waives all causes of action against the County, its "
+            "agents or employees, arising out of the tax sale. The undersigned "
+            "attaches a copy of the Social Security card and such other identification "
+            "as the Tax Collector shall request.\n\n"
+            "Signature: ___________________________ Name (Printed): {{full_name}}\n\n"
+            "SWORN to before me this _______ day of _______________, 20______.\n\n"
+            "_____________________________  (L.S.)\n"
+            "{{notary_name}}, Notary Public for the State of {{state}}\n"
+            "My Commission Expires: {{notary_expiry}}\n\n"
+            "*** FOR COUNTY USE ONLY ***\n"
+            "I verify the amount of overage (cash produced in excess of full taxes, "
+            "assessments, penalties and costs) as $_______________. This overage is "
+            "payable to the owner of record immediately before the end of the "
+            "redemption period. I verify all required documents were received.\n\n"
+            "Signed: ___________________________ Date: _____________\n"
+            "  Delinquent Tax Collector Division\n"
+            "Approved By: _______________________ Date: _____________\n"
+            "  County Tax Collector / Agent\n\n"
+            "RETURNED ON: ___________________ ID: ___________________\n\n"
+            "Prepared with assistance by: {{company_name}} | {{company_phone}} | {{company_email}}\n"
+            "Document Preparation Only — NOT Legal Advice"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "County Overage Claim — Filing Instructions",
+        "description": "Step-by-step instructions for filing a county tax sale overage claim.",
+        "category": "letter",
+        "content": (
+            "INSTRUCTIONS FOR FILING YOUR TAX SALE OVERAGE CLAIM\n"
+            "Prepared by: {{company_name}} | {{company_phone}}\n\n"
+            "Client: {{full_name}} | Case No.: {{case_number}}\n"
+            "County: {{county}}, {{state}} | Parcel: {{parcel_folio}}\n\n"
+            "IMPORTANT: Per state law, the OWNER OF RECORD IMMEDIATELY BEFORE THE "
+            "END OF THE REDEMPTION PERIOD OF THE TAX SALE is the legal claimant "
+            "of the overage. The redemption period typically ends twelve (12) months "
+            "after the tax sale date.\n\n"
+            "DOCUMENTS REQUIRED FOR SUBMISSION:\n"
+            "  1. Completed and notarized Claim for Tax Sale Overage form\n"
+            "  2. Copy of the tax deed (from Tax Collector to highest bidder)\n"
+            "  3. Copy of the deed or probate conveyance sheet showing your ownership\n"
+            "  4. Copy of your government-issued photo ID\n"
+            "  5. Copy of your Social Security card\n"
+            "  6. If claiming through Power of Attorney: copy of the executed POA, "
+            "plus POA holder's photo ID and Social Security card or FEIN\n\n"
+            "CLAIM FORM COMPLETION CHECKLIST:\n"
+            "  [ ] Map Reference / Parcel Number of the property\n"
+            "  [ ] Tax Sale Year and Item Number\n"
+            "  [ ] Physical location / address of the property\n"
+            "  [ ] Name of Defaulting Taxpayer\n"
+            "  [ ] Your name and mailing address as owner at end of redemption period\n"
+            "  [ ] Name and address of any mortgage or lien holders (write NONE if none)\n"
+            "  [ ] Deed Book and Page Number of the Tax Deed\n"
+            "  [ ] Signed BEFORE a Notary Public\n\n"
+            "IMPORTANT NOTES:\n"
+            "  • Funds are not released until at least 90 days after the tax deed is "
+            "recorded, to allow for competing claimant objections.\n"
+            "  • If the County questions your claim, they may require a court order "
+            "before releasing funds.\n"
+            "  • {{company_name}} will coordinate submission and follow-up on your "
+            "behalf per your signed Contingency Agreement.\n\n"
+            "Questions? Contact us at {{company_phone}} | {{company_email}}\n"
+            "{{company_name}} | {{company_address}}\n"
+            "Document Preparation Services Only — NOT Legal Advice"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Power of Attorney (Standard — Outside PA/GA)",
+        "description": "36-month limited power of attorney authorizing surplus fund recovery — for use outside Pennsylvania and Georgia.",
+        "category": "agreement",
+        "content": (
+            "LIMITED POWER OF ATTORNEY\n"
+            "(SURPLUS FUND RECOVERY — STANDARD 36-MONTH)\n\n"
+            "KNOW ALL PERSONS BY THESE PRESENTS that I, {{full_name}}, residing at "
+            "{{address}} (\"Principal\"), do hereby appoint {{company_name}}, and its "
+            "authorized agents and representatives, as my true and lawful "
+            "Attorney-in-Fact (\"Agent\") for the limited purposes set forth below.\n\n"
+            "PROPERTY SUBJECT TO THIS POA\n"
+            "County: {{county}}, State: {{state}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "GRANT OF AUTHORITY\n"
+            "Agent is hereby authorized, on behalf of Principal, to:\n"
+            "  1. Prepare, execute, and file all documents necessary to claim the "
+            "tax deed surplus funds referenced above from the {{county}} Clerk of "
+            "Court or other applicable authority;\n"
+            "  2. Communicate with and provide information to the county clerk, tax "
+            "collector, court clerk, and any other governmental office regarding "
+            "this specific surplus claim;\n"
+            "  3. Endorse and negotiate checks payable to Principal for surplus "
+            "funds, solely for the purpose of disbursement per the parties' written "
+            "Fee Agreement;\n"
+            "  4. Execute any affidavits, certifications, or supplemental documents "
+            "required by the county or court in connection with this claim.\n\n"
+            "LIMITATIONS\n"
+            "This Power of Attorney is LIMITED solely to the recovery of surplus "
+            "funds from the above-described property. Agent may NOT: (a) bind "
+            "Principal to any obligation other than as stated herein; (b) appear in "
+            "court on Principal's behalf in an adversarial proceeding; or (c) provide "
+            "legal advice to Principal.\n\n"
+            "TERM\n"
+            "This Power of Attorney shall remain in effect for thirty-six (36) months "
+            "from the date of execution, or until the surplus funds are disbursed or "
+            "the claim is formally closed, whichever occurs first.\n\n"
+            "THIRD-PARTY RELIANCE\n"
+            "Any third party may rely on a copy of this Power of Attorney as though "
+            "it were an original.\n\n"
+            "NON-ATTORNEY DISCLOSURE\n"
+            "{{company_name}} is NOT a law firm and does not provide legal advice. "
+            "Principal is encouraged to consult a licensed attorney before signing.\n\n"
+            "Executed this {{date}}.\n\n"
+            "_____________________________\n"
+            "{{full_name}} (Principal)\n\n"
+            "STATE OF {{state}}\n"
+            "COUNTY OF {{county}}\n\n"
+            "Personally appeared {{full_name}}, who being known to me (or "
+            "satisfactorily proven), acknowledged the foregoing instrument to be "
+            "his/her free act and deed.\n\n"
+            "_____________________________\n"
+            "{{notary_name}}, Notary Public\n"
+            "Commission No.: {{notary_commission}}\n"
+            "My Commission Expires: {{notary_expiry}}\n"
+            "[NOTARY SEAL]"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Pre-Estate Agreement",
+        "description": "Agreement with an heir-in-waiting to recover surplus funds from an estate with a pending escheat date.",
+        "category": "agreement",
+        "content": (
+            "PRE-ESTATE SURPLUS RECOVERY AGREEMENT\n\n"
+            "This Pre-Estate Agreement (\"Agreement\") is entered into as of {{date}} "
+            "by and between {{full_name}} (\"Client\"), heir/interested party to the "
+            "estate of {{deceased_name}} (deceased {{deceased_date}}), and "
+            "{{company_name}} (\"Recovery Company\").\n\n"
+            "ESTATE & PROPERTY INFORMATION\n"
+            "Decedent: {{deceased_name}}\n"
+            "Date of Death: {{deceased_date}}\n"
+            "Client's Relationship to Decedent: {{heir_relationship}}\n"
+            "County: {{county}}, State: {{state}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n"
+            "Escheat Date (Funds revert to State): {{escheat_date}}\n\n"
+            "BACKGROUND\n"
+            "The above-described property was sold at a tax deed sale. The resulting "
+            "surplus funds are currently held by the {{county}} Clerk of Court and "
+            "are claimable by the estate of the former owner. These funds will "
+            "escheat (revert) to the State of {{state}} if not claimed before "
+            "{{escheat_date}}.\n\n"
+            "SCOPE OF SERVICES\n"
+            "Recovery Company agrees to assist Client in:\n"
+            "  1. Documenting Client's interest in the estate and right to claim;\n"
+            "  2. Coordinating with the Probate Court or estate administrator as needed;\n"
+            "  3. Preparing and submitting the surplus fund claim on behalf of the estate;\n"
+            "  4. Following up with the county until funds are released.\n\n"
+            "CONTINGENCY FEE\n"
+            "Client agrees to pay Recovery Company {{fee_percentage}} of all surplus "
+            "funds actually recovered. Client's net share shall be {{client_percentage}}. "
+            "No fee is owed if no funds are recovered.\n\n"
+            "PROBATE REQUIREMENT\n"
+            "If the county requires letters testamentary, letters of administration, "
+            "or other probate documentation before releasing funds, Client agrees to "
+            "cooperate fully in obtaining such documents. Probate court fees, if any, "
+            "are the responsibility of Client or the estate and are not included in "
+            "this Agreement.\n\n"
+            "NOT A LAW FIRM\n"
+            "{{company_name}} is NOT a law firm. If probate or legal proceedings are "
+            "required, an attorney referral will be recommended. Attorney fees are "
+            "separate from and not covered by this Agreement.\n\n"
+            "ESCHEAT URGENCY\n"
+            "Client acknowledges that time is of the essence due to the escheat date "
+            "of {{escheat_date}} and agrees to provide all requested documentation "
+            "promptly.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{assigned_to}} (Recovery Company)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_address}} | {{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Inheritance Expectancy Agreement (Full Irrevocable)",
+        "description": "Full irrevocable assignment of inheritance expectancy interest in estate surplus funds.",
+        "category": "agreement",
+        "content": (
+            "INHERITANCE EXPECTANCY AGREEMENT\n"
+            "(FULL IRREVOCABLE ASSIGNMENT)\n\n"
+            "This Inheritance Expectancy Agreement (\"Agreement\") is entered into as "
+            "of {{date}} by and between {{full_name}} (\"Assignor\") and "
+            "{{company_name}} (\"Assignee\").\n\n"
+            "RECITALS\n"
+            "Assignor is an heir or interested party to the estate of {{deceased_name}}, "
+            "deceased, and has a legitimate expectancy interest in surplus funds "
+            "generated from the tax deed sale of the following property:\n"
+            "  County: {{county}}, State: {{state}}\n"
+            "  Parcel / Folio No.: {{parcel_folio}}\n"
+            "  Tax Deed No.: {{tax_deed_number}}\n"
+            "  Estimated Surplus: {{estimated_surplus}}\n"
+            "  Assignor's Relationship to Decedent: {{heir_relationship}}\n\n"
+            "FULL IRREVOCABLE ASSIGNMENT\n"
+            "In consideration of Assignee's recovery services and other valuable "
+            "consideration, Assignor hereby irrevocably assigns to Assignee ALL of "
+            "Assignor's expectancy interest in and right to receive surplus funds from "
+            "the above-referenced estate and tax deed sale, including the right to "
+            "file claims, receive payment, and execute all necessary documents.\n\n"
+            "COMPENSATION\n"
+            "Assignee shall remit to Assignor {{client_percentage}} of all surplus "
+            "funds actually recovered on Assignor's behalf, within ten (10) business "
+            "days of receipt. Assignee retains {{fee_percentage}} as its recovery fee.\n\n"
+            "IRREVOCABILITY\n"
+            "This Assignment is irrevocable and shall survive the death or incapacity "
+            "of either party, binding their respective heirs, successors, and assigns.\n\n"
+            "NOT A LAW FIRM\n"
+            "{{company_name}} is NOT a law firm. Assignor is encouraged to consult "
+            "a licensed attorney or estate planning professional before signing.\n\n"
+            "_____________________________\n"
+            "{{full_name}} (Assignor)\n"
+            "Date: {{signature_date}}\n\n"
+            "STATE OF {{state}} | COUNTY OF {{county}}\n\n"
+            "Sworn to and subscribed before me this {{date}}.\n\n"
+            "_____________________________\n"
+            "{{notary_name}}, Notary Public\n"
+            "Commission No.: {{notary_commission}}\n"
+            "Expires: {{notary_expiry}}\n"
+            "[NOTARY SEAL]\n\n"
+            "_____________________________\n"
+            "{{assigned_to}}, {{company_name}}\n"
+            "Date: {{signature_date}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Late Claim Addendum",
+        "description": "Addendum addressing claims filed after the initial redemption period — attaches to the primary agreement.",
+        "category": "agreement",
+        "content": (
+            "LATE CLAIM ADDENDUM\n"
+            "To: [Primary Agreement / Assignment dated {{date}}]\n\n"
+            "Client: {{full_name}}\n"
+            "Case No.: {{case_number}}\n"
+            "County: {{county}}, State: {{state}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n\n"
+            "PURPOSE\n"
+            "This Addendum supplements the parties' primary agreement (identified "
+            "above) to address the fact that the surplus fund claim referenced therein "
+            "is being filed after the initial ninety (90) day period following "
+            "recordation of the tax deed.\n\n"
+            "ACKNOWLEDGMENT OF LATE FILING\n"
+            "Client acknowledges that:\n"
+            "  (a) The standard 90-day claim window has passed;\n"
+            "  (b) Competing claims may have been filed during that period;\n"
+            "  (c) The county or court may require additional documentation or a "
+            "court order before releasing funds;\n"
+            "  (d) In some jurisdictions, claims filed after the statutory deadline "
+            "may be subject to judicial review or may be denied.\n\n"
+            "ADDITIONAL SERVICES\n"
+            "{{company_name}} agrees to make reasonable efforts to pursue the late "
+            "claim, including:\n"
+            "  1. Researching the current status of the surplus funds;\n"
+            "  2. Submitting documentation to the county demonstrating Client's "
+            "entitlement;\n"
+            "  3. Coordinating with a licensed attorney if judicial intervention is "
+            "required (attorney fees are separate and not covered by the base "
+            "contingency agreement).\n\n"
+            "FEE ADJUSTMENT\n"
+            "The parties agree that the contingency fee stated in the primary "
+            "agreement ({{fee_percentage}}) shall remain unchanged. However, if "
+            "extraordinary legal costs are required to pursue the late claim, Client "
+            "and {{company_name}} will negotiate in good faith before incurring such "
+            "costs.\n\n"
+            "NO GUARANTEE\n"
+            "{{company_name}} makes no guarantee that a late claim will be approved "
+            "or that funds will be recovered. This Addendum does not constitute a "
+            "promise of recovery.\n\n"
+            "By signing below, Client acknowledges and accepts the terms of this "
+            "Addendum.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{assigned_to}} ({{company_name}})\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Email: Overages List Request (Standard)",
+        "description": "Email to a county tax collector requesting the list of current tax sale surplus funds.",
+        "category": "letter",
+        "content": (
+            "SUBJECT: Request for Tax Sale Surplus / Overage Funds List — {{county}}\n\n"
+            "Date: {{date}}\n\n"
+            "Dear {{county}} Tax Collector / Delinquent Tax Division,\n\n"
+            "My name is {{assigned_to}} and I am a representative of {{company_name}}, "
+            "a surplus fund recovery firm located at {{company_address}}.\n\n"
+            "We are writing to respectfully request a copy of your current list of "
+            "unclaimed tax sale surplus / overage funds. We assist former property "
+            "owners in recovering funds they are legally entitled to, and we work "
+            "exclusively within the bounds of {{state}} law.\n\n"
+            "Specifically, we are requesting:\n"
+            "  1. A list of tax deed sales that produced surplus proceeds currently "
+            "held by your office or the {{county}} Clerk of Court;\n"
+            "  2. For each item: parcel number, former owner name, sale date, sale "
+            "amount, surplus amount, and claim deadline (if applicable).\n\n"
+            "We understand this information may be a public record under {{state}} "
+            "law and the Freedom of Information Act. We are happy to pay any "
+            "applicable records request fee.\n\n"
+            "Please feel free to contact us at the information below. We appreciate "
+            "your time and look forward to working with your office.\n\n"
+            "Sincerely,\n\n"
+            "{{assigned_to}}\n"
+            "{{company_name}}\n"
+            "{{company_address}}\n"
+            "{{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Email: Mortgage Foreclosure Overages List Request",
+        "description": "Email to a county requesting the list of mortgage foreclosure surplus / overbid funds.",
+        "category": "letter",
+        "content": (
+            "SUBJECT: Request for Mortgage Foreclosure Surplus Funds List — {{county}}\n\n"
+            "Date: {{date}}\n\n"
+            "Dear {{county}} Clerk of Court / Civil Division,\n\n"
+            "My name is {{assigned_to}}, representing {{company_name}}, a surplus "
+            "fund recovery company assisting former homeowners in reclaiming funds "
+            "they are legally entitled to following mortgage foreclosure sales.\n\n"
+            "We are writing to request your current list of unclaimed mortgage "
+            "foreclosure surplus funds / overbids held by your office. Under "
+            "{{state}} law, former homeowners whose properties were sold at "
+            "foreclosure auction for more than the amount owed are entitled to "
+            "claim the surplus proceeds.\n\n"
+            "We respectfully request the following information:\n"
+            "  1. Case numbers and property addresses for foreclosure sales that "
+            "produced surplus proceeds currently on deposit with the court;\n"
+            "  2. Former owner / defendant names and last known addresses;\n"
+            "  3. Amount of surplus on deposit and any applicable claim deadline.\n\n"
+            "This information is a matter of public record. We are prepared to pay "
+            "any applicable copy or records request fees.\n\n"
+            "Thank you for your assistance. Please contact us at:\n\n"
+            "{{assigned_to}}\n"
+            "{{company_name}}\n"
+            "{{company_address}}\n"
+            "{{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Email: Notice of Claim to Recovery Agency",
+        "description": "Formal notice to a county or agency that a client's surplus fund claim has been filed.",
+        "category": "letter",
+        "content": (
+            "SUBJECT: Notice of Surplus Fund Claim — {{parcel_folio}} / {{full_name}}\n\n"
+            "Date: {{date}}\n\n"
+            "{{county}} Tax Collector / Clerk of Court\n"
+            "Attn: Surplus / Overage Division\n\n"
+            "RE: Surplus Fund Claim\n"
+            "Former Owner: {{full_name}}\n"
+            "Parcel / Folio No.: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Estimated Surplus: {{estimated_surplus}}\n\n"
+            "Dear Sir / Madam,\n\n"
+            "Please be advised that {{company_name}} represents {{full_name}}, the "
+            "former owner / legal claimant of the above-referenced tax deed surplus "
+            "funds, pursuant to a signed Assignment of Rights and/or Power of "
+            "Attorney executed on {{signature_date}}.\n\n"
+            "We are hereby providing formal notice that a claim for the surplus "
+            "funds referenced above will be (or has been) submitted to your office "
+            "on behalf of our client. We request that:\n"
+            "  1. All correspondence regarding this claim be directed to us at the "
+            "contact information below;\n"
+            "  2. No disbursement of the surplus funds be made to any other party "
+            "without prior written notice to us;\n"
+            "  3. You confirm receipt of this notice and advise us of the current "
+            "status and any outstanding requirements.\n\n"
+            "Enclosed / attached with this notice:\n"
+            "  [ ] Signed Assignment of Rights\n"
+            "  [ ] Power of Attorney\n"
+            "  [ ] Client government-issued photo ID\n"
+            "  [ ] Claim form (completed)\n\n"
+            "Thank you for your prompt attention to this matter.\n\n"
+            "Respectfully,\n\n"
+            "{{assigned_to}}\n"
+            "{{company_name}}\n"
+            "{{company_address}}\n"
+            "{{company_phone}} | {{company_email}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Claimant Satisfaction Survey",
+        "description": "Post-recovery satisfaction survey sent to clients after surplus funds are disbursed.",
+        "category": "form",
+        "content": (
+            "CLAIMANT SATISFACTION SURVEY\n"
+            "{{company_name}}\n\n"
+            "Dear {{full_name}},\n\n"
+            "Thank you for trusting {{company_name}} to assist with your surplus fund "
+            "recovery. We value your feedback and ask that you take a few moments to "
+            "complete this brief survey. Your responses help us improve our service.\n\n"
+            "Case No.: {{case_number}}\n"
+            "County: {{county}} | Parcel: {{parcel_folio}}\n"
+            "Recovery Specialist: {{assigned_to}}\n\n"
+            "PLEASE RATE THE FOLLOWING (1 = Poor, 5 = Excellent):\n\n"
+            "1. Initial contact and explanation of services\n"
+            "   [ ] 1  [ ] 2  [ ] 3  [ ] 4  [ ] 5\n\n"
+            "2. Speed and responsiveness of communication\n"
+            "   [ ] 1  [ ] 2  [ ] 3  [ ] 4  [ ] 5\n\n"
+            "3. Accuracy and clarity of documents provided\n"
+            "   [ ] 1  [ ] 2  [ ] 3  [ ] 4  [ ] 5\n\n"
+            "4. Timeliness of fund disbursement\n"
+            "   [ ] 1  [ ] 2  [ ] 3  [ ] 4  [ ] 5\n\n"
+            "5. Overall satisfaction with our service\n"
+            "   [ ] 1  [ ] 2  [ ] 3  [ ] 4  [ ] 5\n\n"
+            "6. Would you recommend {{company_name}} to family or friends?\n"
+            "   [ ] Definitely Yes  [ ] Probably Yes  [ ] Not Sure  [ ] No\n\n"
+            "7. How did you first hear about us?\n"
+            "   [ ] Mail / Letter  [ ] Internet Search  [ ] Referral  [ ] Other: _________\n\n"
+            "8. Additional comments or suggestions:\n"
+            "   _______________________________________________________________\n"
+            "   _______________________________________________________________\n\n"
+            "May we use your experience as a testimonial (name withheld if preferred)?\n"
+            "   [ ] Yes, with my name  [ ] Yes, anonymously  [ ] No\n\n"
+            "Thank you for your time!\n\n"
+            "{{company_name}} | {{company_phone}} | {{company_email}}\n"
+            "{{company_address}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Personal Pitch Letter (Former Owner Outreach)",
+        "description": "Marketing letter sent to former property owners informing them of unclaimed surplus funds.",
+        "category": "letter",
+        "content": (
+            "{{company_name}}\n"
+            "{{company_address}}\n"
+            "{{company_phone}} | {{company_email}}\n\n"
+            "Date: {{date}}\n\n"
+            "{{full_name}}\n"
+            "{{address}}\n\n"
+            "RE: Unclaimed Surplus Funds — Your Former Property at {{property_description}}\n\n"
+            "Dear {{full_name}},\n\n"
+            "My name is {{assigned_to}}, and I am writing to you on behalf of "
+            "{{company_name}} regarding an important financial matter.\n\n"
+            "Our records indicate that the property you formerly owned at "
+            "{{property_description}}, {{county}}, {{state}} (Parcel No. "
+            "{{parcel_folio}}) was sold at a tax deed auction. That sale produced "
+            "surplus / excess proceeds — funds above and beyond what was owed in "
+            "taxes — that are currently being held by the county on your behalf.\n\n"
+            "These funds legally belong to YOU.\n\n"
+            "The estimated surplus amount is {{estimated_surplus}}. However, these "
+            "funds will not be paid to you automatically. A claim must be filed, "
+            "and if the funds remain unclaimed, they may eventually be turned over "
+            "to the state.\n\n"
+            "HOW WE CAN HELP\n"
+            "{{company_name}} specializes in recovering surplus funds for former "
+            "property owners — at NO UPFRONT COST to you. We work on a contingency "
+            "basis: you pay nothing unless we successfully recover your funds.\n\n"
+            "Our services include:\n"
+            "  • Verifying the surplus amount on file with the county\n"
+            "  • Preparing all required claim documentation\n"
+            "  • Submitting the claim and following up with the county\n"
+            "  • Disbursing your funds directly to you\n\n"
+            "NEXT STEPS\n"
+            "Simply call or email us to discuss your case. There is no obligation, "
+            "and we will explain everything clearly before you sign anything.\n\n"
+            "Time is important — claim deadlines exist and funds may escheat to "
+            "the state if not claimed. Please contact us soon.\n\n"
+            "Sincerely,\n\n"
+            "{{assigned_to}}\n"
+            "{{company_name}}\n"
+            "{{company_phone}} | {{company_email}}\n\n"
+            "IMPORTANT: {{company_name}} is NOT a law firm and does not provide "
+            "legal advice. This letter is for informational purposes only."
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "generated",
+        "name": "Disbursements Worksheet",
+        "description": "Internal worksheet tracking the disbursement of recovered surplus funds to all parties.",
+        "category": "report",
+        "content": (
+            "DISBURSEMENTS WORKSHEET — SURPLUS FUND RECOVERY\n"
+            "{{company_name}} — INTERNAL USE\n\n"
+            "Case No.: {{case_number}}\n"
+            "Client: {{full_name}}\n"
+            "County: {{county}} | Parcel: {{parcel_folio}}\n"
+            "Tax Deed No.: {{tax_deed_number}}\n"
+            "Recovery Specialist: {{assigned_to}}\n"
+            "Date Funds Received: {{date}}\n\n"
+            "=== FUNDS RECEIVED ===\n"
+            "Gross Amount Received from County:       $_______________\n"
+            "Check No. / Reference:                   _______________\n"
+            "Date Deposited:                          _______________\n\n"
+            "=== DISBURSEMENTS ===\n"
+            "1. Recovery Costs Advanced (reimbursed first):\n"
+            "   Filing Fees:                          $_______________\n"
+            "   Recording Fees:                       $_______________\n"
+            "   Notary Fees:                          $_______________\n"
+            "   Other Costs:                          $_______________\n"
+            "   TOTAL COSTS:                          $_______________\n\n"
+            "2. Net Funds After Costs:                $_______________\n\n"
+            "3. {{company_name}} Fee ({{fee_percentage}}):\n"
+            "   Fee Amount:                           $_______________\n\n"
+            "4. Client Share ({{client_percentage}}):\n"
+            "   Client Amount:                        $_______________\n\n"
+            "5. Verification:\n"
+            "   Costs + Company Fee + Client = Gross: [ ] Balanced  [ ] Discrepancy\n\n"
+            "=== CLIENT PAYMENT ===\n"
+            "Payment Method: [ ] Check  [ ] Wire  [ ] Cashier's Check\n"
+            "Payable To: {{full_name}}\n"
+            "Mailing Address: {{address}}\n"
+            "Date Mailed / Wired: _______________\n"
+            "Check No. / Wire Ref.: _______________\n\n"
+            "=== W-9 ON FILE ===\n"
+            "W-9 Received: [ ] Yes  [ ] No — required before disbursement if "
+            "surplus exceeds $600.00\n\n"
+            "Notes: {{notes}}\n\n"
+            "Prepared by: {{assigned_to}} | {{company_name}}"
+        ),
+    },
+    {
+        "division_slug": "overages",
+        "template_type": "intake",
+        "name": "W-9 Request for Taxpayer Identification",
+        "description": "IRS Form W-9 — sent to clients to collect their TIN/SSN before disbursing recovered funds over $600.",
+        "category": "form",
+        "content": (
+            "REQUEST FOR TAXPAYER IDENTIFICATION NUMBER AND CERTIFICATION\n"
+            "(IRS Form W-9 — Substitute)\n\n"
+            "TO: {{full_name}}\n"
+            "FROM: {{company_name}}\n"
+            "DATE: {{date}}\n"
+            "CASE NO.: {{case_number}}\n\n"
+            "IMPORTANT: Federal law requires {{company_name}} to obtain your correct "
+            "Taxpayer Identification Number (TIN) before disbursing any surplus fund "
+            "payment of $600 or more. Please complete ALL sections below and return "
+            "this form promptly.\n\n"
+            "PART I — IDENTIFICATION\n"
+            "Legal Name (as shown on your tax return): _______________________________\n"
+            "Business / DBA Name (if different): _______________________________\n"
+            "Address: _______________________________\n"
+            "City, State, ZIP: _______________________________\n\n"
+            "Federal Tax Classification:\n"
+            "  [ ] Individual / Sole Proprietor\n"
+            "  [ ] C Corporation\n"
+            "  [ ] S Corporation\n"
+            "  [ ] Partnership\n"
+            "  [ ] Trust / Estate\n"
+            "  [ ] Limited Liability Company (tax classification: _____)\n"
+            "  [ ] Other: _______________________________\n\n"
+            "PART II — TAXPAYER IDENTIFICATION NUMBER\n"
+            "Social Security Number:          ___ ___ ___  –  ___ ___  –  ___ ___ ___ ___\n"
+            "  — OR —\n"
+            "Employer Identification Number:  ___ ___  –  ___ ___ ___ ___ ___ ___ ___\n\n"
+            "PART III — CERTIFICATION\n"
+            "Under penalties of perjury, I certify that:\n"
+            "  1. The TIN shown on this form is my correct taxpayer identification "
+            "number (or I am waiting for a number to be issued);\n"
+            "  2. I am not subject to backup withholding;\n"
+            "  3. I am a U.S. citizen or other U.S. person.\n\n"
+            "Signature: _______________________________\n"
+            "Printed Name: {{full_name}}\n"
+            "Date: {{signature_date}}\n\n"
+            "Return completed form to:\n"
+            "{{company_name}} | {{company_address}}\n"
+            "{{company_phone}} | {{company_email}}\n\n"
+            "NOTE: Failure to provide your TIN may result in mandatory backup "
+            "withholding of 24% from your disbursement per IRS regulations."
+        ),
+    },
+    # ── JUDGMENT RECOVERY — templates ─────────────────────────────────────────
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Acknowledgment of Assignment (Judgment)",
+        "description": "Court-filed document transferring ownership of a civil judgment to the recovery company.",
+        "category": "agreement",
+        "content": (
+            "ACKNOWLEDGMENT OF ASSIGNMENT OF JUDGMENT\n\n"
+            "IN THE {{court_name}}\n"
+            "Case / Docket No.: {{docket_number}}\n"
+            "Term: {{term}}\n\n"
+            "Original Plaintiff (Judgment Creditor): {{plaintiff_name}}\n"
+            "Defendant (Judgment Debtor): {{defendant_name}}\n"
+            "Original Judgment Amount: {{judgment_amount}}\n"
+            "Judgment Date: {{date}}\n\n"
+            "NOTICE OF ASSIGNMENT\n"
+            "PLEASE TAKE NOTICE that {{plaintiff_name}} (\"Assignor\") has sold, "
+            "assigned, and transferred all of Assignor's right, title, and interest "
+            "in and to the above-captioned judgment to:\n\n"
+            "{{new_plaintiff_name}}\n"
+            "{{company_address}}\n\n"
+            "(\"Assignee\")\n\n"
+            "The Assignment was made for valuable consideration paid by Assignee to "
+            "Assignor. Assignee is now the owner of the above-referenced judgment and "
+            "is entitled to enforce all legal remedies available to the original "
+            "judgment creditor, including but not limited to: wage garnishments, bank "
+            "levies, property liens, and execution of assets.\n\n"
+            "This Acknowledgment is submitted for filing with the Court pursuant to "
+            "applicable court rules, to place the Court and all interested parties on "
+            "notice of this Assignment.\n\n"
+            "Respectfully submitted,\n\n"
+            "_____________________________\n"
+            "{{plaintiff_name}} (Original Judgment Creditor / Assignor)\n"
+            "Date: {{signature_date}}\n\n"
+            "_____________________________\n"
+            "{{assigned_to}}, Authorized Representative\n"
+            "{{new_plaintiff_name}} (Assignee)\n"
+            "Date: {{signature_date}}\n\n"
+            "Attorney ID: {{attorney_id}} | {{attorney_firm}}\n"
+            "{{company_address}} | {{company_phone}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Judgment Purchase Agreement",
+        "description": "Private contract between judgment creditor and recovery company for purchase of a civil judgment.",
+        "category": "agreement",
+        "content": (
+            "JUDGMENT PURCHASE AGREEMENT\n\n"
+            "This Judgment Purchase Agreement (\"Agreement\") is entered into as of "
+            "{{date}} by and between {{plaintiff_name}} (\"Seller\") and "
+            "{{company_name}} (\"Buyer\").\n\n"
+            "JUDGMENT DETAILS\n"
+            "Court: {{court_name}}\n"
+            "Case / Docket No.: {{docket_number}}\n"
+            "Judgment Debtor: {{defendant_name}}\n"
+            "Original Judgment Amount: {{judgment_amount}}\n"
+            "Judgment Date: ___________\n\n"
+            "PURCHASE\n"
+            "Seller agrees to sell, assign, and transfer to Buyer all of Seller's "
+            "right, title, and interest in the above-referenced judgment for the "
+            "purchase price of $_____ (\"Purchase Price\"), receipt of which is "
+            "hereby acknowledged.\n\n"
+            "CONTINGENCY ARRANGEMENT\n"
+            "In lieu of or in addition to the Purchase Price, upon Buyer's successful "
+            "collection of any funds under the judgment, Buyer shall remit to Seller "
+            "{{client_percentage}} of all amounts collected. Buyer retains "
+            "{{fee_percentage}} as its recovery fee.\n\n"
+            "SELLER REPRESENTATIONS\n"
+            "Seller warrants that: (a) the judgment is valid, unsatisfied, and not "
+            "previously assigned; (b) Seller has full authority to sell the judgment; "
+            "(c) no attorney has a lien on the judgment; (d) no bankruptcy stay is "
+            "in effect against the Judgment Debtor to Seller's knowledge.\n\n"
+            "REVERSION\n"
+            "If Buyer is unable to collect any amounts within _____ months of the "
+            "date of this Agreement, ownership of the judgment shall revert to "
+            "Seller upon written notice.\n\n"
+            "CONFIDENTIALITY\n"
+            "The terms of this Agreement are confidential and shall not be disclosed "
+            "to the Judgment Debtor or any third party without mutual written consent.\n\n"
+            "NOT A LAW FIRM\n"
+            "{{company_name}} is NOT a law firm. Legal enforcement of judgments may "
+            "require coordination with a licensed attorney.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{plaintiff_name}} (Seller)\t\t\t{{assigned_to}} (Buyer / Company)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_address}} | {{company_phone}}"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Debtor Skip Trace Report",
+        "description": "Internal report documenting skip tracing results for a judgment debtor.",
+        "category": "report",
+        "content": (
+            "DEBTOR SKIP TRACE REPORT — INTERNAL\n"
+            "{{company_name}}\n\n"
+            "Case No.: {{case_number}}\n"
+            "Date: {{date}}\n"
+            "Investigator: {{assigned_to}}\n\n"
+            "JUDGMENT INFORMATION\n"
+            "Court: {{court_name}}\n"
+            "Docket No.: {{docket_number}}\n"
+            "Judgment Amount: {{judgment_amount}}\n"
+            "Original Creditor (Client): {{plaintiff_name}}\n"
+            "Judgment Debtor: {{defendant_name}}\n\n"
+            "=== SKIP TRACE FINDINGS ===\n\n"
+            "CURRENT ADDRESS:\n"
+            "  Confirmed Address: _______________________________\n"
+            "  Source: [ ] Credit Report  [ ] Public Record  [ ] Voter Reg.  [ ] Other: ___\n"
+            "  Date Verified: _______________\n\n"
+            "EMPLOYMENT:\n"
+            "  Employer Name: _______________________________\n"
+            "  Employer Address: _______________________________\n"
+            "  Source: _______________\n"
+            "  Wage Garnishment Viable: [ ] Yes  [ ] No  [ ] Unknown\n\n"
+            "BANK ACCOUNTS:\n"
+            "  Institution: _______________________________\n"
+            "  Source: _______________\n"
+            "  Bank Levy Viable: [ ] Yes  [ ] No  [ ] Unknown\n\n"
+            "REAL PROPERTY OWNED:\n"
+            "  Property Address / Parcel: _______________________________\n"
+            "  Source: [ ] County Records  [ ] Credit Report  [ ] Other: ___\n"
+            "  Lien Viable: [ ] Yes  [ ] No\n\n"
+            "VEHICLES / OTHER ASSETS:\n"
+            "  Description: _______________________________\n"
+            "  Source: _______________\n\n"
+            "RECOMMENDED ENFORCEMENT ACTION:\n"
+            "  [ ] Wage Garnishment  [ ] Bank Levy  [ ] Property Lien\n"
+            "  [ ] Order for Disclosure  [ ] Other: _______________________________\n\n"
+            "NOTES / FLAGS:\n"
+            "{{notes}}\n\n"
+            "Prepared by: {{assigned_to}} | {{company_name}}\n"
+            "CONFIDENTIAL — FOR INTERNAL USE ONLY"
+        ),
+    },
+    {
+        "division_slug": "judgment",
+        "template_type": "generated",
+        "name": "Judgment Outreach Letter (to Creditor)",
+        "description": "Marketing letter sent to a judgment creditor offering to collect their uncollected judgment.",
+        "category": "letter",
+        "content": (
+            "{{company_name}}\n"
+            "{{company_address}}\n"
+            "{{company_phone}} | {{company_email}}\n\n"
+            "Date: {{date}}\n\n"
+            "{{plaintiff_name}}\n"
+            "{{address}}\n\n"
+            "RE: Your Uncollected Judgment — Case No. {{docket_number}}\n\n"
+            "Dear {{plaintiff_name}},\n\n"
+            "We are writing regarding the civil judgment entered in your favor in "
+            "{{court_name}} (Case No. {{docket_number}}) against {{defendant_name}} "
+            "in the amount of {{judgment_amount}}.\n\n"
+            "Our records indicate this judgment may remain uncollected. Did you know "
+            "that across the United States, an estimated 75–85% of court-awarded "
+            "judgments go uncollected — not because they cannot be enforced, but "
+            "because most creditors lack the time, expertise, and tools to pursue "
+            "collection after the court case ends?\n\n"
+            "{{company_name}} specializes in judgment recovery. We can pursue "
+            "collection of your judgment on your behalf through legal means — wage "
+            "garnishments, bank levies, property liens, and more — AT NO UPFRONT "
+            "COST TO YOU.\n\n"
+            "HOW IT WORKS:\n"
+            "  1. You assign your judgment to us (a simple, reversible process).\n"
+            "  2. We locate the debtor and their assets using professional skip "
+            "tracing resources.\n"
+            "  3. We enforce collection through the court system.\n"
+            "  4. When funds are recovered, you receive {{client_percentage}} of all "
+            "collected amounts — we keep {{fee_percentage}} as our fee.\n"
+            "  5. If we collect nothing, you owe us nothing.\n\n"
+            "Please call or email us to discuss your case. There is absolutely no "
+            "obligation, and we will explain everything before you make any decision.\n\n"
+            "Sincerely,\n\n"
+            "{{assigned_to}}\n"
+            "{{company_name}}\n"
+            "{{company_phone}} | {{company_email}}"
+        ),
+    },
+    # ── NOTARY — Mobile Notary Agreement (from source document) ───────────────
+    {
+        "division_slug": "notary",
+        "template_type": "generated",
+        "name": "Mobile Notary Fee Agreement (Detailed)",
+        "description": "Detailed mobile notary engagement letter with travel fee, cancellation policy, and W-9 request.",
+        "category": "agreement",
+        "content": (
+            "MOBILE NOTARY FEE AGREEMENT\n"
+            "{{company_name}}\n\n"
+            "Date: {{date}}\n"
+            "Client: {{full_name}}\n"
+            "Case / Appointment No.: {{case_number}}\n\n"
+            "APPOINTMENT DETAILS\n"
+            "Date of Service: {{date}}\n"
+            "Location of Service: {{address}}\n"
+            "Document(s) to be Notarized: {{document_type}}\n"
+            "Notary Public: {{notary_name}}\n"
+            "Commission No.: {{notary_commission}}\n\n"
+            "FEE SCHEDULE\n"
+            "  Notarization Fee (per signature):   $_______________\n"
+            "  Travel / Mobile Fee:                $_______________\n"
+            "  Printing / Document Prep Fee:       $_______________\n"
+            "  After-Hours / Weekend Surcharge:    $_______________\n"
+            "  TOTAL FEE:                          {{notary_fee}}\n\n"
+            "PAYMENT\n"
+            "Payment is due at the time of service. Accepted forms of payment: "
+            "[ ] Cash  [ ] Zelle  [ ] Venmo  [ ] Credit/Debit Card  [ ] Check\n\n"
+            "IDENTIFICATION REQUIREMENT\n"
+            "Client must present valid, unexpired government-issued photo "
+            "identification at the time of signing. {{notary_name}} cannot "
+            "proceed with notarization without proper identification.\n\n"
+            "CANCELLATION POLICY\n"
+            "Cancellations made with less than two (2) hours' notice of the "
+            "scheduled appointment may be charged a cancellation / trip fee of "
+            "$_______________. Cancellations with adequate notice will not be charged.\n\n"
+            "REFUSAL OF SERVICE\n"
+            "{{notary_name}} reserves the right to refuse service if: (a) the "
+            "signer cannot be properly identified; (b) the signer appears to be "
+            "signing under duress; or (c) the document appears fraudulent or "
+            "incomplete.\n\n"
+            "LIMITATION OF SERVICES\n"
+            "{{company_name}} provides notarization services only. We do not "
+            "provide legal advice, draft legal documents, or guarantee that "
+            "notarized documents will be accepted by any specific agency.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Client)\t\t\t{{notary_name}} (Notary Public)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_address}} | {{company_phone}} | {{company_email}}"
+        ),
+    },
+    # ── CONSULTING — Independent Contractor Agreement ─────────────────────────
+    {
+        "division_slug": "consulting",
+        "template_type": "generated",
+        "name": "Independent Contractor Agreement",
+        "description": "Agreement engaging an independent contractor for surplus recovery or consulting services.",
+        "category": "agreement",
+        "content": (
+            "INDEPENDENT CONTRACTOR AGREEMENT\n\n"
+            "This Independent Contractor Agreement (\"Agreement\") is entered into "
+            "as of {{date}} by and between {{company_name}} (\"Company\") and "
+            "{{full_name}} (\"Contractor\").\n\n"
+            "1. SERVICES\n"
+            "Contractor agrees to provide the following services for Company:\n"
+            "{{service_type}}\n"
+            "Services shall commence on {{date}} and continue until terminated "
+            "by either party upon _____ days' written notice.\n\n"
+            "2. COMPENSATION\n"
+            "Company shall pay Contractor as follows:\n"
+            "  [ ] Flat Fee: $_______________  per _______________\n"
+            "  [ ] Hourly Rate: $_______________  per hour\n"
+            "  [ ] Commission: {{fee_percentage}} of revenues generated\n"
+            "Payment shall be made within _____ days of invoice.\n\n"
+            "3. INDEPENDENT CONTRACTOR STATUS\n"
+            "Contractor is an independent contractor and NOT an employee of Company. "
+            "Contractor is responsible for all self-employment taxes, insurance, and "
+            "compliance with applicable laws. Company shall not withhold taxes on "
+            "Contractor's behalf. Contractor shall provide a completed IRS Form W-9 "
+            "prior to first payment.\n\n"
+            "4. CONFIDENTIALITY\n"
+            "Contractor agrees to keep confidential all client information, business "
+            "methods, proprietary data, and trade secrets learned during the term "
+            "of this Agreement, both during and after its termination.\n\n"
+            "5. NON-SOLICITATION\n"
+            "During the term of this Agreement and for twelve (12) months thereafter, "
+            "Contractor agrees not to solicit Company's clients directly for "
+            "competing services.\n\n"
+            "6. WORK PRODUCT\n"
+            "All work product, reports, and deliverables produced by Contractor in "
+            "connection with Company's clients shall be the property of Company.\n\n"
+            "7. TERMINATION\n"
+            "Either party may terminate this Agreement with _____ days' written "
+            "notice. Company may terminate immediately for cause.\n\n"
+            "8. GOVERNING LAW\n"
+            "This Agreement is governed by the laws of South Carolina.\n\n"
+            "_____________________________\t\t_____________________________\n"
+            "{{full_name}} (Contractor)\t\t\t{{assigned_to}} (Company)\n"
+            "Date: {{signature_date}}\t\t\tDate: {{signature_date}}\n\n"
+            "{{company_name}} | {{company_address}}"
         ),
     },
 ]

@@ -612,18 +612,45 @@ function JudgmentWorkflowCard({
 // ── Overages Automation Panel ─────────────────────────────────────────────────
 
 const OVERAGE_DOCS = [
-  { key: 'assignment_of_rights',    label: 'Assignment of Rights' },
-  { key: 'assignment_of_judgment',  label: 'Assignment of Judgment' },
-  { key: 'fee_agreement',           label: 'Fee Agreement (60/40)' },
-  { key: 'power_of_attorney',       label: 'Power of Attorney' },
-  { key: 'purchase_agreement',      label: 'Purchase Agreement' },
-  { key: 'purchase_sale_agreement', label: 'Purchase & Sale Agreement' },
-  { key: 'quitclaim_deed',          label: 'Quitclaim Deed' },
-  { key: 'pre_estate_agreement',    label: 'Pre-Estate Agreement' },
-  { key: 'notary_affidavit',        label: 'Notary Affidavit' },
-  { key: 'contingency_agreement',   label: 'Contingency Agreement' },
-  { key: 'authorization',           label: 'Authorization to Recover' },
-  { key: 'non_lawyer_disclosure',   label: 'Non-Lawyer Disclosure' },
+  // ── Assignment documents ───────────────────────────────────────────────────
+  { key: 'assignment_of_rights',              label: 'Assignment of Rights' },
+  { key: 'assignment_of_rights_full',         label: 'Assignment of Rights (Full)' },
+  { key: 'assignment_of_rights_partial_ind',  label: 'Assignment of Rights (Partial — Ind.)' },
+  { key: 'assignment_of_rights_partial_ent',  label: 'Assignment of Rights (Partial — Entity)' },
+  { key: 'assignment_of_judgment',            label: 'Assignment of Judgment' },
+  // ── Fee agreements ────────────────────────────────────────────────────────
+  { key: 'fee_agreement',                     label: 'Fee Agreement (60/40)' },
+  { key: 'fee_agreement_cost_cap',            label: 'Fee Agreement (w/ Cost Cap)' },
+  { key: 'contingency_agreement',             label: 'Contingency Agreement' },
+  // ── Power of attorney ─────────────────────────────────────────────────────
+  { key: 'power_of_attorney',                 label: 'Power of Attorney (General)' },
+  { key: 'power_of_attorney_standard',        label: 'Power of Attorney (Standard 36-Mo.)' },
+  // ── Purchase / deed ───────────────────────────────────────────────────────
+  { key: 'purchase_agreement',                label: 'Purchase Agreement' },
+  { key: 'purchase_sale_agreement',           label: 'Purchase & Sale Agreement' },
+  { key: 'quitclaim_deed',                    label: 'Quitclaim Deed' },
+  // ── Estate / inheritance ──────────────────────────────────────────────────
+  { key: 'pre_estate_agreement',              label: 'Pre-Estate Agreement' },
+  { key: 'inheritance_expectancy_full',       label: 'Inheritance Expectancy (Full)' },
+  { key: 'late_claim_addendum',               label: 'Late Claim Addendum' },
+  // ── Notary / affidavit ────────────────────────────────────────────────────
+  { key: 'notary_affidavit',                  label: 'Notary Affidavit' },
+  // ── County claim forms ────────────────────────────────────────────────────
+  { key: 'county_claim_form',                 label: 'County Claim Form' },
+  { key: 'county_claim_instructions',         label: 'County Claim Instructions' },
+  // ── Client authorization / disclosure ────────────────────────────────────
+  { key: 'authorization',                     label: 'Authorization to Recover' },
+  { key: 'non_lawyer_disclosure',             label: 'Non-Lawyer Disclosure' },
+  { key: 'claimant_satisfaction_survey',      label: 'Satisfaction Survey' },
+  { key: 'w9_request',                        label: 'W-9 (Tax ID Request)' },
+  // ── Email templates ───────────────────────────────────────────────────────
+  { key: 'personal_pitch_letter',             label: 'Pitch Letter (Former Owner)' },
+  { key: 'email_overages_list',               label: 'Email: Request Overages List' },
+  { key: 'email_foreclosure_list',            label: 'Email: Request Foreclosure List' },
+  { key: 'email_notice_of_claim',             label: 'Email: Notice of Claim' },
+  // ── Internal / admin ──────────────────────────────────────────────────────
+  { key: 'disbursements_worksheet',           label: 'Disbursements Worksheet' },
+  { key: 'case_status_report',                label: 'Case Status Report' },
 ];
 
 interface AgentResult { title: string; content: string; document_id: number; }

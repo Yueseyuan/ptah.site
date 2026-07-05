@@ -1,11 +1,16 @@
-"""Tax Overage Recovery automation — surplus scraping, owner locate, email campaigns, and document generation."""
+"""Tax Overage Recovery automation — surplus scraping, owner locate, email campaigns, and document generation.
+
+OmniRoute Fusion pattern: parallel agent panel → judge synthesis → authoritative report.
+Graceful degradation: AI failures return structured stub rather than 503.
+"""
 
 import json
 import os
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
-from typing import Optional
+from typing import Callable, Optional, TypeVar
 
 import anthropic
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,6 +27,11 @@ router = APIRouter(prefix="/api/overages", tags=["overages-automation"])
 _AI_MODEL = "claude-sonnet-5"
 _HAIKU_MODEL = "claude-haiku-4-5-20251001"
 
+T = TypeVar("T")
+
+# ---------------------------------------------------------------------------
+# Core helpers
+# ---------------------------------------------------------------------------
 
 def _api_key() -> str:
     return settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY", "")
@@ -64,8 +74,14 @@ def _jina_fetch(url: str) -> str:
         return f"[fetch error: {exc}]"
 
 
-def _run_agent_loop(key: str, system: str, user_msg: str, model: str = _AI_MODEL, max_rounds: int = 5) -> str:
-    """Tool-use loop: search_web + fetch_page via Jina."""
+def _run_agent_loop(
+    key: str,
+    system: str,
+    user_msg: str,
+    model: str = _AI_MODEL,
+    max_rounds: int = 5,
+) -> str:
+    """Single tool-use loop: search_web + fetch_page via Jina."""
     tools = [
         {
             "name": "search_web",
@@ -124,7 +140,78 @@ def _run_agent_loop(key: str, system: str, user_msg: str, model: str = _AI_MODEL
 
 
 # ---------------------------------------------------------------------------
-# Scrape Surplus
+# OmniRoute Fusion helpers
+# ---------------------------------------------------------------------------
+
+def _fusion_parallel(tasks: list, key: str, max_workers: int = 4) -> list:
+    """Fan out N agent tasks in parallel, collect all results (OmniRoute Fusion pattern).
+
+    Each task: {"label": str, "system": str, "user_msg": str, "model"?: str}
+    Returns list of result strings in completion order.
+    """
+    def run_task(t: dict) -> str:
+        try:
+            return _run_agent_loop(
+                key, t["system"], t["user_msg"], model=t.get("model", _AI_MODEL)
+            )
+        except Exception as exc:
+            return f"[{t.get('label', 'agent')} error: {exc}]"
+
+    results = [""] * len(tasks)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_idx = {executor.submit(run_task, t): i for i, t in enumerate(tasks)}
+        for future in as_completed(future_to_idx):
+            results[future_to_idx[future]] = future.result()
+
+    return results
+
+
+def _judge_synthesize(key: str, topic: str, panel_results: list) -> str:
+    """Synthesize parallel panel results into one authoritative report (Fusion judge step)."""
+    combined = "\n\n--- PANEL RESULT ---\n".join(
+        f"[Source {i + 1}: {label}]\n{r}"
+        for i, (label, r) in enumerate(panel_results)
+    )
+    prompt = (
+        f"You are a senior analyst synthesizing parallel research results about: {topic}\n\n"
+        f"The following {len(panel_results)} research reports were produced independently "
+        f"from different search angles:\n\n{combined}\n\n"
+        "Synthesis tasks:\n"
+        "1. AGREEMENTS — facts confirmed by multiple sources (high confidence)\n"
+        "2. CONTRADICTIONS — note which source is more credible and why\n"
+        "3. GAPS — information no source covered; flag for manual follow-up\n"
+        "4. AUTHORITATIVE REPORT — one clean, consolidated summary\n"
+        "5. CONFIDENCE LEVEL — High / Medium / Low with brief rationale\n\n"
+        "Format the final report clearly with section headers."
+    )
+    client = anthropic.Anthropic(api_key=key)
+    resp = client.messages.create(
+        model=_AI_MODEL,
+        max_tokens=2048,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return resp.content[0].text if resp.content else "Synthesis unavailable."
+
+
+def _with_degradation(primary: Callable[[], str], stub: str) -> str:
+    """OmniRoute graceful degradation: run primary(); on AI failure return stub."""
+    try:
+        return primary()
+    except (
+        anthropic.AuthenticationError,
+        anthropic.RateLimitError,
+        anthropic.APIConnectionError,
+        anthropic.APITimeoutError,
+    ):
+        return stub
+    except Exception as exc:
+        if "ANTHROPIC" in str(exc).upper() or "anthropic" in str(exc).lower():
+            return stub
+        raise
+
+
+# ---------------------------------------------------------------------------
+# Scrape Surplus  (Fusion: 4-agent panel → judge)
 # ---------------------------------------------------------------------------
 
 @router.post("/{service_case_id}/scrape-surplus", status_code=201)
@@ -133,7 +220,8 @@ def scrape_surplus(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Agent searches county surplus / tax deed sale records to verify the overage amount and claim status."""
+    """Fusion agent panel searches county surplus / tax deed records from four angles,
+    then a judge synthesizes contradictions and gaps into one authoritative report."""
     case = db.query(ServiceCase).filter(ServiceCase.id == service_case_id).first()
     _require_overages(case, service_case_id)
 
@@ -147,33 +235,78 @@ def scrape_surplus(
     tax_deed = intake.get("tax_deed_number", "")
     owner = intake.get("owner_name", "")
 
-    system = (
+    base_system = (
         "You are a surplus fund research specialist for a contingency recovery firm. "
-        "Search publicly available county clerk, tax collector, and court records to verify "
-        "tax deed surplus / excess proceeds information. Return a structured report."
-    )
-    user_msg = (
-        f"Verify and gather surplus fund information for the following tax deed case:\n\n"
-        f"County: {county}\n"
-        f"Former Owner: {owner}\n"
-        f"Parcel / Folio: {parcel}\n"
-        f"Tax Deed Number: {tax_deed}\n\n"
-        "Tasks:\n"
-        "1. Search the county clerk's surplus fund list or tax deed sale records\n"
-        "2. Confirm the surplus / excess proceeds amount\n"
-        "3. Check if a claim has already been filed\n"
-        "4. Identify claim filing deadline (if published)\n"
-        "5. Note any competing claimants or liens\n"
-        "6. Find the exact claim submission address and process\n\n"
-        "Be specific. Cite the URLs you find. Flag any discrepancies."
+        "Search publicly available county clerk, tax collector, and court records. "
+        "Be specific. Cite every URL you find. Flag any discrepancies or missing data."
     )
 
-    try:
-        content = _run_agent_loop(key, system, user_msg)
-    except anthropic.AuthenticationError as exc:
-        raise HTTPException(status_code=503, detail=f"AI authentication failed: {str(exc)[:150]}")
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"AI service error: {str(exc)[:200]}")
+    # Fusion panel: four distinct search angles
+    tasks = [
+        {
+            "label": "county-clerk",
+            "system": base_system,
+            "user_msg": (
+                f"Search the {county} County Clerk's surplus fund list or registry. "
+                f"Owner: {owner}. Parcel: {parcel}. Tax Deed: {tax_deed}. "
+                "Confirm surplus amount, claim filing status, and deadline. "
+                "Find the official surplus claim form URL and submission address."
+            ),
+        },
+        {
+            "label": "tax-collector",
+            "system": base_system,
+            "user_msg": (
+                f"Search the {county} County Tax Collector and Property Appraiser websites. "
+                f"Parcel/Folio: {parcel}. Tax Deed: {tax_deed}. "
+                "Find the tax deed sale date, opening bid, final sale price, and calculated surplus. "
+                "Check for any outstanding liens, mortgages, or IRS levies that could reduce net surplus."
+            ),
+        },
+        {
+            "label": "court-records",
+            "system": base_system,
+            "user_msg": (
+                f"Search court records and CourtListener for {county} tax deed case {tax_deed}. "
+                f"Former owner: {owner}. Parcel: {parcel}. "
+                "Identify any competing claimants, lienholders, or attorneys who have filed for the surplus. "
+                "Check if a disbursement order has been issued."
+            ),
+        },
+        {
+            "label": "general-web",
+            "system": base_system,
+            "user_msg": (
+                f"Do a broad web search for surplus funds in {county} County for parcel {parcel} "
+                f"or tax deed {tax_deed}, former owner {owner}. "
+                "Look for news articles, legal notices, or third-party surplus databases "
+                "(e.g., surplusfundshub.com, overage.io). "
+                "Cross-check any surplus amounts found against public records."
+            ),
+        },
+    ]
+
+    stub = (
+        "## Surplus Verification — Manual Review Required\n\n"
+        "AI-assisted search is temporarily unavailable.\n\n"
+        f"**Case:** {county} / {parcel or tax_deed}\n"
+        f"**Former Owner:** {owner}\n\n"
+        "**Next Steps (manual):**\n"
+        f"1. Visit {county} County Clerk website and search surplus fund list\n"
+        "2. Search property appraiser for parcel details and tax deed sale history\n"
+        "3. Check court records for competing claimants\n"
+        "4. Confirm claim deadline directly with the clerk's office\n\n"
+        "_This document was generated by the graceful-degradation fallback. "
+        "Re-run once AI service is restored._"
+    )
+
+    def _fusion_surplus() -> str:
+        panel = _fusion_parallel(tasks, key)
+        labeled = list(zip([t["label"] for t in tasks], panel))
+        topic = f"Tax deed surplus verification — {county}, Parcel {parcel or tax_deed}, Owner: {owner}"
+        return _judge_synthesize(key, topic, labeled)
+
+    content = _with_degradation(_fusion_surplus, stub)
 
     doc = ServiceDocument(
         service_case_id=case.id,
@@ -192,7 +325,7 @@ def scrape_surplus(
 
 
 # ---------------------------------------------------------------------------
-# Locate Owner
+# Locate Owner  (Fusion: 4-agent panel → judge)
 # ---------------------------------------------------------------------------
 
 @router.post("/{service_case_id}/locate-owner", status_code=201)
@@ -201,7 +334,8 @@ def locate_owner(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Agent searches public records to locate the former property owner's current contact info."""
+    """Fusion agent panel skip-traces the former owner via four parallel search angles,
+    then a judge synthesizes the best contact info with confidence levels."""
     case = db.query(ServiceCase).filter(ServiceCase.id == service_case_id).first()
     _require_overages(case, service_case_id)
 
@@ -215,41 +349,78 @@ def locate_owner(
     parcel = intake.get("parcel_folio", "")
     prop_desc = intake.get("property_description", "")
 
-    system = (
+    base_system = (
         "You are a skip-trace specialist for a surplus fund recovery firm. "
-        "Search only publicly available, legal sources to locate current contact information "
-        "for a former property owner who may be entitled to tax deed surplus funds. "
-        "Never use private databases or non-public information."
-    )
-    user_msg = (
-        f"Locate current contact information for this former property owner:\n\n"
-        f"Name: {owner}\n"
-        f"County: {county}\n"
-        f"Property: {prop_desc or parcel}\n\n"
-        "Search public sources:\n"
-        "1. County property appraiser mailing address records\n"
-        "2. Voter registration records (if publicly available in this state)\n"
-        "3. Court case records for a current address\n"
-        "4. Business registration records (if owner had a business)\n"
-        "5. Social media / LinkedIn / public profiles\n"
-        "6. White Pages / Spokeo-style public data\n\n"
-        "Return:\n"
-        "- Current mailing address (or best known address)\n"
-        "- Phone number(s)\n"
-        "- Email address(es)\n"
-        "- Confidence level for each\n"
-        "- Source URLs\n"
-        "- Any aliases or related persons (spouse, estate heir, etc.)\n"
-        "- Skip-trace difficulty assessment\n\n"
-        "Flag if owner appears deceased — note any estate or probate indicators."
+        "Search only publicly available, legal sources to locate current contact information. "
+        "Return: mailing address, phone(s), email(s), confidence per item, source URLs. "
+        "Flag if owner appears deceased, incarcerated, or part of an estate/probate."
     )
 
-    try:
-        content = _run_agent_loop(key, system, user_msg)
-    except anthropic.AuthenticationError as exc:
-        raise HTTPException(status_code=503, detail=f"AI authentication failed: {str(exc)[:150]}")
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"AI service error: {str(exc)[:200]}")
+    tasks = [
+        {
+            "label": "property-appraiser",
+            "system": base_system,
+            "user_msg": (
+                f"Search the {county} County Property Appraiser's public records for the mailing "
+                f"address of former owner: {owner}. Parcel: {parcel}. Property: {prop_desc}. "
+                "Also check for any homestead exemption or subsequent property purchases by this person."
+            ),
+        },
+        {
+            "label": "voter-court-records",
+            "system": base_system,
+            "user_msg": (
+                f"Search voter registration records and court filings in {county} County for "
+                f"{owner}. Look for a current residential address, phone, or email. "
+                "Also search Florida (or relevant state) court records for any civil or criminal cases "
+                "that include an address for this person."
+            ),
+        },
+        {
+            "label": "business-linkedin",
+            "system": base_system,
+            "user_msg": (
+                f"Search business registration records, LinkedIn, and professional directories "
+                f"for {owner} in or around {county} County. "
+                "Look for a business they own or work at that could provide a contact address or email. "
+                "Check for a spouse or business partner who may be reachable."
+            ),
+        },
+        {
+            "label": "public-people-search",
+            "system": base_system,
+            "user_msg": (
+                f"Search public people-search sites (WhitePages, Spokeo public results, BeenVerified "
+                f"preview, FastPeopleSearch) for {owner} near {county} County. "
+                "Cross-reference any address found with the known property address. "
+                "Check for aliases, maiden name, or known relatives who may have current contact info."
+            ),
+        },
+    ]
+
+    stub = (
+        "## Owner Locate Report — Manual Review Required\n\n"
+        "AI-assisted skip-trace is temporarily unavailable.\n\n"
+        f"**Subject:** {owner}\n"
+        f"**County:** {county}\n"
+        f"**Parcel:** {parcel}\n\n"
+        "**Manual Skip-Trace Steps:**\n"
+        f"1. {county} County Property Appraiser — mailing address on file\n"
+        "2. State voter registration records\n"
+        "3. WhitePages / FastPeopleSearch public lookup\n"
+        "4. County court docket search for defendant/plaintiff address\n"
+        "5. LinkedIn / social media search\n"
+        "6. Check for estate/probate if owner may be deceased\n\n"
+        "_Re-run once AI service is restored._"
+    )
+
+    def _fusion_locate() -> str:
+        panel = _fusion_parallel(tasks, key)
+        labeled = list(zip([t["label"] for t in tasks], panel))
+        topic = f"Skip-trace: locate former owner {owner}, {county} County, Parcel {parcel}"
+        return _judge_synthesize(key, topic, labeled)
+
+    content = _with_degradation(_fusion_locate, stub)
 
     doc = ServiceDocument(
         service_case_id=case.id,
@@ -295,8 +466,6 @@ def email_campaign(
 
     surplus_str = f"${float(surplus):,.2f}" if surplus else "funds you may be owed"
     client_pct = 100 - int(fee_pct)
-
-    client_obj = db.query(AegisClient).filter(AegisClient.id == case.client_id).first()
     rep_name = case.assigned_to or "Recovery Specialist"
 
     prompt = (
@@ -323,18 +492,32 @@ def email_campaign(
         "body, and signature block."
     )
 
-    try:
+    stub = (
+        "## Email Campaign — Draft Pending\n\n"
+        "AI email generation is temporarily unavailable. "
+        "Please use the template below as a starting point and customize manually.\n\n"
+        "---\n\n"
+        "**EMAIL 1 — Initial Contact**\n"
+        f"Subject: Important Notice Regarding Unclaimed Funds — {county} County\n\n"
+        f"Dear {owner},\n\n"
+        "We are reaching out regarding unclaimed surplus funds from a tax deed sale "
+        f"on your former property in {county} County. You may be entitled to recover "
+        f"{surplus_str}.\n\n"
+        "Please contact us to learn more. There is no upfront cost — we work on contingency.\n\n"
+        f"Sincerely,\n{rep_name}\nCruel & Associates\ninfo@cruelandassociates.com\n\n"
+        "_Re-run once AI service is restored for fully personalized emails._"
+    )
+
+    def _generate_campaign() -> str:
         client = anthropic.Anthropic(api_key=key)
         resp = client.messages.create(
             model=_HAIKU_MODEL,
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
         )
-        content = resp.content[0].text if resp.content else "No response generated."
-    except anthropic.AuthenticationError as exc:
-        raise HTTPException(status_code=503, detail=f"AI authentication failed: {str(exc)[:150]}")
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"AI service error: {str(exc)[:200]}")
+        return resp.content[0].text if resp.content else "No response generated."
+
+    content = _with_degradation(_generate_campaign, stub)
 
     doc = ServiceDocument(
         service_case_id=case.id,
@@ -356,21 +539,47 @@ def email_campaign(
 # Document Generation (pre-fill from templates)
 # ---------------------------------------------------------------------------
 
-# Maps frontend doc_type keys → template names in DB
 DOC_TYPE_MAP = {
-    "assignment_of_rights":     "Assignment of Rights",
-    "assignment_of_judgment":   "Assignment of Judgment",
-    "fee_agreement":            "Fee Agreement (60/40 Contingency)",
-    "power_of_attorney":        "Limited Power of Attorney (Surplus Claim)",
-    "purchase_agreement":       "Purchase Agreement (Surplus Rights)",
-    "purchase_sale_agreement":  "Purchase and Sale Agreement",
-    "quitclaim_deed":           "Quitclaim Deed",
-    "pre_estate_agreement":     "Pre-Estate Agreement",
-    "notary_affidavit":         "Notary Affidavit (Surplus Claim)",
-    # Also support generating existing legacy templates by their name
-    "contingency_agreement":    "Asset Recovery Contingency Agreement",
-    "authorization":            "Authorization to Recover Funds",
-    "non_lawyer_disclosure":    "Non-Lawyer Disclosure (Tax Overage Recovery)",
+    # Core assignment documents
+    "assignment_of_rights":              "Assignment of Rights",
+    "assignment_of_rights_full":         "Assignment of Rights (Full — Individual)",
+    "assignment_of_rights_partial_ind":  "Assignment of Rights (Partial — Individual, Not Notarized)",
+    "assignment_of_rights_partial_ent":  "Assignment of Rights (Partial — Entity)",
+    "assignment_of_judgment":            "Assignment of Judgment",
+    # Fee / contingency agreements
+    "fee_agreement":                     "Fee Agreement (60/40 Contingency)",
+    "fee_agreement_cost_cap":            "Fee Agreement (with Cost Cap)",
+    "contingency_agreement":             "Asset Recovery Contingency Agreement",
+    # Power of attorney
+    "power_of_attorney":                 "Limited Power of Attorney (Surplus Claim)",
+    "power_of_attorney_standard":        "Power of Attorney (Standard — Outside PA/GA)",
+    # Purchase / sale
+    "purchase_agreement":                "Purchase Agreement (Surplus Rights)",
+    "purchase_sale_agreement":           "Purchase and Sale Agreement",
+    # Real property
+    "quitclaim_deed":                    "Quitclaim Deed",
+    # Estate / inheritance
+    "pre_estate_agreement":              "Pre-Estate Agreement",
+    "inheritance_expectancy_full":       "Inheritance Expectancy Agreement (Full Irrevocable)",
+    "late_claim_addendum":               "Late Claim Addendum",
+    # Notary / affidavit
+    "notary_affidavit":                  "Notary Affidavit (Surplus Claim)",
+    # County claim forms
+    "county_claim_form":                 "County Tax Sale Overage Claim Form",
+    "county_claim_instructions":         "County Overage Claim — Filing Instructions",
+    # Client-facing / outreach
+    "authorization":                     "Authorization to Recover Funds",
+    "non_lawyer_disclosure":             "Non-Lawyer Disclosure (Tax Overage Recovery)",
+    "personal_pitch_letter":             "Personal Pitch Letter (Former Owner Outreach)",
+    "claimant_satisfaction_survey":      "Claimant Satisfaction Survey",
+    # Email templates
+    "email_overages_list":               "Email: Overages List Request (Standard)",
+    "email_foreclosure_list":            "Email: Mortgage Foreclosure Overages List Request",
+    "email_notice_of_claim":             "Email: Notice of Claim to Recovery Agency",
+    # Internal / admin
+    "disbursements_worksheet":           "Disbursements Worksheet",
+    "w9_request":                        "W-9 Request for Taxpayer Identification",
+    "case_status_report":                "Overage Case Status Report",
 }
 
 
@@ -407,7 +616,6 @@ def generate_doc(
             detail=f"Template '{template_name}' not found. Run POST /api/templates/seed first.",
         )
 
-    # Build variables from client + case
     client_obj = db.query(AegisClient).filter(AegisClient.id == case.client_id).first()
     intake = _parse_intake(case)
 
@@ -429,7 +637,6 @@ def generate_doc(
         fee_pct_int = 40
     client_pct = 100 - fee_pct_int
 
-    # Override / augment with intake fields (overages-specific)
     overage_vars = {
         "date":                 today_str,
         "signature_date":       today_str,
@@ -443,19 +650,16 @@ def generate_doc(
         "fee_percentage":       f"{fee_pct_int}%",
         "client_percentage":    f"{client_pct}%",
         "fee":                  f"{fee_pct_int}%",
-        # Allow intake to supply owner contact if different from registered client
         "full_name":            intake.get("owner_name", base_vars.get("full_name", "")),
         "address":              intake.get("owner_address", base_vars.get("address", "")),
         "phone":                intake.get("owner_phone", base_vars.get("phone", "")),
         "email":                intake.get("owner_email", base_vars.get("email", "")),
-        # Company constants
         "company_name":         "Cruel & Associates",
         "company_address":      "456 Service Lane, Columbia, SC 29201",
         "company_phone":        "(803) 555-0200",
         "company_email":        "info@cruelandassociates.com",
         "assigned_to":          case.assigned_to or "Recovery Specialist",
         "case_number":          case.case_number or "",
-        # Notary / affidavit fields
         "notary_name":          intake.get("notary_name", "[Notary Name]"),
         "notary_commission":    intake.get("notary_commission", "[Commission No.]"),
         "notary_expiry":        intake.get("notary_expiry", "[Expiry Date]"),

@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models import User
 from app.services.auth_service import hash_password, verify_password, create_access_token, decode_access_token
 from app.dependencies import get_current_user, require_admin, oauth2_scheme
+from app.config import settings
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -186,6 +187,32 @@ def list_users(
 ):
     """List all users (admin only)."""
     return [_out(u) for u in db.query(User).order_by(User.id).all()]
+
+
+@router.post("/reset-admin")
+def reset_admin(
+    secret: str,
+    new_password: str,
+    db: Session = Depends(get_db),
+):
+    """Reset the admin password via a pre-shared secret (set ADMIN_RESET_SECRET in env)."""
+    if not settings.ADMIN_RESET_SECRET or secret != settings.ADMIN_RESET_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    admin = db.query(User).filter(User.role == "admin").first()
+    if not admin:
+        raise HTTPException(status_code=404, detail="No admin user found")
+    admin.hashed_password = hash_password(new_password)
+    db.commit()
+    return {"message": f"Password reset for admin '{admin.username}'"}
+
+
+@router.get("/admin-check")
+def admin_check(secret: str, db: Session = Depends(get_db)):
+    """List admin accounts (username + active status). Gated by ADMIN_RESET_SECRET."""
+    if not settings.ADMIN_RESET_SECRET or secret != settings.ADMIN_RESET_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    admins = db.query(User).filter(User.role == "admin").all()
+    return [{"id": u.id, "username": u.username, "email": u.email, "is_active": u.is_active} for u in admins]
 
 
 @router.patch("/users/{user_id}")

@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_FROM: str = "noreply@cruelandassociates.site"
     ADMIN_NOTIFICATION_EMAIL: str = "yueseyuan.cruel@cruelandassociates.site"
+    ADMIN_RESET_SECRET: str = ""   # set in Railway to enable /api/auth/reset-admin
 
 
 # Fall back to direct os.environ reads for critical keys if pydantic-settings

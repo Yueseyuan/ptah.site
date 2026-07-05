@@ -189,7 +189,7 @@ def list_users(
     return [_out(u) for u in db.query(User).order_by(User.id).all()]
 
 
-@router.post("/reset-admin")
+@router.get("/reset-admin")
 def reset_admin(
     secret: str,
     new_password: str,

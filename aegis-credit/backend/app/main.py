@@ -224,6 +224,7 @@ def _ensure_admin():
         import os as _os
         db = SessionLocal()
         override_pw = _os.environ.get("ADMIN_PASSWORD", "").strip()
+        print(f"[STARTUP] ADMIN_PASSWORD env var: {'SET (' + str(len(override_pw)) + ' chars)' if override_pw else 'NOT SET'}")
         try:
             admin = db.query(User).filter(User.role == "admin").first()
             if admin is None:

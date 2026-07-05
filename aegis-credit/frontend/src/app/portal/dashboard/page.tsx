@@ -49,7 +49,20 @@ export default function PortalDashboard() {
   useEffect(() => {
     portalMe()
       .then(me => setData(me))
-      .catch(() => setError('Failed to load your account. Please try again.'))
+      .catch((err: unknown) => {
+        const e = err as Error & { response?: { status: number; data?: { detail?: string } } };
+        const status = e.response?.status;
+        const detail = e.response?.data?.detail;
+        if (status === 404) {
+          setError("Your account isn't linked to a client file yet. Please contact your case manager at info@cruelandassociates.com.");
+        } else if (status === 401) {
+          window.location.href = '/portal/login';
+        } else if (detail) {
+          setError(detail);
+        } else {
+          setError('Failed to load your account. Please try again.');
+        }
+      })
       .finally(() => setLoading(false));
     billingStatus()
       .then(billing => setSubStatus(billing.subscription_status))
@@ -382,12 +395,23 @@ function LoadingState() {
 }
 
 function ErrorState({ message }: { message: string }) {
+  function signOut() {
+    localStorage.removeItem('portal_token');
+    localStorage.removeItem('portal_role');
+    window.location.href = '/portal/login';
+  }
   return (
     <div style={{
       background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca',
-      borderRadius: 8, padding: '16px 20px', fontSize: 14,
+      borderRadius: 8, padding: '20px 24px', fontSize: 14,
     }}>
-      {message}
+      <div style={{ marginBottom: 12 }}>{message}</div>
+      <button
+        onClick={signOut}
+        style={{ background: 'none', border: '1px solid #fca5a5', borderRadius: 6, padding: '6px 14px', color: '#991b1b', cursor: 'pointer', fontSize: 13 }}
+      >
+        Sign out and try again
+      </button>
     </div>
   );
 }

@@ -61,14 +61,14 @@ async function portalFetch<T = unknown>(
   const res = await fetch(url, init);
 
   if (!res.ok) {
+    let errData: { detail?: string; message?: string } = {};
+    try { errData = await res.json(); } catch { /* ignore */ }
     if (res.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('portal_token');
       localStorage.removeItem('portal_role');
       window.location.href = '/portal/login';
     }
-    const err = new Error(`HTTP ${res.status}`) as Error & { response: { status: number; data?: unknown } };
-    let errData: unknown;
-    try { errData = await res.json(); } catch { /* ignore */ }
+    const err = new Error(errData.detail || errData.message || `HTTP ${res.status}`) as Error & { response: { status: number; data?: unknown } };
     err.response = { status: res.status, data: errData };
     throw err;
   }

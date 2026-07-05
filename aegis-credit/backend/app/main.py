@@ -223,10 +223,13 @@ def _ensure_admin():
         from app.services.auth_service import hash_password
         import os as _os
         db = SessionLocal()
+        import sys as _sys
         override_pw = _os.environ.get("ADMIN_PASSWORD", "").strip()
-        print(f"[STARTUP] ADMIN_PASSWORD env var: {'SET (' + str(len(override_pw)) + ' chars)' if override_pw else 'NOT SET'}")
+        print(f"[STARTUP] ADMIN_PASSWORD env var: {'SET (' + str(len(override_pw)) + ' chars)' if override_pw else 'NOT SET'}", flush=True)
         try:
-            admin = db.query(User).filter(User.role == "admin").first()
+            admins = db.query(User).filter(User.role == "admin").all()
+            print(f"[STARTUP] Admin accounts in DB: {[u.username for u in admins]}", flush=True)
+            admin = admins[0] if admins else None
             if admin is None:
                 pw = override_pw or "Cruel2026!"
                 admin = User(
@@ -239,14 +242,14 @@ def _ensure_admin():
                 )
                 db.add(admin)
                 db.commit()
-                print("[STARTUP] Default admin created — username: admin")
+                print(f"[STARTUP] Default admin created — username: admin", flush=True)
             elif override_pw:
                 admin.hashed_password = hash_password(override_pw)
                 admin.is_active = True
                 db.commit()
-                print(f"[STARTUP] Admin password synced from ADMIN_PASSWORD env var (user: {admin.username})")
+                print(f"[STARTUP] Admin password synced — username: '{admin.username}' is_active: {admin.is_active}", flush=True)
             else:
-                print(f"[STARTUP] Admin user already exists — username: {admin.username}")
+                print(f"[STARTUP] Admin exists — username: '{admin.username}' is_active: {admin.is_active} (set ADMIN_PASSWORD to reset)", flush=True)
         finally:
             db.close()
     except Exception as e:

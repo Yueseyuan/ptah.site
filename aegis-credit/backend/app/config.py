@@ -51,6 +51,10 @@ if not settings.ANTHROPIC_API_KEY.strip():
     settings.ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY").strip()
 if not settings.STRIPE_SECRET_KEY.strip():
     settings.STRIPE_SECRET_KEY = _env("STRIPE_SECRET_KEY").strip()
+if not settings.ADMIN_RESET_SECRET.strip():
+    settings.ADMIN_RESET_SECRET = _env("ADMIN_RESET_SECRET").strip()
+if settings.ADMIN_RESET_SECRET:
+    print("[CONFIG] ADMIN_RESET_SECRET: SET")
 
 # Secondary fallback: if the primary variable names are being truncated/blocked by Railway
 # (observed when variable value arrives as <50 chars despite full key being set),

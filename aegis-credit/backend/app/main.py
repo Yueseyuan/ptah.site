@@ -227,7 +227,7 @@ def _ensure_admin():
         override_pw = _os.environ.get("ADMIN_PASSWORD", "").strip()
         print(f"[STARTUP] ADMIN_PASSWORD env var: {'SET (' + str(len(override_pw)) + ' chars)' if override_pw else 'NOT SET'}", flush=True)
         try:
-            admins = db.query(User).filter(User.role == "admin").all()
+            admins = db.query(User).filter(User.role == "admin").order_by(User.id).all()
             print(f"[STARTUP] Admin accounts in DB: {[u.username for u in admins]}", flush=True)
             admin = admins[0] if admins else None
             if admin is None:

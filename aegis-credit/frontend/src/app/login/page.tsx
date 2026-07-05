@@ -16,12 +16,17 @@ export default function LoginPage() {
   useEffect(() => {
     // Local desktop mode: auto-login without credentials
     if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
+      setLoading(true);
       loginUser('dev_admin', 'dev').then(data => {
         clearPortalAuth();
         setToken(data.access_token);
         setPortalAuth(data.access_token, data.role || 'admin');
         router.replace('/cases');
-      }).catch(() => {});
+      }).catch((err: unknown) => {
+        setLoading(false);
+        setError('Dev auto-login failed — is the local backend running on port 8082?');
+        console.error('Dev auto-login error:', err);
+      });
       return;
     }
     const token = getToken();

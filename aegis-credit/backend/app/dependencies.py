@@ -29,7 +29,12 @@ def get_current_user(
     When DEV_NO_AUTH is True, return a fake admin without checking the token.
     """
     if settings.DEV_NO_AUTH:
-        return _DEV_ADMIN
+        import os as _os
+        if _os.environ.get("RAILWAY_ENVIRONMENT") == "production":
+            import warnings
+            warnings.warn("[SECURITY] DEV_NO_AUTH=True in Railway production — ignoring", stacklevel=2)
+        else:
+            return _DEV_ADMIN
 
     if not token:
         raise HTTPException(

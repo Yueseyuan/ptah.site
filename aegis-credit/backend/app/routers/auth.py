@@ -192,29 +192,12 @@ def list_users(
     return [_out(u) for u in db.query(User).order_by(User.id).all()]
 
 
-@router.get("/reset-admin")
-def reset_admin(
-    secret: str,
-    new_password: str,
-    db: Session = Depends(get_db),
-):
-    """Reset the admin password via a pre-shared secret (set ADMIN_RESET_SECRET in env)."""
-    if not settings.ADMIN_RESET_SECRET or secret != settings.ADMIN_RESET_SECRET:
-        raise HTTPException(status_code=403, detail="Forbidden")
-    admin = db.query(User).filter(User.role == "admin").first()
-    if not admin:
-        raise HTTPException(status_code=404, detail="No admin user found")
-    admin.hashed_password = hash_password(new_password)
-    db.commit()
-    return {"message": f"Password reset for admin '{admin.username}'"}
-
-
 @router.get("/admin-check")
 def admin_check(secret: str, db: Session = Depends(get_db)):
-    """List admin accounts (username + active status). Gated by ADMIN_RESET_SECRET."""
+    """List admin accounts. Gated by ADMIN_RESET_SECRET. Use ADMIN_PASSWORD env var to reset passwords."""
     if not settings.ADMIN_RESET_SECRET or secret != settings.ADMIN_RESET_SECRET:
         raise HTTPException(status_code=403, detail="Forbidden")
-    admins = db.query(User).filter(User.role == "admin").all()
+    admins = db.query(User).filter(User.role == "admin").order_by(User.id).all()
     return [{"id": u.id, "username": u.username, "email": u.email, "is_active": u.is_active} for u in admins]
 
 

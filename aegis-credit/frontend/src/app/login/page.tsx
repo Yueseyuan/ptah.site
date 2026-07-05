@@ -14,6 +14,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Local desktop mode: auto-login without credentials
+    if (process.env.NEXT_PUBLIC_DEV_MODE === 'true') {
+      loginUser('dev_admin', 'dev').then(data => {
+        clearPortalAuth();
+        setToken(data.access_token);
+        setPortalAuth(data.access_token, data.role || 'admin');
+        router.replace('/cases');
+      }).catch(() => {});
+      return;
+    }
     const token = getToken();
     const role = getPortalRole();
     // Only auto-redirect if the stored token belongs to a staff role.

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-const BACKEND = 'https://ptahsite-production.up.railway.app';
+const BACKEND = process.env.BACKEND_URL || 'https://ptahsite-production.up.railway.app';
 
 const SKIP = new Set(['host', 'connection', 'transfer-encoding', 'te', 'trailer', 'upgrade']);
 

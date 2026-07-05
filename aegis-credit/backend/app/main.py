@@ -227,29 +227,43 @@ def _ensure_admin():
         override_pw = _os.environ.get("ADMIN_PASSWORD", "").strip()
         print(f"[STARTUP] ADMIN_PASSWORD env var: {'SET (' + str(len(override_pw)) + ' chars)' if override_pw else 'NOT SET'}", flush=True)
         try:
-            admins = db.query(User).filter(User.role == "admin").order_by(User.id).all()
-            print(f"[STARTUP] Admin accounts in DB: {[u.username for u in admins]}", flush=True)
-            admin = admins[0] if admins else None
-            if admin is None:
-                pw = override_pw or "Cruel2026!"
-                admin = User(
-                    username="admin",
-                    email="admin@cruelandassociates.site",
-                    full_name="Administrator",
-                    hashed_password=hash_password(pw),
-                    role="admin",
-                    is_active=True,
-                )
-                db.add(admin)
-                db.commit()
-                print(f"[STARTUP] Default admin created — username: admin", flush=True)
-            elif override_pw:
-                admin.hashed_password = hash_password(override_pw)
-                admin.is_active = True
-                db.commit()
-                print(f"[STARTUP] Admin password synced — username: '{admin.username}' is_active: {admin.is_active}", flush=True)
+            if override_pw:
+                # Always ensure username="admin" exists with the specified password
+                admin = db.query(User).filter(User.username == "admin").first()
+                if admin:
+                    admin.hashed_password = hash_password(override_pw)
+                    admin.is_active = True
+                    db.commit()
+                    print(f"[STARTUP] admin password updated — login: admin / <ADMIN_PASSWORD>", flush=True)
+                else:
+                    # No user named "admin" — create one (other admins may still exist)
+                    admin = User(
+                        username="admin",
+                        email="admin@cruelandassociates.site",
+                        full_name="Administrator",
+                        hashed_password=hash_password(override_pw),
+                        role="admin",
+                        is_active=True,
+                    )
+                    db.add(admin)
+                    db.commit()
+                    print(f"[STARTUP] admin user created — login: admin / <ADMIN_PASSWORD>", flush=True)
             else:
-                print(f"[STARTUP] Admin exists — username: '{admin.username}' is_active: {admin.is_active} (set ADMIN_PASSWORD to reset)", flush=True)
+                admins = db.query(User).filter(User.role == "admin").order_by(User.id).all()
+                if admins:
+                    print(f"[STARTUP] Admin accounts: {[u.username for u in admins]} (set ADMIN_PASSWORD env var to reset password)", flush=True)
+                else:
+                    admin = User(
+                        username="admin",
+                        email="admin@cruelandassociates.site",
+                        full_name="Administrator",
+                        hashed_password=hash_password("Cruel2026!"),
+                        role="admin",
+                        is_active=True,
+                    )
+                    db.add(admin)
+                    db.commit()
+                    print(f"[STARTUP] Default admin created — login: admin / Cruel2026!", flush=True)
         finally:
             db.close()
     except Exception as e:

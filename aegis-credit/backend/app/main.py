@@ -216,27 +216,36 @@ def run_seeds():
 
 
 def _ensure_admin():
-    """Create a default admin user on first boot if none exists."""
+    """Create or sync the default admin user on boot."""
     try:
         from app.database import SessionLocal
         from app.models import User
         from app.services.auth_service import hash_password
+        import os as _os
         db = SessionLocal()
+        override_pw = _os.environ.get("ADMIN_PASSWORD", "").strip()
         try:
-            if db.query(User).filter(User.role == "admin").count() == 0:
+            admin = db.query(User).filter(User.role == "admin").first()
+            if admin is None:
+                pw = override_pw or "Cruel2026!"
                 admin = User(
                     username="admin",
                     email="admin@cruelandassociates.site",
                     full_name="Administrator",
-                    hashed_password=hash_password("Cruel2026!"),
+                    hashed_password=hash_password(pw),
                     role="admin",
                     is_active=True,
                 )
                 db.add(admin)
                 db.commit()
-                print("[STARTUP] Default admin created — username: admin  password: Cruel2026!")
+                print("[STARTUP] Default admin created — username: admin")
+            elif override_pw:
+                admin.hashed_password = hash_password(override_pw)
+                admin.is_active = True
+                db.commit()
+                print(f"[STARTUP] Admin password synced from ADMIN_PASSWORD env var (user: {admin.username})")
             else:
-                print("[STARTUP] Admin user already exists — skipping default creation")
+                print(f"[STARTUP] Admin user already exists — username: {admin.username}")
         finally:
             db.close()
     except Exception as e:

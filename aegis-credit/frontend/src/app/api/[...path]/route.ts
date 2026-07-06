@@ -24,7 +24,15 @@ async function handler(request: NextRequest, { params }: { params: { path: strin
     (init as any).duplex = 'half';
   }
 
-  const upstream = await fetch(url, init);
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, init);
+  } catch {
+    return new Response(JSON.stringify({ detail: 'Backend unavailable' }), {
+      status: 502,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   const resHeaders: Record<string, string> = {};
   upstream.headers.forEach((value, key) => {

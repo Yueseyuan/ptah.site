@@ -12,7 +12,7 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    listClients().then(setClients).finally(() => setLoading(false));
+    listClients().then(setClients).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const q = search.toLowerCase().trim();

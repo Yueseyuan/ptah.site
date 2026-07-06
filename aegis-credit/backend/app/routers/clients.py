@@ -76,14 +76,6 @@ def create_client(data: ClientCreate, db: Session = Depends(get_db)):
     return _out(client)
 
 
-@router.get("/{client_id}")
-def get_client(client_id: int, db: Session = Depends(get_db)):
-    client = db.query(AegisClient).filter(AegisClient.id == client_id).first()
-    if not client:
-        raise HTTPException(404, "Client not found")
-    return _out(client)
-
-
 @router.get("/search")
 def search_clients(q: str = "", db: Session = Depends(get_db), _user: User = Depends(get_current_user)):
     """Search clients by name, email, or SSN last4."""
@@ -96,6 +88,14 @@ def search_clients(q: str = "", db: Session = Depends(get_db), _user: User = Dep
         (AegisClient.ssn_last4.like(f"%{q}%"))
     ).limit(20).all()
     return [_out(c) for c in results]
+
+
+@router.get("/{client_id}")
+def get_client(client_id: int, db: Session = Depends(get_db)):
+    client = db.query(AegisClient).filter(AegisClient.id == client_id).first()
+    if not client:
+        raise HTTPException(404, "Client not found")
+    return _out(client)
 
 
 @router.post("/admin/merge", include_in_schema=False)

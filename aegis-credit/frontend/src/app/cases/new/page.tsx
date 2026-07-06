@@ -15,7 +15,7 @@ function NewCaseForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { listClients().then(setClients); }, []);
+  useEffect(() => { listClients().then(setClients).catch(() => {}); }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

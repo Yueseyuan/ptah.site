@@ -46,7 +46,7 @@ export default function ClientDetailPage() {
     setError('');
     try {
       await createCourtRecord({ ...form, client_id: parseInt(id) });
-      listCourtRecordsByClient(parseInt(id)).then(setRecords);
+      listCourtRecordsByClient(parseInt(id)).then(setRecords).catch(() => {});
       setShowForm(false);
     } catch (err: unknown) {
       const e = err as { message?: string };

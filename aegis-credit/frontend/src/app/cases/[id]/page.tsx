@@ -47,14 +47,18 @@ export default function CaseDashboard() {
   const [analyzeResult, setAnalyzeResult] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
-    getCaseSummary(caseId).then(setData).finally(() => setLoading(false));
+    getCaseSummary(caseId).then(setData).catch(() => {}).finally(() => setLoading(false));
     getApplicableLaws(caseId).then(setApplicableLaws).catch(() => {});
   }, [caseId]);
 
   async function changeStatus(status: string) {
     setSaving(true);
-    await updateCase(caseId, { status });
-    getCaseSummary(caseId).then(setData).finally(() => setSaving(false));
+    try {
+      await updateCase(caseId, { status });
+      getCaseSummary(caseId).then(setData).catch(() => {}).finally(() => setSaving(false));
+    } catch {
+      setSaving(false);
+    }
   }
 
   async function handleAnalyzeAll() {
@@ -62,17 +66,19 @@ export default function CaseDashboard() {
     try {
       const r = await analyzeAll(caseId);
       setAnalyzeResult(r);
-      getCaseSummary(caseId).then(setData);
+      getCaseSummary(caseId).then(setData).catch(() => {});
     } finally { setAnalyzing(false); }
   }
 
   async function handleExport() {
-    const data = await exportCase(caseId);
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `case-${caseId}-export.json`; a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const data = await exportCase(caseId);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `case-${caseId}-export.json`; a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* export silently fails — no UI to update */ }
   }
 
   if (loading) return <div className="main-layout"><Sidebar /><main className="main-content"><div className="spinner" /></main></div>;

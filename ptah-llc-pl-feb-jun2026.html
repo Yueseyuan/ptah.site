@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PTAH LLC – Profit & Loss – Feb–Jun 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #c8c8c8;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11.5px;
+      color: #222;
+    }
+
+    .page {
+      width: 11in;
+      min-height: 8.5in;
+      background: #fff;
+      margin: 30px auto;
+      padding: 0.60in 0.70in 0.55in;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page::before {
+      content: "SAMPLE";
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 130px; font-weight: 900;
+      color: rgba(180,0,0,0.08);
+      white-space: nowrap; pointer-events: none;
+      z-index: 1; letter-spacing: 0.15em;
+    }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+    .logo { display: flex; align-items: center; gap: 5px; }
+    .logo-wordmark { font-size: 24px; font-weight: 700; font-style: italic; color: #1a7fc1; letter-spacing: -0.3px; }
+    .co-block { text-align: right; font-size: 11px; line-height: 1.6; color: #333; }
+    .co-block .co-name { font-size: 13px; font-weight: 700; color: #111; }
+
+    .doc-title {
+      text-align: center;
+      font-size: 16px; font-weight: 700;
+      text-decoration: underline;
+      margin-bottom: 3px;
+    }
+    .doc-sub {
+      text-align: center;
+      font-size: 11.5px; color: #444;
+      margin-bottom: 18px;
+    }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+
+    .pl-tbl th, .pl-tbl td {
+      padding: 5px 6px;
+      font-size: 11px;
+      vertical-align: middle;
+    }
+
+    /* Column header row */
+    .pl-tbl thead tr.col-heads th {
+      font-weight: 700; text-align: right;
+      border-bottom: 1.5px solid #222;
+      border-top: 1.5px solid #222;
+      white-space: nowrap;
+      padding-bottom: 6px; padding-top: 6px;
+    }
+    .pl-tbl thead tr.col-heads th:first-child { text-align: left; }
+
+    /* Section label rows */
+    .section-hdr td {
+      font-size: 12px; font-weight: 700;
+      padding-top: 14px; padding-bottom: 3px;
+      border-bottom: 1px solid #333;
+      color: #111;
+    }
+
+    /* Data rows */
+    .pl-tbl tbody tr.data td { border-bottom: 1px solid #ddd; }
+    .pl-tbl tbody tr.data td:first-child { padding-left: 16px; }
+    .pl-tbl tbody tr.data td:not(:first-child) { text-align: right; }
+
+    /* Subtotal rows */
+    tr.subtotal td {
+      font-weight: 700;
+      border-top: 1px solid #888;
+      border-bottom: 2px solid #888;
+      padding-top: 5px; padding-bottom: 5px;
+    }
+    tr.subtotal td:not(:first-child) { text-align: right; }
+
+    /* Net income row */
+    tr.net-income td {
+      font-size: 13px; font-weight: 700;
+      border-top: 2px solid #222;
+      border-bottom: 3px double #222;
+      padding-top: 7px; padding-bottom: 7px;
+      background: #f0f6ff;
+    }
+    tr.net-income td:not(:first-child) { text-align: right; }
+
+    /* Blank spacer */
+    tr.spacer td { height: 6px; }
+
+    /* Footer */
+    .footer {
+      margin-top: 22px;
+      font-size: 10px; color: #666;
+      border-top: 1px solid #ccc;
+      padding-top: 8px;
+      display: flex; justify-content: space-between;
+    }
+
+    @page { size: 11in 8.5in landscape; margin: 0; }
+    @media print {
+      body { background: white; }
+      .page { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 80 80" fill="#1a7fc1">
+        <path d="M65 10 C70 30 68 50 50 63 C37 72 18 70 10 76 C16 55 26 36 44 24 C54 17 65 10 65 10Z"/>
+      </svg>
+      <span class="logo-wordmark">BlueVine</span>
+    </div>
+    <div class="co-block">
+      <div class="co-name">PTAH LLC</div>
+      <div>3210 N. Pleasantburg Drive Suite 1123</div>
+      <div>Greenville, SC 29609</div>
+      <div>Account No. 875110864282</div>
+    </div>
+  </div>
+
+  <div class="doc-title">Profit &amp; Loss Statement</div>
+  <div class="doc-sub">For the Period February 1, 2026 – June 30, 2026 &nbsp;|&nbsp; Cash Basis</div>
+
+  <table class="pl-tbl">
+    <thead>
+      <tr class="col-heads">
+        <th style="width:260px"></th>
+        <th style="width:90px">Feb 2026</th>
+        <th style="width:90px">Mar 2026</th>
+        <th style="width:90px">Apr 2026</th>
+        <th style="width:90px">May 2026</th>
+        <th style="width:90px">Jun 2026</th>
+        <th style="width:100px">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- REVENUE -->
+      <tr class="section-hdr"><td colspan="7">REVENUE</td></tr>
+
+      <tr class="data">
+        <td>Professional Services</td>
+        <td>54,600.00</td><td>62,650.00</td><td>72,000.00</td><td>76,400.00</td><td>84,200.00</td>
+        <td>349,850.00</td>
+      </tr>
+      <tr class="data">
+        <td>Consulting &amp; Advisory</td>
+        <td>23,350.00</td><td>27,800.00</td><td>30,800.00</td><td>33,700.00</td><td>33,800.00</td>
+        <td>149,450.00</td>
+      </tr>
+      <tr class="data">
+        <td>Digital Services</td>
+        <td>9,100.00</td><td>11,700.00</td><td>12,250.00</td><td>12,700.00</td><td>13,600.00</td>
+        <td>59,350.00</td>
+      </tr>
+      <tr class="data">
+        <td>Retail / POS Sales</td>
+        <td>4,150.00</td><td>4,650.00</td><td>3,450.00</td><td>3,700.00</td><td>4,000.00</td>
+        <td>19,950.00</td>
+      </tr>
+
+      <tr class="subtotal">
+        <td>Total Revenue</td>
+        <td>91,200.00</td><td>106,800.00</td><td>118,500.00</td><td>126,500.00</td><td>135,600.00</td>
+        <td>578,600.00</td>
+      </tr>
+
+      <tr class="spacer"><td colspan="7"></td></tr>
+
+      <!-- EXPENSES -->
+      <tr class="section-hdr"><td colspan="7">OPERATING EXPENSES</td></tr>
+
+      <tr class="data">
+        <td>Payroll</td>
+        <td>7,000.00</td><td>7,600.00</td><td>7,800.00</td><td>8,200.00</td><td>8,600.00</td>
+        <td>39,200.00</td>
+      </tr>
+      <tr class="data">
+        <td>Rent &amp; Facilities</td>
+        <td>4,800.00</td><td>4,800.00</td><td>4,800.00</td><td>4,800.00</td><td>4,800.00</td>
+        <td>24,000.00</td>
+      </tr>
+      <tr class="data">
+        <td>Marketing &amp; Advertising</td>
+        <td>2,000.00</td><td>2,500.00</td><td>2,500.00</td><td>5,400.00</td><td>5,600.00</td>
+        <td>18,000.00</td>
+      </tr>
+      <tr class="data">
+        <td>Legal &amp; Professional Fees</td>
+        <td>1,200.00</td><td>1,500.00</td><td>2,700.00</td><td>2,700.00</td><td>2,700.00</td>
+        <td>10,800.00</td>
+      </tr>
+      <tr class="data">
+        <td>Technology &amp; Software</td>
+        <td>—</td><td>—</td><td>—</td><td>2,694.00</td><td>1,744.00</td>
+        <td>4,438.00</td>
+      </tr>
+      <tr class="data">
+        <td>Utilities</td>
+        <td>780.00</td><td>820.00</td><td>840.00</td><td>870.00</td><td>920.00</td>
+        <td>4,230.00</td>
+      </tr>
+      <tr class="data">
+        <td>Employee Benefits</td>
+        <td>—</td><td>1,008.00</td><td>1,008.00</td><td>1,008.00</td><td>1,008.00</td>
+        <td>4,032.00</td>
+      </tr>
+      <tr class="data">
+        <td>Office Supplies</td>
+        <td>470.00</td><td>420.00</td><td>980.00</td><td>1,065.00</td><td>1,140.00</td>
+        <td>4,075.00</td>
+      </tr>
+      <tr class="data">
+        <td>Communications</td>
+        <td>420.00</td><td>440.00</td><td>440.00</td><td>440.00</td><td>440.00</td>
+        <td>2,180.00</td>
+      </tr>
+      <tr class="data">
+        <td>Meals &amp; Entertainment</td>
+        <td>—</td><td>—</td><td>—</td><td>—</td><td>1,140.00</td>
+        <td>1,140.00</td>
+      </tr>
+      <tr class="data">
+        <td>Facilities Maintenance</td>
+        <td>—</td><td>250.00</td><td>—</td><td>—</td><td>—</td>
+        <td>250.00</td>
+      </tr>
+      <tr class="data">
+        <td>Shipping &amp; Postage</td>
+        <td>—</td><td>65.00</td><td>65.00</td><td>65.00</td><td>65.00</td>
+        <td>260.00</td>
+      </tr>
+      <tr class="data">
+        <td>Bank Service Charges</td>
+        <td>37.00</td><td>33.00</td><td>58.00</td><td>58.00</td><td>58.00</td>
+        <td>244.00</td>
+      </tr>
+      <tr class="data">
+        <td>Other Operating Expenses</td>
+        <td>15.00</td><td>4,200.00</td><td>3,689.00</td><td>340.00</td><td>—</td>
+        <td>8,244.00</td>
+      </tr>
+
+      <tr class="subtotal">
+        <td>Total Operating Expenses</td>
+        <td>16,722.00</td><td>23,636.00</td><td>24,880.00</td><td>27,640.00</td><td>28,215.00</td>
+        <td>121,093.00</td>
+      </tr>
+
+      <tr class="spacer"><td colspan="7"></td></tr>
+
+      <!-- NET INCOME -->
+      <tr class="net-income">
+        <td>NET INCOME</td>
+        <td>74,478.00</td><td>83,164.00</td><td>93,620.00</td><td>98,860.00</td><td>107,385.00</td>
+        <td>457,507.00</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <span>PTAH LLC &nbsp;|&nbsp; Account No. 875110864282 &nbsp;|&nbsp; BlueVine Business Checking</span>
+    <span>Prepared from bank statement data &nbsp;|&nbsp; Cash basis &nbsp;|&nbsp; Period: Feb 1 – Jun 30, 2026</span>
+  </div>
+
+</div>
+</body>
+</html>

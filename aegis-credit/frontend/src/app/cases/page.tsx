@@ -24,7 +24,7 @@ export default function CasesPage() {
       const m: Record<number, string> = {};
       for (const c of cls) m[c.id] = `${c.first_name} ${c.last_name}`;
       setClientMap(m);
-    }).finally(() => setLoading(false));
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const q = search.toLowerCase().trim();

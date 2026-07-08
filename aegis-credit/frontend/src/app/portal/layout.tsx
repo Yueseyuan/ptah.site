@@ -72,6 +72,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <a href="/portal/letters" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Letters</a>
             <a href="/portal/disputes" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Disputes</a>
             <a href="/portal/billing" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Billing</a>
+            <a href="/portal/book" style={{ color: '#93c5fd', textDecoration: 'none', fontWeight: 600 }}>📅 Book</a>
             <button
               onClick={handleLogout}
               style={{

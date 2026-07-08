@@ -36,6 +36,19 @@ class Settings(BaseSettings):
     SMTP_FROM: str = "noreply@cruelandassociates.site"
     ADMIN_NOTIFICATION_EMAIL: str = "yueseyuan.cruel@cruelandassociates.site"
     ADMIN_RESET_SECRET: str = ""   # set in Railway to enable /api/auth/reset-admin
+    # ── External AI Services ──────────────────────────────────────────────────
+    # Dify (langgenius/dify) — workflow + chatflow orchestration
+    DIFY_API_KEY: str = ""
+    DIFY_BASE_URL: str = "https://api.dify.ai/v1"
+    DIFY_RECEPTIONIST_TOKEN: str = ""   # public embed token for the chatbot widget
+    # OpenHands (All-Hands-AI) — autonomous coding/document agent
+    OPENHANDS_API_KEY: str = ""
+    OPENHANDS_BASE_URL: str = "https://app.all-hands.dev/api/v1"
+    # LibreChat — multi-model staff chat UI
+    LIBRECHAT_URL: str = ""
+    LIBRECHAT_API_KEY: str = ""
+    # OpenJarvis — voice-first AI sidecar (run: jarvis serve --port 8765)
+    OPENJARVIS_URL: str = "http://localhost:8765"
 
 
 # Fall back to direct os.environ reads for critical keys if pydantic-settings

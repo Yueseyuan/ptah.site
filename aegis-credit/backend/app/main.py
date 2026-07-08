@@ -48,6 +48,9 @@ from app.routers.case_research import router as case_research_router
 from app.routers.data_pulls import router as data_pulls_router
 from app.routers.case_monitor import router as case_monitor_router
 from app.routers.booking_agent import router as booking_agent_router
+from app.routers.dify_proxy import router as dify_proxy_router
+from app.routers.openhands_router import router as openhands_router
+from app.routers.openjarvis_router import router as openjarvis_router
 
 
 def repair_schema():
@@ -371,6 +374,9 @@ app.include_router(case_research_router)
 app.include_router(data_pulls_router)
 app.include_router(case_monitor_router)
 app.include_router(booking_agent_router)
+app.include_router(dify_proxy_router)
+app.include_router(openhands_router)
+app.include_router(openjarvis_router)
 
 
 @app.get("/api/health")

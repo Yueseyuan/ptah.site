@@ -45,6 +45,14 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    section: 'AI Tools',
+    items: [
+      { href: '/staff-ai', label: 'AI Workspace', icon: '🤖' },
+      { href: '/receptionist', label: 'Receptionist', icon: '📞' },
+      { href: '/portal/book', label: 'Booking Agent', icon: '📅' },
+    ],
+  },
+  {
     section: 'Administration',
     items: [
       { href: '/admin/portal', label: 'Portal Intake', icon: '📥' },

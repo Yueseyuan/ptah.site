@@ -1,9 +1,9 @@
-"""Communication channels endpoints — Telegram, Discord, Slack, generic webhooks."""
-import hashlib
+"""Communication channels endpoints — Telegram, Discord, Slack, generic webhooks, WhatsApp, Email."""
 import logging
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,7 @@ from app.models.channel import Channel
 from app.models.user import User
 from app.services.channel_service import (
     handle_telegram_update,
+    handle_whatsapp_update,
     make_telegram_secret_token,
     send_to_channel,
     telegram_delete_webhook,
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
 
-CHANNEL_TYPES = ["telegram", "discord_webhook", "slack_webhook", "generic_webhook"]
+CHANNEL_TYPES = ["telegram", "discord_webhook", "slack_webhook", "generic_webhook", "whatsapp", "email"]
 
 
 class ChannelCreate(BaseModel):
@@ -53,13 +54,16 @@ class ChannelOut(BaseModel):
     model_config = {"from_attributes": True}
 
     def model_post_init(self, _context: Any) -> None:
-        # Mask the bot token in responses
-        if "bot_token" in self.config:
-            token = self.config["bot_token"]
-            self.config = {
-                **self.config,
-                "bot_token": token[:8] + "…" + token[-4:] if len(token) > 12 else "***",
-            }
+        masked = dict(self.config)
+        if "bot_token" in masked:
+            token = masked["bot_token"]
+            masked["bot_token"] = token[:8] + "…" + token[-4:] if len(token) > 12 else "***"
+        if "access_token" in masked:
+            token = masked["access_token"]
+            masked["access_token"] = token[:6] + "…" if len(token) > 6 else "***"
+        if "smtp_password" in masked:
+            masked["smtp_password"] = "***"
+        self.config = masked
 
 
 class SendMessageBody(BaseModel):
@@ -270,4 +274,73 @@ async def telegram_webhook_handler(
     import asyncio
     asyncio.create_task(handle_telegram_update(update, matched_channel.id))
 
+    return {"ok": True}
+
+
+# ── WhatsApp public webhooks (called by Meta, no auth) ───────────────────────
+
+@router.get("/whatsapp/webhook", include_in_schema=False)
+async def whatsapp_webhook_verify(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> PlainTextResponse:
+    """Meta sends a GET to verify the webhook endpoint — returns hub.challenge on match."""
+    params = dict(request.query_params)
+    mode = params.get("hub.mode")
+    verify_token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge", "")
+
+    if mode != "subscribe" or not verify_token:
+        raise HTTPException(status_code=400, detail="Invalid hub params")
+
+    all_channels = (
+        await db.execute(
+            select(Channel).where(Channel.channel_type == "whatsapp", Channel.enabled.is_(True))
+        )
+    ).scalars().all()
+
+    for ch in all_channels:
+        if ch.config.get("verify_token") == verify_token:
+            return PlainTextResponse(challenge)
+
+    raise HTTPException(status_code=403, detail="verify_token does not match any channel")
+
+
+@router.post("/whatsapp/webhook", include_in_schema=False)
+async def whatsapp_webhook_handler(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Receive inbound WhatsApp Cloud API messages and route to Chief."""
+    body = await request.json()
+
+    try:
+        phone_number_id = (
+            body.get("entry", [{}])[0]
+            .get("changes", [{}])[0]
+            .get("value", {})
+            .get("metadata", {})
+            .get("phone_number_id", "")
+        )
+    except (IndexError, KeyError, TypeError):
+        return {"ok": True}
+
+    all_channels = (
+        await db.execute(
+            select(Channel).where(Channel.channel_type == "whatsapp", Channel.enabled.is_(True))
+        )
+    ).scalars().all()
+
+    matched_channel = None
+    for ch in all_channels:
+        if ch.config.get("phone_number_id") == phone_number_id:
+            matched_channel = ch
+            break
+
+    if not matched_channel:
+        logger.warning("WhatsApp webhook: no matching channel for phone_number_id %s", phone_number_id)
+        return {"ok": True}
+
+    import asyncio
+    asyncio.create_task(handle_whatsapp_update(body, matched_channel.id))
     return {"ok": True}

@@ -11,8 +11,10 @@ async def lifespan(app: FastAPI):
     await init_db()
     from app.services.scheduler_service import start_scheduler, stop_scheduler
     from app.services.rss_service import start_rss_polling
+    from app.services.channel_service import start_email_polling
     await start_scheduler()
     await start_rss_polling()
+    await start_email_polling()
     yield
     await stop_scheduler()
 

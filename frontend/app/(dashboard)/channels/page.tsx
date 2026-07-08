@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { channelsApi, Channel } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,8 @@ import {
 
 const CHANNEL_TYPES = [
   { value: "telegram", label: "Telegram Bot", icon: "✈️", desc: "Bidirectional — receive goals, reply with results" },
+  { value: "whatsapp", label: "WhatsApp", icon: "📱", desc: "Bidirectional — receive goals via WhatsApp, reply with results" },
+  { value: "email", label: "Email (SMTP/IMAP)", icon: "✉️", desc: "Bidirectional — receive emails, reply with results via SMTP" },
   { value: "discord_webhook", label: "Discord Webhook", icon: "🎮", desc: "Outbound — send notifications to a Discord channel" },
   { value: "slack_webhook", label: "Slack Webhook", icon: "💬", desc: "Outbound — send notifications to a Slack channel" },
   { value: "generic_webhook", label: "Generic Webhook", icon: "🔗", desc: "Outbound — POST JSON to any webhook URL" },
@@ -189,13 +191,60 @@ function ChannelCard({
   );
 }
 
+function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-[--text-secondary] mb-1">
+        {label} {hint && <span className="text-[--text-muted] font-normal">{hint}</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function TextInput({
+  value, onChange, placeholder, type = "text", mono = false,
+}: { value: string; onChange: (v: string) => void; placeholder: string; type?: string; mono?: boolean }) {
+  return (
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      type={type}
+      className={`w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2 text-sm text-[--text-primary] placeholder-[--text-muted] focus:outline-none focus:border-[--accent]/50 transition-colors${mono ? " font-mono" : ""}`}
+    />
+  );
+}
+
 function AddChannelForm({ onAdd }: { onAdd: (ch: Channel) => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("telegram");
+
+  // Telegram
   const [botToken, setBotToken] = useState("");
-  const [webhookUrl, setWebhookUrl] = useState("");
   const [allowedChats, setAllowedChats] = useState("");
+
+  // WhatsApp
+  const [waPhoneId, setWaPhoneId] = useState("");
+  const [waAccessToken, setWaAccessToken] = useState("");
+  const [waVerifyToken, setWaVerifyToken] = useState("");
+  const [waDefaultTo, setWaDefaultTo] = useState("");
+
+  // Email
+  const [emailSmtpHost, setEmailSmtpHost] = useState("");
+  const [emailSmtpPort, setEmailSmtpPort] = useState("587");
+  const [emailSmtpUser, setEmailSmtpUser] = useState("");
+  const [emailSmtpPassword, setEmailSmtpPassword] = useState("");
+  const [emailImapHost, setEmailImapHost] = useState("");
+  const [emailImapPort, setEmailImapPort] = useState("993");
+  const [emailFromEmail, setEmailFromEmail] = useState("");
+  const [emailDefaultTo, setEmailDefaultTo] = useState("");
+  const [emailPollMinutes, setEmailPollMinutes] = useState("5");
+
+  // Webhooks
+  const [webhookUrl, setWebhookUrl] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -207,7 +256,36 @@ function AddChannelForm({ onAdd }: { onAdd: (ch: Channel) => void }) {
       }
       return config;
     }
+    if (type === "whatsapp") {
+      return {
+        phone_number_id: waPhoneId.trim(),
+        access_token: waAccessToken.trim(),
+        verify_token: waVerifyToken.trim(),
+        ...(waDefaultTo.trim() ? { default_to: waDefaultTo.trim() } : {}),
+      };
+    }
+    if (type === "email") {
+      return {
+        smtp_host: emailSmtpHost.trim(),
+        smtp_port: emailSmtpPort.trim() || "587",
+        smtp_user: emailSmtpUser.trim(),
+        smtp_password: emailSmtpPassword,
+        imap_host: emailImapHost.trim(),
+        imap_port: emailImapPort.trim() || "993",
+        from_email: emailFromEmail.trim(),
+        default_to: emailDefaultTo.trim(),
+        poll_interval_minutes: emailPollMinutes.trim() || "5",
+      };
+    }
     return { webhook_url: webhookUrl };
+  }
+
+  function resetFields() {
+    setName(""); setBotToken(""); setAllowedChats("");
+    setWaPhoneId(""); setWaAccessToken(""); setWaVerifyToken(""); setWaDefaultTo("");
+    setEmailSmtpHost(""); setEmailSmtpPort("587"); setEmailSmtpUser(""); setEmailSmtpPassword("");
+    setEmailImapHost(""); setEmailImapPort("993"); setEmailFromEmail(""); setEmailDefaultTo(""); setEmailPollMinutes("5");
+    setWebhookUrl("");
   }
 
   async function submit() {
@@ -222,7 +300,8 @@ function AddChannelForm({ onAdd }: { onAdd: (ch: Channel) => void }) {
         enabled: true,
       });
       onAdd(ch);
-      setName(""); setBotToken(""); setWebhookUrl(""); setAllowedChats(""); setOpen(false);
+      resetFields();
+      setOpen(false);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to create channel");
     } finally {
@@ -241,21 +320,13 @@ function AddChannelForm({ onAdd }: { onAdd: (ch: Channel) => void }) {
     );
   }
 
-  const isTelegram = type === "telegram";
-
   return (
     <Card>
       <p className="text-sm font-semibold text-[--text-primary] mb-4">New Channel</p>
       <div className="space-y-3">
-        <div>
-          <label className="block text-xs font-medium text-[--text-secondary] mb-1">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="My Telegram Bot"
-            className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2 text-sm text-[--text-primary] placeholder-[--text-muted] focus:outline-none focus:border-[--accent]/50 transition-colors"
-          />
-        </div>
+        <Field label="Name">
+          <TextInput value={name} onChange={setName} placeholder="My Channel" />
+        </Field>
 
         <div>
           <label className="block text-xs font-medium text-[--text-secondary] mb-2">Type</label>
@@ -280,45 +351,78 @@ function AddChannelForm({ onAdd }: { onAdd: (ch: Channel) => void }) {
           </div>
         </div>
 
-        {isTelegram ? (
+        {type === "telegram" && (
           <>
-            <div>
-              <label className="block text-xs font-medium text-[--text-secondary] mb-1">
-                Bot Token <span className="text-[--text-muted]">(from @BotFather)</span>
-              </label>
-              <input
-                value={botToken}
-                onChange={(e) => setBotToken(e.target.value)}
-                placeholder="1234567890:ABCdefGHIjklMNOpqrSTUvwxyz"
-                type="password"
-                className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2 text-sm text-[--text-primary] placeholder-[--text-muted] focus:outline-none focus:border-[--accent]/50 transition-colors font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[--text-secondary] mb-1">
-                Allowed Chat IDs <span className="text-[--text-muted]">(optional, comma-separated)</span>
-              </label>
-              <input
-                value={allowedChats}
-                onChange={(e) => setAllowedChats(e.target.value)}
-                placeholder="123456789, -987654321"
-                className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2 text-sm text-[--text-primary] placeholder-[--text-muted] focus:outline-none focus:border-[--accent]/50 transition-colors"
-              />
-              <p className="text-[10px] text-[--text-muted] mt-1">
-                Leave blank to allow all chats. After saving, register a webhook URL to go live.
-              </p>
-            </div>
+            <Field label="Bot Token" hint="(from @BotFather)">
+              <TextInput value={botToken} onChange={setBotToken} placeholder="1234567890:ABCdef…" type="password" mono />
+            </Field>
+            <Field label="Allowed Chat IDs" hint="(optional, comma-separated)">
+              <TextInput value={allowedChats} onChange={setAllowedChats} placeholder="123456789, -987654321" />
+              <p className="text-[10px] text-[--text-muted] mt-1">Leave blank to allow all chats. Register a webhook URL after saving.</p>
+            </Field>
           </>
-        ) : (
-          <div>
-            <label className="block text-xs font-medium text-[--text-secondary] mb-1">Webhook URL</label>
-            <input
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://discord.com/api/webhooks/…"
-              className="w-full bg-[--bg] border border-[--border] rounded-lg px-3 py-2 text-sm text-[--text-primary] placeholder-[--text-muted] focus:outline-none focus:border-[--accent]/50 transition-colors"
-            />
-          </div>
+        )}
+
+        {type === "whatsapp" && (
+          <>
+            <Field label="Phone Number ID" hint="(from Meta Developer Console)">
+              <TextInput value={waPhoneId} onChange={setWaPhoneId} placeholder="123456789012345" mono />
+            </Field>
+            <Field label="Access Token" hint="(permanent system user token)">
+              <TextInput value={waAccessToken} onChange={setWaAccessToken} placeholder="EAA…" type="password" mono />
+            </Field>
+            <Field label="Verify Token" hint="(any secret string you choose)">
+              <TextInput value={waVerifyToken} onChange={setWaVerifyToken} placeholder="my-secret-token-123" mono />
+              <p className="text-[10px] text-[--text-muted] mt-1">
+                Use this when registering your webhook at Meta: <code className="bg-[--surface-2] px-1 rounded">{"GET /api/v1/channels/whatsapp/webhook"}</code>
+              </p>
+            </Field>
+            <Field label="Default outbound number" hint="(optional)">
+              <TextInput value={waDefaultTo} onChange={setWaDefaultTo} placeholder="15551234567" />
+            </Field>
+          </>
+        )}
+
+        {type === "email" && (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="SMTP Host">
+                <TextInput value={emailSmtpHost} onChange={setEmailSmtpHost} placeholder="smtp.gmail.com" />
+              </Field>
+              <Field label="SMTP Port">
+                <TextInput value={emailSmtpPort} onChange={setEmailSmtpPort} placeholder="587" />
+              </Field>
+            </div>
+            <Field label="SMTP Username / Email">
+              <TextInput value={emailSmtpUser} onChange={setEmailSmtpUser} placeholder="you@gmail.com" />
+            </Field>
+            <Field label="SMTP Password" hint="(or app password)">
+              <TextInput value={emailSmtpPassword} onChange={setEmailSmtpPassword} placeholder="••••••••" type="password" />
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="IMAP Host" hint="(for receiving)">
+                <TextInput value={emailImapHost} onChange={setEmailImapHost} placeholder="imap.gmail.com" />
+              </Field>
+              <Field label="IMAP Port">
+                <TextInput value={emailImapPort} onChange={setEmailImapPort} placeholder="993" />
+              </Field>
+            </div>
+            <Field label="From address" hint="(optional, defaults to SMTP user)">
+              <TextInput value={emailFromEmail} onChange={setEmailFromEmail} placeholder="apex@yourdomain.com" />
+            </Field>
+            <Field label="Default recipient" hint="(for outbound tests)">
+              <TextInput value={emailDefaultTo} onChange={setEmailDefaultTo} placeholder="you@example.com" />
+            </Field>
+            <Field label="Poll interval (minutes)">
+              <TextInput value={emailPollMinutes} onChange={setEmailPollMinutes} placeholder="5" />
+            </Field>
+          </>
+        )}
+
+        {["discord_webhook", "slack_webhook", "generic_webhook"].includes(type) && (
+          <Field label="Webhook URL">
+            <TextInput value={webhookUrl} onChange={setWebhookUrl} placeholder="https://discord.com/api/webhooks/…" />
+          </Field>
         )}
       </div>
 
@@ -370,7 +474,7 @@ export default function ChannelsPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-[--text-primary]">Channels</h1>
-          <p className="text-sm text-[--text-secondary]">Telegram, Discord, Slack — send and receive with Chief</p>
+          <p className="text-sm text-[--text-secondary]">Telegram, WhatsApp, Email, Discord, Slack — send and receive with Chief</p>
         </div>
       </div>
 

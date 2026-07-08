@@ -1,11 +1,19 @@
-"""Communication channel adapters — Telegram, Discord, Slack, generic webhooks.
+"""Communication channel adapters — Telegram, Discord, Slack, generic webhooks, WhatsApp, Email.
 
 Telegram: full bidirectional bot (receive messages → run Chief → reply).
+WhatsApp: Meta Cloud API bidirectional (receive messages → run Chief → reply).
+Email: SMTP send + IMAP polling receive → run Chief → reply.
 Discord/Slack/Generic: outbound-only webhook notifications.
 """
+import asyncio
+import email as email_lib
 import hashlib
+import imaplib
 import logging
+import smtplib
 import secrets
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import Any
 
 import httpx
@@ -117,8 +125,224 @@ async def send_to_channel(channel_config: dict[str, Any], channel_type: str, mes
             return False
         return await webhook_send(webhook_url, message, channel_type)
 
+    if channel_type == "whatsapp":
+        return await whatsapp_send(
+            phone_number_id=channel_config.get("phone_number_id", ""),
+            access_token=channel_config.get("access_token", ""),
+            to=channel_config.get("default_to", ""),
+            text=message,
+        )
+
+    if channel_type == "email":
+        return await email_send(
+            smtp_host=channel_config.get("smtp_host", ""),
+            smtp_port=int(channel_config.get("smtp_port", 587)),
+            smtp_user=channel_config.get("smtp_user", ""),
+            smtp_password=channel_config.get("smtp_password", ""),
+            from_email=channel_config.get("from_email", channel_config.get("smtp_user", "")),
+            to_email=channel_config.get("default_to", ""),
+            subject="APEX AI",
+            body=message,
+        )
+
     logger.warning("Unknown channel type: %s", channel_type)
     return False
+
+
+# ── WhatsApp Cloud API ────────────────────────────────────────────────────────
+
+_WHATSAPP_API = "https://graph.facebook.com/v20.0/{phone_number_id}/messages"
+
+
+async def whatsapp_send(
+    phone_number_id: str, access_token: str, to: str, text: str
+) -> bool:
+    if not phone_number_id or not access_token or not to:
+        logger.warning("WhatsApp channel missing phone_number_id, access_token, or default_to")
+        return False
+    url = _WHATSAPP_API.format(phone_number_id=phone_number_id)
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "text",
+        "text": {"body": text[:4096]},
+    }
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            if resp.status_code != 200:
+                logger.warning("WhatsApp send failed %d: %s", resp.status_code, resp.text[:200])
+                return False
+            return True
+    except Exception as exc:
+        logger.error("WhatsApp send error: %s", exc)
+        return False
+
+
+async def handle_whatsapp_update(body: dict[str, Any], channel_id: int) -> None:
+    """Process an inbound WhatsApp message → Chief → reply."""
+    try:
+        entry = body.get("entry", [{}])[0]
+        changes = entry.get("changes", [{}])[0]
+        value = changes.get("value", {})
+        messages = value.get("messages", [])
+        if not messages:
+            return
+        msg = messages[0]
+        from_number = msg.get("from", "")
+        text = (msg.get("text") or {}).get("body", "").strip()
+        if not text:
+            return
+    except (IndexError, KeyError):
+        return
+
+    from sqlalchemy import select
+    from app.database import AsyncSessionLocal
+    from app.models.channel import Channel
+    from app.services.chief import run_chief
+
+    async with AsyncSessionLocal() as db:
+        ch = (await db.execute(select(Channel).where(Channel.id == channel_id))).scalar_one_or_none()
+
+    if not ch or not ch.enabled:
+        return
+
+    phone_number_id = ch.config.get("phone_number_id", "")
+    access_token = ch.config.get("access_token", "")
+    if not phone_number_id or not access_token:
+        return
+
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await run_chief(goal=text, db=db, triggered_by_id=ch.created_by_id)
+    except Exception as exc:
+        logger.error("Chief failed for WhatsApp message: %s", exc)
+        await whatsapp_send(phone_number_id, access_token, from_number, f"⚠️ Error: {exc}")
+        return
+
+    output = result.get("merged_output") or "✅ Task completed."
+    for chunk in _split_message(output, 4000):
+        await whatsapp_send(phone_number_id, access_token, from_number, chunk)
+
+
+# ── Email (SMTP send + IMAP polling) ─────────────────────────────────────────
+
+async def email_send(
+    smtp_host: str,
+    smtp_port: int,
+    smtp_user: str,
+    smtp_password: str,
+    from_email: str,
+    to_email: str,
+    subject: str,
+    body: str,
+) -> bool:
+    if not smtp_host or not smtp_user or not smtp_password or not to_email:
+        logger.warning("Email channel missing SMTP config or recipient")
+        return False
+
+    def _send() -> None:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = from_email or smtp_user
+        msg["To"] = to_email
+        msg.attach(MIMEText(body, "plain"))
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.ehlo()
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(from_email or smtp_user, to_email, msg.as_string())
+
+    try:
+        await asyncio.get_event_loop().run_in_executor(None, _send)
+        return True
+    except Exception as exc:
+        logger.error("Email send error: %s", exc)
+        return False
+
+
+async def poll_email_channel(channel_id: int) -> None:
+    """Poll IMAP for unseen emails → run Chief → reply. Called by APScheduler."""
+    from sqlalchemy import select
+    from app.database import AsyncSessionLocal
+    from app.models.channel import Channel
+    from app.services.chief import run_chief
+
+    async with AsyncSessionLocal() as db:
+        ch = (await db.execute(select(Channel).where(Channel.id == channel_id))).scalar_one_or_none()
+
+    if not ch or not ch.enabled:
+        return
+
+    cfg = ch.config
+    imap_host = cfg.get("imap_host", "")
+    imap_port = int(cfg.get("imap_port", 993))
+    smtp_user = cfg.get("smtp_user", "")
+    smtp_password = cfg.get("smtp_password", "")
+    from_email = cfg.get("from_email", smtp_user)
+    smtp_host = cfg.get("smtp_host", "")
+    smtp_port = int(cfg.get("smtp_port", 587))
+
+    if not imap_host or not smtp_user or not smtp_password:
+        return
+
+    def _fetch_unseen() -> list[tuple[str, str, str]]:
+        mail = imaplib.IMAP4_SSL(imap_host, imap_port)
+        mail.login(smtp_user, smtp_password)
+        mail.select("inbox")
+        _, uids = mail.search(None, "UNSEEN")
+        results = []
+        for uid in (uids[0] or b"").split():
+            _, data = mail.fetch(uid, "(RFC822)")
+            raw = data[0][1] if data and data[0] else None
+            if not raw:
+                continue
+            parsed = email_lib.message_from_bytes(raw)
+            subject = parsed.get("Subject", "")
+            sender = parsed.get("From", "")
+            body = ""
+            if parsed.is_multipart():
+                for part in parsed.walk():
+                    if part.get_content_type() == "text/plain":
+                        body = part.get_payload(decode=True).decode("utf-8", errors="replace")
+                        break
+            else:
+                body = parsed.get_payload(decode=True).decode("utf-8", errors="replace")
+            mail.store(uid, "+FLAGS", "\\Seen")
+            results.append((sender, subject, body.strip()))
+        mail.close()
+        mail.logout()
+        return results
+
+    try:
+        emails = await asyncio.get_event_loop().run_in_executor(None, _fetch_unseen)
+    except Exception as exc:
+        logger.error("IMAP poll error (channel %d): %s", channel_id, exc)
+        return
+
+    for sender, subject, body in emails:
+        if not body:
+            continue
+        goal = f"Email from {sender} — Subject: {subject}\n\n{body}"
+        try:
+            async with AsyncSessionLocal() as db:
+                result = await run_chief(goal=goal, db=db, triggered_by_id=ch.created_by_id)
+        except Exception as exc:
+            logger.error("Chief failed for email: %s", exc)
+            continue
+
+        reply_body = result.get("merged_output") or "✅ Task completed."
+        await email_send(
+            smtp_host=smtp_host,
+            smtp_port=smtp_port,
+            smtp_user=smtp_user,
+            smtp_password=smtp_password,
+            from_email=from_email,
+            to_email=sender,
+            subject=f"Re: {subject}",
+            body=reply_body,
+        )
 
 
 # ── Webhook ingress (Telegram → Chief) ───────────────────────────────────────
@@ -191,6 +415,36 @@ async def handle_telegram_update(update: dict[str, Any], channel_id: int) -> Non
     # Telegram message limit is 4096 chars
     for chunk in _split_message(output, 4000):
         await telegram_send(bot_token, chat_id, chunk)
+
+
+async def start_email_polling() -> None:
+    """Register APScheduler interval jobs for all enabled email channels. Called at startup."""
+    from sqlalchemy import select
+    from app.database import AsyncSessionLocal
+    from app.models.channel import Channel
+    from app.services.scheduler_service import get_scheduler
+
+    async with AsyncSessionLocal() as db:
+        channels = list(
+            (await db.execute(
+                select(Channel).where(Channel.channel_type == "email", Channel.enabled.is_(True))
+            )).scalars().all()
+        )
+
+    scheduler = get_scheduler()
+    for ch in channels:
+        interval_minutes = max(1, int(ch.config.get("poll_interval_minutes", 5)))
+        job_id = f"email_poll_{ch.id}"
+        if not scheduler.get_job(job_id):
+            scheduler.add_job(
+                poll_email_channel,
+                "interval",
+                minutes=interval_minutes,
+                id=job_id,
+                args=[ch.id],
+                replace_existing=True,
+            )
+            logger.info("Scheduled email polling for channel %d every %d min", ch.id, interval_minutes)
 
 
 def _split_message(text: str, max_len: int) -> list[str]:

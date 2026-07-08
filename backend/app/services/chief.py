@@ -90,14 +90,15 @@ async def _get_provider_and_model(registry):
     return None, None
 
 
-async def _decompose_goal(goal: str, registry) -> tuple[list[dict], str]:
+async def _decompose_goal(goal: str, registry, skill_context: str = "") -> tuple[list[dict], str]:
     """Use LLM to decompose the goal. Returns (subtasks, shared_context)."""
     provider, model_id = await _get_provider_and_model(registry)
     if provider is None:
         return [{"title": goal, "description": goal, "required_capability": "research"}], ""
 
+    system = _DECOMPOSE_SYSTEM + skill_context if skill_context else _DECOMPOSE_SYSTEM
     messages = [
-        Message(role="system", content=_DECOMPOSE_SYSTEM),
+        Message(role="system", content=system),
         Message(role="user", content=f"Goal: {goal}"),
     ]
     try:
@@ -340,8 +341,13 @@ async def run_chief(goal: str, db: AsyncSession, triggered_by_id: int) -> dict:
         # 0. Workspace
         workspace = await create_workspace(orch_run.id)
 
-        # 1. Decompose — returns subtasks AND shared project blueprint
-        subtask_defs, shared_context = await _decompose_goal(goal, registry)
+        # 1. Retrieve learned skills and inject into decompose prompt
+        from app.services.skill_loop import get_relevant_skills, format_skills_for_prompt
+        relevant_skills = await get_relevant_skills(goal, db)
+        skill_context = format_skills_for_prompt(relevant_skills)
+
+        # 1b. Decompose — returns subtasks AND shared project blueprint
+        subtask_defs, shared_context = await _decompose_goal(goal, registry, skill_context)
 
         # 2. Load agents + capabilities
         agents: list[Agent] = list(
@@ -399,6 +405,20 @@ async def run_chief(goal: str, db: AsyncSession, triggered_by_id: int) -> dict:
         }
         orch_run.finished_at = datetime.now(timezone.utc)
         await db.commit()
+
+        # 8. Extract a reusable skill from this run in the background
+        async def _extract_bg() -> None:
+            try:
+                from app.database import AsyncSessionLocal
+                from app.services.skill_loop import extract_skill_from_run
+                async with AsyncSessionLocal() as bg_db:
+                    await extract_skill_from_run(
+                        goal, all_subtask_meta, merged_output, triggered_by_id, bg_db, registry
+                    )
+            except Exception as _exc:
+                logger.warning("Background skill extraction failed: %s", _exc)
+
+        asyncio.create_task(_extract_bg())
 
         return {
             "run_id": orch_run.id,

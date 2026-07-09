@@ -68,6 +68,10 @@ async def _access_token() -> str:
     """
     global _token_cache
 
+    # Simplest path: a raw token set via HIGGSFIELD_ACCESS_TOKEN env var
+    if settings.higgsfield_access_token:
+        return settings.higgsfield_access_token
+
     now = time.time()
     cached_expires = _token_cache.get("expires_at", 0)
     # If we have a cached token with a known expiry, use it while still valid

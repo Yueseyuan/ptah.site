@@ -60,7 +60,9 @@ class Settings(BaseSettings):
     telegram_webhook_secret: str = ""
 
     # ── Higgsfield AI  (video + audio generation) ─────────────────────────────
-    # Run `hf auth login` once, then set this to the credentials.json path.
+    # Option A: paste a bearer token directly (simplest — no CLI needed)
+    higgsfield_access_token: str = ""
+    # Option B: path to credentials.json written by `hf auth login`
     # Default: ~/.config/higgsfield/credentials.json (auto-detected if present)
     higgsfield_credentials_path: str = ""
 

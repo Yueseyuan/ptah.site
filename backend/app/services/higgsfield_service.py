@@ -310,9 +310,10 @@ async def check_balance() -> dict[str, Any]:
     """Return current Higgsfield credit balance."""
     try:
         headers = await _headers()
-    except FileNotFoundError as exc:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(f"{_BASE}/balance", headers=headers)
+            resp.raise_for_status()
+            return {"ok": True, **resp.json()}
+    except Exception as exc:
+        logger.warning("Higgsfield balance check failed: %s", exc)
         return {"ok": False, "error": str(exc)}
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.get(f"{_BASE}/balance", headers=headers)
-        resp.raise_for_status()
-        return {"ok": True, **resp.json()}

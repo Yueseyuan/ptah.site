@@ -1,4 +1,4 @@
-# build: 20260702-v1
+# build: 20260710-v1
 fastapi>=0.111.0
 uvicorn[standard]>=0.29.0
 sqlalchemy>=2.0.30
@@ -18,4 +18,3 @@ alembic>=1.13.0
 stripe>=9.0.0
 apscheduler>=3.10.0
 httpx>=0.27.0
-openhands-sdk>=0.1.0

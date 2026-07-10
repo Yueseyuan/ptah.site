@@ -4,7 +4,7 @@ import { useState } from "react";
 import { youtubeApi, TranscribeResult } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Youtube, Loader2, Copy, Check, Captions, Mic } from "lucide-react";
+import { PlaySquare, Loader2, Copy, Check, Captions, Mic } from "lucide-react";
 
 const EXAMPLES = [
   "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -73,7 +73,7 @@ export default function YouTubePage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/25 flex items-center justify-center">
-          <Youtube size={18} className="text-red-400" />
+          <PlaySquare size={18} className="text-red-400" />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-[--text-primary]">YouTube Transcription</h1>
@@ -126,7 +126,7 @@ export default function YouTubePage() {
         {loading ? (
           <><Loader2 size={14} className="animate-spin" /> Transcribing…</>
         ) : (
-          <><Youtube size={14} /> Transcribe</>
+          <><PlaySquare size={14} /> Transcribe</>
         )}
       </Button>
 

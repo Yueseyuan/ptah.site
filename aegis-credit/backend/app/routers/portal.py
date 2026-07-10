@@ -795,7 +795,7 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
 
 import json as _json
 
-_CLIENT_SLUGS = {"criminal", "document", "consulting", "notary", "credit"}
+_CLIENT_SLUGS = {"criminal", "document", "consulting", "notary", "credit", "judgment"}
 
 # Checklist generation per division
 def _checklist(slug: str, intake: dict) -> list[dict]:
@@ -867,6 +867,47 @@ def _checklist(slug: str, intake: dict) -> list[dict]:
         items.append({"item": "List of your top 3 immediate business challenges", "required": True})
         return items
 
+    if slug == "judgment":
+        case_type = intake.get("case_type", "")
+        has_judgment = intake.get("has_judgment", "")
+        items = [
+            {"item": "Valid government-issued photo ID", "required": True},
+        ]
+        if has_judgment == "yes":
+            items += [
+                {"item": "Certified copy of the court judgment (obtainable from the clerk of court)", "required": True},
+                {"item": "Proof of service on the judgment debtor", "required": True},
+                {"item": "Any abstract of judgment filed with the county recorder", "required": False},
+            ]
+        elif has_judgment == "no":
+            items += [
+                {"item": "Signed contracts, invoices, or promissory notes evidencing the debt", "required": True},
+                {"item": "Correspondence history with the debtor (emails, texts, letters)", "required": True},
+                {"item": "Any prior collection attempts or demand letters", "required": False},
+            ]
+        elif has_judgment == "partial":
+            items += [
+                {"item": "Original court judgment and satisfaction records showing partial payment", "required": True},
+                {"item": "Ledger showing payments received and remaining balance", "required": True},
+            ]
+        if case_type in ("asset_tracing", "divorce_assets"):
+            items.append({"item": "Any known bank accounts, property addresses, or employer information for the debtor", "required": False})
+            items.append({"item": "Documentation of suspected asset transfers or fraudulent conveyances", "required": False})
+        if case_type == "landlord_tenant":
+            items += [
+                {"item": "Signed lease agreement", "required": True},
+                {"item": "Move-out inspection report and security deposit accounting", "required": False},
+                {"item": "Eviction judgment or small claims judgment (if obtained)", "required": False},
+            ]
+        if case_type == "estate_recovery":
+            items += [
+                {"item": "Letters testamentary or letters of administration (if appointed)", "required": True},
+                {"item": "Death certificate of decedent", "required": True},
+                {"item": "List of known estate assets and their approximate values", "required": False},
+            ]
+        items.append({"item": "List of known debtor addresses, phone numbers, or social security number (last 4 digits)", "required": False})
+        return items
+
     return [{"item": "Contact us to discuss your specific needs", "required": True}]
 
 
@@ -905,6 +946,21 @@ def _next_steps(slug: str, intake: dict) -> list[str]:
             "You'll receive a written plan summary within 48 hours of your consultation.",
         ]
 
+    if slug == "judgment":
+        has_judgment = intake.get("has_judgment", "")
+        steps = [
+            "We'll review your case details and assess recoverability within 1 business day.",
+            "Our team will contact you to discuss your recovery strategy, estimated timeline, and fee structure.",
+        ]
+        if has_judgment == "yes":
+            steps.append("We'll verify the judgment is still active and identify all available enforcement remedies (wage garnishment, bank levy, property lien).")
+            steps.append("We begin asset location immediately — bank accounts, employer, real property, and vehicles.")
+        elif has_judgment == "no":
+            steps.append("We'll evaluate whether to pursue a demand letter, small claims, or full litigation referral to collect your debt.")
+            steps.append("If litigation is the right path, we'll connect you with the appropriate counsel and prepare your supporting documentation.")
+        steps.append("You'll receive a status update each time we take action on your case, and all recovered funds are disbursed to you promptly.")
+        return steps
+
     return ["We'll be in touch within 1-2 business days to discuss next steps."]
 
 
@@ -939,6 +995,7 @@ def create_service_intake(
         "consulting": "Business Consulting",
         "notary": "Mobile Notary Request",
         "credit": "Credit Restoration",
+        "judgment": "Judgment & Asset Recovery",
     }.get(data.division_slug, data.division_slug.title())
 
     sc = ServiceCase(

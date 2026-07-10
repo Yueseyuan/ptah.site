@@ -1,4 +1,57 @@
 export default function HomePage() {
+  const SERVICES = [
+    {
+      icon: '📑',
+      tag: 'Credit Services',
+      title: 'Credit Repair & Consumer Rights',
+      desc: 'FCRA & FDCPA dispute correspondence — bureau letters, debt-collector cease & desist, CFPB complaints, and affidavits of truth. Flat monthly retainer, no hourly billing.',
+      cta: 'Start Your Case →',
+      href: '/portal/register?service=credit',
+      primary: true,
+      detail: ['Bureau dispute letters (all 3)', 'Debt collector C&D', 'CFPB complaints', 'Affidavit of Truth', '$149/month flat'],
+    },
+    {
+      icon: '🛡️',
+      tag: 'Record Relief',
+      title: 'Criminal Record Relief',
+      desc: 'Document preparation for expungements, record sealings, and post-conviction relief. We handle the paperwork — you move forward with a clean slate.',
+      cta: 'Request Intake →',
+      href: '/portal/criminal',
+      primary: true,
+      detail: ['Expungement petitions', 'Record sealing', 'Pardons & post-conviction', 'Eligibility pre-check', 'Court filing support'],
+    },
+    {
+      icon: '📋',
+      tag: 'Doc Prep',
+      title: 'Document Preparation',
+      desc: 'Legal and business documents prepared accurately and ready to sign — LLC formations, operating agreements, demand letters, leases, POA, and custom contracts.',
+      cta: 'Request Documents →',
+      href: '/portal/doc-prep',
+      primary: true,
+      detail: ['LLC formation', 'Operating agreements', 'Demand letters', 'Power of attorney', 'Lease agreements'],
+    },
+    {
+      icon: '💼',
+      tag: 'Business',
+      title: 'Business Consulting',
+      desc: 'Practical advisory for small and mid-sized businesses — entity formation, compliance, business credit building, and growth strategy tailored to where you are right now.',
+      cta: 'Book Consultation →',
+      href: '/portal/consulting',
+      primary: true,
+      detail: ['Entity formation', 'Business credit building', 'Compliance advisory', '90-day growth plan', 'Ongoing advisory'],
+    },
+    {
+      icon: '🖊️',
+      tag: 'Notary',
+      title: 'Mobile Notary Services',
+      desc: 'Certified mobile notary for loan signings, real estate closings, affidavits, and powers of attorney — at a location convenient for you.',
+      cta: 'Schedule Signing →',
+      href: '/portal/book',
+      primary: false,
+      detail: ['Loan closings', 'Real estate signings', 'Affidavits', 'POA notarization', 'RON available'],
+    },
+  ];
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -11,27 +64,25 @@ export default function HomePage() {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         padding: '0 48px', height: 68,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'rgba(7,9,15,0.92)', backdropFilter: 'blur(16px)',
+        background: 'rgba(7,9,15,0.94)', backdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(201,168,76,0.12)',
       }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>
-            CRUEL & ASSOCIATES
+            CRUEL &amp; ASSOCIATES
           </div>
           <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 3, textTransform: 'uppercase', marginTop: 2 }}>
-            Consumer Rights Consulting
+            Consumer Rights &amp; Business Services
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <a href="/login" style={{
-            fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5,
-          }}>
+          <a href="/login" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
             Staff
           </a>
           <a href="/portal/login" style={{
             padding: '8px 20px', border: '1px solid rgba(201,168,76,0.4)',
             color: '#c9a84c', borderRadius: 4, fontSize: 13, fontWeight: 600,
-            textDecoration: 'none', transition: 'all 0.15s',
+            textDecoration: 'none',
           }}>
             Client Login
           </a>
@@ -56,37 +107,36 @@ export default function HomePage() {
           background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
           padding: '5px 14px', borderRadius: 20, marginBottom: 32, width: 'fit-content',
         }}>
-          FCRA · FDCPA · Consumer Advocacy
+          Credit · Record Relief · Doc Prep · Business · Notary
         </div>
 
         <h1 style={{
           fontSize: 'clamp(36px, 6vw, 80px)', fontWeight: 900,
-          lineHeight: 1.05, letterSpacing: -2, maxWidth: 800, margin: '0 0 24px',
+          lineHeight: 1.05, letterSpacing: -2, maxWidth: 820, margin: '0 0 24px',
         }}>
-          Know Your Rights.<br />
+          Your Rights. Your Records.<br />
           <span style={{
             background: 'linear-gradient(135deg, #c9a84c, #e6c96e)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            Fight Back.
+            Your Future.
           </span>
         </h1>
 
         <p style={{
           fontSize: 18, color: '#8a90a0', lineHeight: 1.8,
-          maxWidth: 540, fontWeight: 300, marginBottom: 40,
+          maxWidth: 560, fontWeight: 300, marginBottom: 40,
         }}>
-          We prepare legally grounded dispute correspondence under the FCRA and FDCPA,
-          holding credit bureaus and debt collectors accountable — on your behalf.
+          From credit disputes to expungements, document preparation to business growth —
+          we give you the tools and advocacy to move forward on every front.
         </p>
 
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <a href="/portal/register" style={{
             padding: '15px 36px', background: '#c9a84c', color: '#07090f',
             fontWeight: 800, fontSize: 15, borderRadius: 4, textDecoration: 'none',
-            letterSpacing: 0.3,
           }}>
-            Start Your Case →
+            Open a Case →
           </a>
           <a href="/portal/login" style={{
             padding: '15px 36px', background: 'transparent',
@@ -97,17 +147,16 @@ export default function HomePage() {
           </a>
         </div>
 
-        {/* Stats */}
         <div style={{
           display: 'flex', gap: 48, marginTop: 72,
           paddingTop: 40, borderTop: '1px solid rgba(201,168,76,0.12)',
           flexWrap: 'wrap',
         }}>
           {[
-            { num: '30', suffix: ' days', label: 'Bureau Response Window (FCRA)' },
+            { num: '5', suffix: ' services', label: 'Credit · Relief · Docs · Biz · Notary' },
             { num: '$1,000', suffix: '', label: 'Statutory Damages per FDCPA Violation' },
-            { num: '3', suffix: ' bureaus', label: 'Experian · Equifax · TransUnion' },
-            { num: '$149', suffix: '/mo', label: 'Flat Monthly Retainer' },
+            { num: '30', suffix: ' days', label: 'Bureau Response Window (FCRA §611)' },
+            { num: '$149', suffix: '/mo', label: 'Credit Repair Flat Retainer' },
           ].map(s => (
             <div key={s.label}>
               <div style={{
@@ -125,104 +174,72 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Divisions */}
+      {/* Services Grid */}
       <section style={{ padding: '80px 48px', background: '#07090f' }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 16 }}>
           Our Services
         </div>
-        <h2 style={{ fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 800, marginBottom: 16, maxWidth: 600 }}>
-          Three Ways We Put Money Back in Your Pocket
+        <h2 style={{ fontSize: 'clamp(24px, 3vw, 42px)', fontWeight: 800, marginBottom: 16, maxWidth: 640 }}>
+          Five Ways We Help You Get Ahead
         </h2>
-        <p style={{ color: '#64748b', fontSize: 16, marginBottom: 48, maxWidth: 540 }}>
-          Whether it&apos;s bad credit, an unpaid judgment, or surplus funds from a foreclosure — we know how to recover what&apos;s yours.
+        <p style={{ color: '#64748b', fontSize: 16, marginBottom: 56, maxWidth: 540 }}>
+          Each service has its own dedicated portal page. Click into the one that fits your situation and start the intake process today.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
-          {/* Credit Repair */}
-          <div style={{
-            background: '#0c1018', border: '1px solid rgba(201,168,76,0.25)',
-            borderRadius: 10, padding: '36px 32px',
-            display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{ fontSize: 36, marginBottom: 18 }}>📑</div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 10 }}>
-              Division I
-            </div>
-            <h3 style={{ fontSize: 22, fontWeight: 800, color: '#e8eaf0', marginBottom: 14, lineHeight: 1.2 }}>
-              Credit Repair &amp; Consumer Rights
-            </h3>
-            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, marginBottom: 28, flex: 1 }}>
-              FCRA &amp; FDCPA dispute correspondence — bureau letters, debt collector cease &amp; desist, CFPB complaints, and affidavits of truth. Flat monthly retainer, no hourly billing.
-            </p>
-            <a href="/portal/register" style={{
-              display: 'inline-block', padding: '12px 24px',
-              background: '#c9a84c', color: '#07090f',
-              fontWeight: 800, fontSize: 14, borderRadius: 5,
-              textDecoration: 'none', textAlign: 'center',
-            }}>
-              Start Your Case →
-            </a>
-          </div>
 
-          {/* Judgment Recovery */}
-          <div style={{
-            background: '#0c1018', border: '1px solid rgba(201,168,76,0.15)',
-            borderRadius: 10, padding: '36px 32px',
-            display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{ fontSize: 36, marginBottom: 18 }}>⚖️</div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 10 }}>
-              Division II
-            </div>
-            <h3 style={{ fontSize: 22, fontWeight: 800, color: '#e8eaf0', marginBottom: 14, lineHeight: 1.2 }}>
-              Judgment Recovery
-            </h3>
-            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, marginBottom: 28, flex: 1 }}>
-              Won a lawsuit but never got paid? We locate assets, file enforcement actions, and collect on dormant civil judgments — at no upfront cost. We only get paid when you do.
-            </p>
-            <a href="mailto:yueseyuan.cruel@cruelandassociates.site?subject=Judgment Recovery Inquiry" style={{
-              display: 'inline-block', padding: '12px 24px',
-              background: 'transparent', color: '#c9a84c',
-              border: '1px solid rgba(201,168,76,0.4)',
-              fontWeight: 700, fontSize: 14, borderRadius: 5,
-              textDecoration: 'none', textAlign: 'center',
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          {SERVICES.map(s => (
+            <div key={s.title} style={{
+              background: '#0c1018',
+              border: `1px solid ${s.primary ? 'rgba(201,168,76,0.28)' : 'rgba(201,168,76,0.12)'}`,
+              borderRadius: 10, padding: '32px 28px',
+              display: 'flex', flexDirection: 'column',
+              position: 'relative',
             }}>
-              Contact Us →
-            </a>
-          </div>
-
-          {/* Overages */}
-          <div style={{
-            background: '#0c1018', border: '1px solid rgba(201,168,76,0.15)',
-            borderRadius: 10, padding: '36px 32px',
-            display: 'flex', flexDirection: 'column',
-          }}>
-            <div style={{ fontSize: 36, marginBottom: 18 }}>🏠</div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 10 }}>
-              Division III
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+                <span style={{ fontSize: 34 }}>{s.icon}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, letterSpacing: 2,
+                  color: '#c9a84c', textTransform: 'uppercase',
+                  background: 'rgba(201,168,76,0.08)',
+                  border: '1px solid rgba(201,168,76,0.2)',
+                  padding: '3px 10px', borderRadius: 12,
+                }}>
+                  {s.tag}
+                </span>
+              </div>
+              <h3 style={{ fontSize: 19, fontWeight: 800, color: '#e8eaf0', marginBottom: 12, lineHeight: 1.2 }}>
+                {s.title}
+              </h3>
+              <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.75, marginBottom: 20, flex: 1 }}>
+                {s.desc}
+              </p>
+              <ul style={{ margin: '0 0 24px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {s.detail.map(d => (
+                  <li key={d} style={{ fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: '#c9a84c', fontSize: 10, fontWeight: 700 }}>›</span>
+                    {d}
+                  </li>
+                ))}
+              </ul>
+              <a href={s.href} style={{
+                display: 'block', padding: '11px 20px',
+                background: s.primary ? '#c9a84c' : 'transparent',
+                color: s.primary ? '#07090f' : '#c9a84c',
+                border: s.primary ? 'none' : '1px solid rgba(201,168,76,0.4)',
+                fontWeight: 700, fontSize: 13, borderRadius: 5,
+                textDecoration: 'none', textAlign: 'center',
+              }}>
+                {s.cta}
+              </a>
             </div>
-            <h3 style={{ fontSize: 22, fontWeight: 800, color: '#e8eaf0', marginBottom: 14, lineHeight: 1.2 }}>
-              Foreclosure Overages &amp; Surplus Funds
-            </h3>
-            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, marginBottom: 28, flex: 1 }}>
-              When a foreclosed property sells for more than the debt owed, the surplus belongs to the former owner — not the bank. We track down and recover those overage funds on your behalf.
-            </p>
-            <a href="mailto:yueseyuan.cruel@cruelandassociates.site?subject=Surplus Funds Inquiry" style={{
-              display: 'inline-block', padding: '12px 24px',
-              background: 'transparent', color: '#c9a84c',
-              border: '1px solid rgba(201,168,76,0.4)',
-              fontWeight: 700, fontSize: 14, borderRadius: 5,
-              textDecoration: 'none', textAlign: 'center',
-            }}>
-              Contact Us →
-            </a>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* Credit Repair Details */}
+      {/* Credit Repair Detail */}
       <section style={{ padding: '80px 48px', background: '#0c1018' }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 16 }}>
-          What We Do
+          Credit Repair — What We Do
         </div>
         <h2 style={{ fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 800, marginBottom: 48, maxWidth: 560 }}>
           Every Letter. Every Round. Every Bureau.
@@ -248,7 +265,7 @@ export default function HomePage() {
       {/* Pricing */}
       <section style={{ padding: '80px 48px', textAlign: 'center' }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, color: '#c9a84c', textTransform: 'uppercase', marginBottom: 16 }}>
-          Simple Pricing
+          Credit Repair Pricing
         </div>
         <h2 style={{ fontSize: 'clamp(24px, 3vw, 40px)', fontWeight: 800, marginBottom: 12 }}>
           One Flat Rate. No Surprises.
@@ -278,7 +295,7 @@ export default function HomePage() {
               <span style={{ fontSize: 14, color: '#e8eaf0' }}>{f}</span>
             </div>
           ))}
-          <a href="/portal/register" style={{
+          <a href="/portal/register?service=credit" style={{
             display: 'block', marginTop: 28, padding: '14px 0',
             background: '#c9a84c', color: '#07090f', fontWeight: 800,
             fontSize: 15, borderRadius: 6, textDecoration: 'none',
@@ -286,6 +303,9 @@ export default function HomePage() {
             Start Today →
           </a>
         </div>
+        <p style={{ marginTop: 28, fontSize: 13, color: '#4a5060' }}>
+          Other services are quoted per-project. Contact us or use the service pages above.
+        </p>
       </section>
 
       {/* Footer */}
@@ -295,10 +315,13 @@ export default function HomePage() {
         alignItems: 'center', flexWrap: 'wrap', gap: 16,
       }}>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>CRUEL & ASSOCIATES</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>CRUEL &amp; ASSOCIATES</div>
           <div style={{ fontSize: 11, color: '#4a5060', marginTop: 4 }}>Consumer Rights Consulting · (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site</div>
         </div>
-        <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#64748b', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#64748b', flexWrap: 'wrap', alignItems: 'center' }}>
+          <a href="/portal/criminal" style={{ color: '#64748b', textDecoration: 'none' }}>Record Relief</a>
+          <a href="/portal/doc-prep" style={{ color: '#64748b', textDecoration: 'none' }}>Doc Prep</a>
+          <a href="/portal/consulting" style={{ color: '#64748b', textDecoration: 'none' }}>Consulting</a>
           <a href="/portal/login" style={{ color: '#64748b', textDecoration: 'none' }}>Client Portal</a>
           <a href="/portal/register" style={{ color: '#c9a84c', textDecoration: 'none', fontWeight: 600 }}>Get Started</a>
           <a href="/login" style={{ color: '#374151', textDecoration: 'none', fontSize: 11, opacity: 0.5 }}>Staff</a>

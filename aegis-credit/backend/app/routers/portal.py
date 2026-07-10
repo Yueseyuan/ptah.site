@@ -10,7 +10,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AegisClient, AegisCase, ClientDocument, CreditReport, EvidenceItem, User, PasswordResetToken
+from app.models import AegisClient, AegisCase, ClientDocument, CreditReport, EvidenceItem, User, PasswordResetToken, ServiceCase
 from app.dependencies import get_current_user, get_portal_client
 from app.config import settings
 from app.services.auth_service import hash_password, create_access_token
@@ -787,3 +787,209 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     record.used = True
     db.commit()
     return {"ok": True, "message": "Password updated. You can now log in with your new password."}
+
+
+# ---------------------------------------------------------------------------
+# Service intake — portal clients self-submit for criminal, doc-prep, consulting
+# ---------------------------------------------------------------------------
+
+import json as _json
+
+_CLIENT_SLUGS = {"criminal", "document", "consulting", "notary", "credit"}
+
+# Checklist generation per division
+def _checklist(slug: str, intake: dict) -> list[dict]:
+    state = intake.get("state", "")
+    if slug == "criminal":
+        record_type = intake.get("record_type", "")
+        items = [
+            {"item": "Valid government-issued photo ID (driver's license or state ID)", "required": True},
+            {"item": "Court docket printout or case number confirmation", "required": True},
+            {"item": "Disposition paperwork (plea, verdict, or dismissal order)", "required": True},
+        ]
+        if record_type in ("felony", "misdemeanor"):
+            items.append({"item": "Arrest record or RAP sheet (obtainable from state SLED or county clerk)", "required": True})
+        if state == "SC":
+            items.append({"item": "SC SLED background check ($25 — request at sled.sc.gov)", "required": False})
+        items.append({"item": "Fingerprint card (if required by your state for expungement petition)", "required": False})
+        items.append({"item": "Any probation/parole completion documents (if applicable)", "required": False})
+        return items
+
+    if slug == "document":
+        doc_type = intake.get("doc_type", "")
+        base = [{"item": "Valid photo ID of all signing parties", "required": True}]
+        extras = {
+            "llc_formation": [
+                {"item": "Desired LLC name (we'll verify availability)", "required": True},
+                {"item": "Registered agent name and address in formation state", "required": True},
+                {"item": "Member names, addresses, and ownership percentages", "required": True},
+                {"item": "Business purpose description (one sentence)", "required": False},
+            ],
+            "operating_agreement": [
+                {"item": "LLC formation documents (Articles of Organization)", "required": True},
+                {"item": "All member names, addresses, and ownership stakes", "required": True},
+                {"item": "Management structure (member-managed vs. manager-managed)", "required": True},
+            ],
+            "demand_letter": [
+                {"item": "Details of the debt or dispute (amount, date, parties)", "required": True},
+                {"item": "Any contracts, invoices, or receipts related to the matter", "required": True},
+                {"item": "Correspondence history (prior emails, texts, or letters)", "required": False},
+            ],
+            "power_of_attorney": [
+                {"item": "Principal's full legal name and address", "required": True},
+                {"item": "Agent's full legal name and address", "required": True},
+                {"item": "Specific powers to be granted (financial, medical, general)", "required": True},
+            ],
+            "lease_agreement": [
+                {"item": "Property address and description", "required": True},
+                {"item": "Landlord and tenant full legal names", "required": True},
+                {"item": "Lease term, monthly rent, and security deposit amounts", "required": True},
+                {"item": "Pet policy, utilities, and any special terms", "required": False},
+            ],
+        }
+        return base + extras.get(doc_type, [
+            {"item": "Any reference documents or examples for the requested document", "required": False},
+            {"item": "Names and addresses of all parties involved", "required": True},
+        ])
+
+    if slug == "consulting":
+        goals = intake.get("goals", [])
+        items = [
+            {"item": "Current business plan or executive summary (if exists)", "required": False},
+            {"item": "Most recent financial statements or projections", "required": False},
+        ]
+        if "entity_setup" in goals or "compliance" in goals:
+            items.append({"item": "Existing formation documents (EIN, Articles, Operating Agreement)", "required": False})
+        if "credit_building" in goals:
+            items.append({"item": "Business credit report (Nav, Dun & Bradstreet, or Experian Business)", "required": False})
+        if "growth_plan" in goals:
+            items.append({"item": "Current revenue figures and top 3 customer/revenue sources", "required": False})
+        items.append({"item": "List of your top 3 immediate business challenges", "required": True})
+        return items
+
+    return [{"item": "Contact us to discuss your specific needs", "required": True}]
+
+
+def _next_steps(slug: str, intake: dict) -> list[str]:
+    if slug == "criminal":
+        state = intake.get("state", "")
+        record_type = intake.get("record_type", "")
+        steps = [
+            "We will review your intake information within 1-2 business days.",
+            "Our team will perform an eligibility pre-check based on your state's expungement statutes.",
+        ]
+        if state == "SC":
+            if record_type == "arrest":
+                steps.append("SC Code § 17-1-40 allows expungement of arrest records with no conviction — strong eligibility likely.")
+            elif record_type == "misdemeanor":
+                steps.append("SC first-offense misdemeanor expungement requires 3-5 years post-completion with no additional offenses.")
+            elif record_type == "felony":
+                steps.append("Felony expungement in SC is limited — we'll assess specific charge eligibility individually.")
+        steps.append("Once eligibility is confirmed, we'll prepare your petition and send you a signing appointment.")
+        steps.append("After signing, we file with the appropriate court(s) and track the outcome.")
+        return steps
+
+    if slug == "document":
+        return [
+            "We will review your intake and confirm the document scope within 1 business day.",
+            "Our team will follow up with any clarifying questions before drafting begins.",
+            "You will receive a draft for your review within the agreed turnaround window.",
+            "Upon approval, we deliver the finalized, ready-to-sign document.",
+        ]
+
+    if slug == "consulting":
+        return [
+            "Your intake has been received. We'll review your goals and match you with the right advisory track.",
+            "Expect a call or email within 1 business day to schedule your initial consultation.",
+            "During the consultation we'll build your 90-day action plan.",
+            "You'll receive a written plan summary within 48 hours of your consultation.",
+        ]
+
+    return ["We'll be in touch within 1-2 business days to discuss next steps."]
+
+
+class ServiceIntakeCreate(BaseModel):
+    division_slug: str
+    intake_data: dict
+    title: Optional[str] = None
+
+
+def _serialize(d: dict) -> str:
+    return _json.dumps(d)
+
+
+def _gen_sc_number(slug: str, sc_id: int) -> str:
+    prefix = slug[:3].upper()
+    return f"SVC-{prefix}-{datetime.utcnow().year}-{sc_id:04d}"
+
+
+@router.post("/service-intake")
+def create_service_intake(
+    data: ServiceIntakeCreate,
+    db: Session = Depends(get_db),
+    client: AegisClient = Depends(get_portal_client),
+):
+    """Portal client self-submits a service intake. Returns case number + checklist."""
+    if data.division_slug not in _CLIENT_SLUGS:
+        raise HTTPException(422, f"Service '{data.division_slug}' not available for self-service intake.")
+
+    title = data.title or {
+        "criminal": "Criminal Record Relief",
+        "document": "Document Preparation",
+        "consulting": "Business Consulting",
+        "notary": "Mobile Notary Request",
+        "credit": "Credit Restoration",
+    }.get(data.division_slug, data.division_slug.title())
+
+    sc = ServiceCase(
+        client_id=client.id,
+        division_slug=data.division_slug,
+        title=title,
+        intake_data=_serialize(data.intake_data),
+        status="intake",
+        case_number="SVC-PENDING",
+    )
+    db.add(sc)
+    db.flush()
+    sc.case_number = _gen_sc_number(data.division_slug, sc.id)
+    db.commit()
+    db.refresh(sc)
+
+    checklist = _checklist(data.division_slug, data.intake_data)
+    next_steps = _next_steps(data.division_slug, data.intake_data)
+
+    return {
+        "case_number": sc.case_number,
+        "id": sc.id,
+        "division_slug": sc.division_slug,
+        "title": sc.title,
+        "status": sc.status,
+        "checklist": checklist,
+        "next_steps": next_steps,
+        "created_at": sc.created_at.isoformat() if sc.created_at else None,
+    }
+
+
+@router.get("/service-cases")
+def portal_service_cases(
+    db: Session = Depends(get_db),
+    client: AegisClient = Depends(get_portal_client),
+):
+    """Return all service cases for the authenticated portal client."""
+    cases = (
+        db.query(ServiceCase)
+        .filter(ServiceCase.client_id == client.id)
+        .order_by(ServiceCase.id.desc())
+        .all()
+    )
+    return [
+        {
+            "id": sc.id,
+            "case_number": sc.case_number,
+            "division_slug": sc.division_slug,
+            "title": sc.title,
+            "status": sc.status,
+            "created_at": sc.created_at.isoformat() if sc.created_at else None,
+        }
+        for sc in cases
+    ]

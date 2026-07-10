@@ -147,6 +147,12 @@ export const forgotPassword = (email: string) =>
 export const resetPassword = (token: string, new_password: string) =>
   portalApi.post('/api/portal/reset-password', { token, new_password }).then(r => r.data);
 
+export const portalServiceIntake = (division_slug: string, intake_data: Record<string, unknown>, title?: string) =>
+  portalApi.post('/api/portal/service-intake', { division_slug, intake_data, title }).then(r => r.data);
+
+export const portalServiceCases = () =>
+  portalApi.get('/api/portal/service-cases').then(r => r.data);
+
 export const createCheckoutSession = () =>
   portalApi.post('/api/portal/billing/create-checkout').then(r => r.data);
 

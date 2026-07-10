@@ -65,11 +65,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               Cruel &amp; Associates — Client Portal
             </span>
           </div>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 24, fontSize: 14 }}>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 20, fontSize: 13 }}>
             <a href="/portal/dashboard" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Dashboard</a>
-            <a href="/portal/profile" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Profile</a>
+            <a href="/portal/criminal" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Record Relief</a>
+            <a href="/portal/doc-prep" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Doc Prep</a>
+            <a href="/portal/consulting" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Consulting</a>
             <a href="/portal/documents" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Documents</a>
-            <a href="/portal/letters" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Letters</a>
             <a href="/portal/disputes" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Disputes</a>
             <a href="/portal/billing" style={{ color: '#ccd6f6', textDecoration: 'none' }}>Billing</a>
             <a href="/portal/book" style={{ color: '#93c5fd', textDecoration: 'none', fontWeight: 600 }}>📅 Book</a>

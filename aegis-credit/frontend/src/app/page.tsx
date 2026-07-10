@@ -67,14 +67,12 @@ export default function HomePage() {
         background: 'rgba(7,9,15,0.94)', backdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(201,168,76,0.12)',
       }}>
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>
-            CRUEL &amp; ASSOCIATES
-          </div>
-          <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 3, textTransform: 'uppercase', marginTop: 2 }}>
+        <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/logo.svg" alt="Cruel & Associates" style={{ height: 44, width: 'auto' }} />
+          <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 3, textTransform: 'uppercase' }}>
             Consumer Rights &amp; Business Services
           </div>
-        </div>
+        </a>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <a href="/notary-portal" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
             Notary
@@ -320,9 +318,12 @@ export default function HomePage() {
         padding: '40px 48px', display: 'flex', justifyContent: 'space-between',
         alignItems: 'center', flexWrap: 'wrap', gap: 16,
       }}>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>CRUEL &amp; ASSOCIATES</div>
-          <div style={{ fontSize: 11, color: '#4a5060', marginTop: 4 }}>Consumer Rights Consulting · (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <img src="/logo.svg" alt="Cruel & Associates" style={{ height: 52, width: 'auto', opacity: 0.9 }} />
+          <div style={{ fontSize: 11, color: '#4a5060', lineHeight: 1.7 }}>
+            Consumer Rights Consulting<br />
+            (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#64748b', flexWrap: 'wrap', alignItems: 'center' }}>
           <a href="/criminal-portal" style={{ color: '#64748b', textDecoration: 'none' }}>Record Relief</a>

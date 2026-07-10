@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 540" fill="none">
+  <!-- Outer circle -->
+  <circle cx="250" cy="210" r="180" stroke="#C9A84C" stroke-width="3"/>
+
+  <!-- ═══ SCALES OF JUSTICE ═══ -->
+
+  <!-- Central post top knob -->
+  <circle cx="250" cy="88" r="8" fill="#C9A84C"/>
+  <!-- Central post shaft -->
+  <rect x="246" y="96" width="8" height="148" rx="2" fill="#C9A84C"/>
+  <!-- Post base widener -->
+  <rect x="234" y="240" width="32" height="8" rx="3" fill="#C9A84C"/>
+  <rect x="220" y="246" width="60" height="9" rx="3" fill="#C9A84C"/>
+
+  <!-- Beam knob at post top -->
+  <ellipse cx="250" cy="118" rx="9" ry="7" fill="#C9A84C"/>
+  <!-- Horizontal beam -->
+  <rect x="100" y="115" width="300" height="7" rx="3.5" fill="#C9A84C"/>
+  <!-- Beam end knobs -->
+  <circle cx="100" cy="118" r="7" fill="#C9A84C"/>
+  <circle cx="400" cy="118" r="7" fill="#C9A84C"/>
+
+  <!-- Left chains (V shape from beam end to pan edges) -->
+  <line x1="100" y1="125" x2="64"  y2="210" stroke="#C9A84C" stroke-width="2.5"/>
+  <line x1="100" y1="125" x2="138" y2="210" stroke="#C9A84C" stroke-width="2.5"/>
+  <!-- Left pan (filled arc/bowl) -->
+  <path d="M 58 207 Q 100 234 142 207 Z" fill="#C9A84C"/>
+  <path d="M 58 207 Q 100 234 142 207" stroke="#C9A84C" stroke-width="2"/>
+
+  <!-- Right chains -->
+  <line x1="400" y1="125" x2="364" y2="210" stroke="#C9A84C" stroke-width="2.5"/>
+  <line x1="400" y1="125" x2="436" y2="210" stroke="#C9A84C" stroke-width="2.5"/>
+  <!-- Right pan (filled arc/bowl) -->
+  <path d="M 358 207 Q 400 234 442 207 Z" fill="#C9A84C"/>
+  <path d="M 358 207 Q 400 234 442 207" stroke="#C9A84C" stroke-width="2"/>
+
+  <!-- ═══ TEXT ═══ -->
+
+  <!-- "Cruel" italic serif script -->
+  <text
+    x="250" y="318"
+    text-anchor="middle"
+    font-family="'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, 'Times New Roman', serif"
+    font-style="italic"
+    font-size="78"
+    font-weight="400"
+    fill="#C9A84C"
+    letter-spacing="-1"
+  >Cruel</text>
+
+  <!-- "AND" small spaced caps -->
+  <text
+    x="250" y="353"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="20"
+    font-weight="400"
+    fill="#C9A84C"
+    letter-spacing="7"
+  >AND</text>
+
+  <!-- "ASSOCIATES" wide spaced caps -->
+  <text
+    x="250" y="395"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="27"
+    font-weight="400"
+    fill="#C9A84C"
+    letter-spacing="9"
+  >ASSOCIATES</text>
+</svg>

@@ -16,7 +16,7 @@ export default function HomePage() {
       title: 'Criminal Record Relief',
       desc: 'Document preparation for expungements, record sealings, and post-conviction relief. We handle the paperwork — you move forward with a clean slate.',
       cta: 'Request Intake →',
-      href: '/portal/criminal',
+      href: '/criminal-portal',
       primary: true,
       detail: ['Expungement petitions', 'Record sealing', 'Pardons & post-conviction', 'Eligibility pre-check', 'Court filing support'],
     },
@@ -46,7 +46,7 @@ export default function HomePage() {
       title: 'Mobile Notary Services',
       desc: 'Certified mobile notary for loan signings, real estate closings, affidavits, and powers of attorney — at a location convenient for you.',
       cta: 'Schedule Signing →',
-      href: '/portal/book',
+      href: '/notary-portal',
       primary: false,
       detail: ['Loan closings', 'Real estate signings', 'Affidavits', 'POA notarization', 'RON available'],
     },
@@ -67,27 +67,31 @@ export default function HomePage() {
         background: 'rgba(7,9,15,0.94)', backdropFilter: 'blur(16px)',
         borderBottom: '1px solid rgba(201,168,76,0.12)',
       }}>
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>
-            CRUEL &amp; ASSOCIATES
-          </div>
-          <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 3, textTransform: 'uppercase', marginTop: 2 }}>
+        <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/logo.svg" alt="Cruel & Associates" style={{ height: 44, width: 'auto' }} />
+          <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 3, textTransform: 'uppercase' }}>
             Consumer Rights &amp; Business Services
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        </a>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <a href="/notary-portal" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
+            Notary
+          </a>
+          <a href="/criminal-portal" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
+            Record Relief
+          </a>
           <a href="/login" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
             Staff
           </a>
           <a href="/portal/login" style={{
-            padding: '8px 20px', border: '1px solid rgba(201,168,76,0.4)',
+            padding: '8px 18px', border: '1px solid rgba(201,168,76,0.4)',
             color: '#c9a84c', borderRadius: 4, fontSize: 13, fontWeight: 600,
             textDecoration: 'none',
           }}>
             Client Login
           </a>
           <a href="/portal/register" style={{
-            padding: '8px 20px', background: '#c9a84c',
+            padding: '8px 18px', background: '#c9a84c',
             color: '#07090f', borderRadius: 4, fontSize: 13, fontWeight: 700,
             textDecoration: 'none',
           }}>
@@ -314,12 +318,15 @@ export default function HomePage() {
         padding: '40px 48px', display: 'flex', justifyContent: 'space-between',
         alignItems: 'center', flexWrap: 'wrap', gap: 16,
       }}>
-        <div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#c9a84c', letterSpacing: 1 }}>CRUEL &amp; ASSOCIATES</div>
-          <div style={{ fontSize: 11, color: '#4a5060', marginTop: 4 }}>Consumer Rights Consulting · (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <img src="/logo.svg" alt="Cruel & Associates" style={{ height: 52, width: 'auto', opacity: 0.9 }} />
+          <div style={{ fontSize: 11, color: '#4a5060', lineHeight: 1.7 }}>
+            Consumer Rights Consulting<br />
+            (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#64748b', flexWrap: 'wrap', alignItems: 'center' }}>
-          <a href="/portal/criminal" style={{ color: '#64748b', textDecoration: 'none' }}>Record Relief</a>
+          <a href="/criminal-portal" style={{ color: '#64748b', textDecoration: 'none' }}>Record Relief</a>
           <a href="/portal/doc-prep" style={{ color: '#64748b', textDecoration: 'none' }}>Doc Prep</a>
           <a href="/portal/consulting" style={{ color: '#64748b', textDecoration: 'none' }}>Consulting</a>
           <a href="/portal/login" style={{ color: '#64748b', textDecoration: 'none' }}>Client Portal</a>

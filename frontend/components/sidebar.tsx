@@ -4,14 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bot, BookOpen, Brain, Calendar, Crown, Film, GitBranch, Home, LogOut,
-  MessageSquare, Network, Rss, Settings, Star, Youtube
+  MessageSquare, Network, PlaySquare, Rss, Settings, Star
 } from "lucide-react";
 import { clearToken } from "@/lib/auth";
 
 const nav = [
   { href: "/chief", icon: Crown, label: "Chief" },
   { href: "/research", icon: BookOpen, label: "Research" },
-  { href: "/youtube", icon: Youtube, label: "YouTube" },
+  { href: "/youtube", icon: PlaySquare, label: "YouTube" },
   { href: "/rss", icon: Rss, label: "RSS Feeds" },
   { href: "/channels", icon: MessageSquare, label: "Channels" },
   { href: "/media-studio", icon: Film, label: "Media Studio" },

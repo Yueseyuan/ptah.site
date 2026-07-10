@@ -50,6 +50,16 @@ export default function HomePage() {
       primary: false,
       detail: ['Loan closings', 'Real estate signings', 'Affidavits', 'POA notarization', 'RON available'],
     },
+    {
+      icon: '⚖️',
+      tag: 'Recovery',
+      title: 'Judgment & Asset Recovery',
+      desc: 'Won in court but can\'t collect? We enforce judgments, trace hidden assets, and recover what you\'re owed — wage garnishment, bank levies, property liens, and estate recovery.',
+      cta: 'Start Recovery Case →',
+      href: '/judgment-portal',
+      primary: true,
+      detail: ['Judgment enforcement', 'Asset tracing', 'Wage garnishment & bank levies', 'Hidden asset recovery', 'Estate & unclaimed property'],
+    },
   ];
 
   return (
@@ -79,6 +89,9 @@ export default function HomePage() {
           </a>
           <a href="/criminal-portal" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
             Record Relief
+          </a>
+          <a href="/judgment-portal" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
+            Recovery
           </a>
           <a href="/login" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
             Staff
@@ -111,7 +124,7 @@ export default function HomePage() {
           background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)',
           padding: '5px 14px', borderRadius: 20, marginBottom: 32, width: 'fit-content',
         }}>
-          Credit · Record Relief · Doc Prep · Business · Notary
+          Credit · Relief · Doc Prep · Business · Notary · Recovery
         </div>
 
         <h1 style={{
@@ -157,7 +170,7 @@ export default function HomePage() {
           flexWrap: 'wrap',
         }}>
           {[
-            { num: '5', suffix: ' services', label: 'Credit · Relief · Docs · Biz · Notary' },
+            { num: '6', suffix: ' services', label: 'Credit · Relief · Docs · Biz · Notary · Recovery' },
             { num: '$1,000', suffix: '', label: 'Statutory Damages per FDCPA Violation' },
             { num: '30', suffix: ' days', label: 'Bureau Response Window (FCRA §611)' },
             { num: '$149', suffix: '/mo', label: 'Credit Repair Flat Retainer' },
@@ -327,6 +340,7 @@ export default function HomePage() {
         </div>
         <div style={{ display: 'flex', gap: 20, fontSize: 13, color: '#64748b', flexWrap: 'wrap', alignItems: 'center' }}>
           <a href="/criminal-portal" style={{ color: '#64748b', textDecoration: 'none' }}>Record Relief</a>
+          <a href="/judgment-portal" style={{ color: '#64748b', textDecoration: 'none' }}>Recovery</a>
           <a href="/portal/doc-prep" style={{ color: '#64748b', textDecoration: 'none' }}>Doc Prep</a>
           <a href="/portal/consulting" style={{ color: '#64748b', textDecoration: 'none' }}>Consulting</a>
           <a href="/portal/login" style={{ color: '#64748b', textDecoration: 'none' }}>Client Portal</a>

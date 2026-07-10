@@ -92,20 +92,33 @@ async def _access_token() -> str:
         _token_cache = creds
         return creds["access_token"]
 
-    # Refresh
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(
-            _REFRESH_URL,
-            json={"refresh_token": creds["refresh_token"]},
-        )
-        resp.raise_for_status()
-        new_creds = {**creds, **resp.json()}
-        path = _creds_path()
-        if path:
-            path.write_text(json.dumps(new_creds, indent=2))
-        _token_cache = new_creds
-        logger.debug("Higgsfield token refreshed")
-        return new_creds["access_token"]
+    # Refresh — fall back to existing token if refresh endpoint fails
+    if not creds.get("refresh_token"):
+        if creds.get("access_token"):
+            _token_cache = creds
+            return creds["access_token"]
+        raise RuntimeError("Higgsfield credentials expired and no refresh_token available.")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                _REFRESH_URL,
+                json={"refresh_token": creds["refresh_token"]},
+            )
+            resp.raise_for_status()
+            new_creds = {**creds, **resp.json()}
+            path = _creds_path()
+            if path:
+                path.write_text(json.dumps(new_creds, indent=2))
+            _token_cache = new_creds
+            logger.debug("Higgsfield token refreshed")
+            return new_creds["access_token"]
+    except Exception as exc:
+        logger.warning("Higgsfield token refresh failed (%s); using existing access_token", exc)
+        if creds.get("access_token"):
+            _token_cache = {**creds, "expires_at": 0}  # clear expiry so we re-attempt next startup
+            return creds["access_token"]
+        raise
 
 
 async def _headers() -> dict[str, str]:

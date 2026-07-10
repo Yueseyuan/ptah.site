@@ -26,6 +26,8 @@ export default function PortalBillingPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [showPromo, setShowPromo] = useState(false);
 
   useEffect(() => {
     portalApi.get('/api/portal/billing/status')
@@ -38,8 +40,9 @@ export default function PortalBillingPage() {
     setActionLoading(true);
     setError('');
     try {
-      const res = await portalApi.post('/api/portal/billing/create-checkout');
-      window.location.href = res.data.checkout_url;
+      const body = promoCode.trim() ? { promo_code: promoCode.trim().toUpperCase() } : {};
+      const res = await portalApi.post('/api/portal/billing/create-checkout', body);
+      window.location.href = (res.data as { checkout_url: string }).checkout_url;
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       setError(msg || 'Could not start checkout. Please try again.');
@@ -165,9 +168,37 @@ export default function PortalBillingPage() {
 
             {/* CTA */}
             {!subStatus || subStatus === 'canceled' ? (
-              <button onClick={handleSubscribe} disabled={actionLoading} style={primaryBtn}>
-                {actionLoading ? 'Redirecting to checkout…' : 'Subscribe — $149/month'}
-              </button>
+              <div>
+                {!showPromo ? (
+                  <button onClick={() => setShowPromo(true)} style={{
+                    background: 'none', border: 'none', color: '#64748b', fontSize: 13,
+                    cursor: 'pointer', textDecoration: 'underline', padding: 0, marginBottom: 14, display: 'block',
+                  }}>
+                    Have a promo code?
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={e => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="PROMO CODE"
+                      style={{
+                        flex: 1, padding: '9px 12px', border: '1px solid #d1d5db',
+                        borderRadius: 8, fontSize: 14, fontFamily: 'monospace',
+                        letterSpacing: 2, textTransform: 'uppercase', outline: 'none',
+                      }}
+                    />
+                    <button onClick={() => { setShowPromo(false); setPromoCode(''); }} style={{
+                      background: 'none', border: '1px solid #e2e8f0', borderRadius: 8,
+                      padding: '9px 14px', fontSize: 13, color: '#94a3b8', cursor: 'pointer',
+                    }}>✕</button>
+                  </div>
+                )}
+                <button onClick={handleSubscribe} disabled={actionLoading} style={primaryBtn}>
+                  {actionLoading ? 'Redirecting to checkout…' : promoCode ? `Apply ${promoCode} & Subscribe` : 'Subscribe — $149/month'}
+                </button>
+              </div>
             ) : subStatus === 'past_due' || subStatus === 'unpaid' ? (
               <div>
                 <div style={{ color: '#92400e', fontSize: 13, marginBottom: 12 }}>

@@ -3,7 +3,9 @@ import stripe
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database import get_db
 from app.models import User
@@ -16,6 +18,10 @@ from app.services.email_service import (
 )
 
 router = APIRouter(prefix="/api/portal/billing", tags=["billing"])
+
+
+class CheckoutRequest(BaseModel):
+    promo_code: Optional[str] = None
 
 
 def _sync_subscription(user: User, sub: stripe.Subscription, db: Session) -> None:
@@ -47,10 +53,13 @@ def billing_status(
 
 @router.post("/create-checkout")
 def create_checkout_session(
+    body: CheckoutRequest = CheckoutRequest(),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a Stripe Checkout session for the monthly subscription."""
+    """Create a Stripe Checkout session for the monthly subscription.
+    Optionally pre-applies a promotion code; falls back to Stripe's
+    built-in promo code field if none is provided."""
     stripe.api_key = settings.STRIPE_SECRET_KEY
     if not stripe.api_key:
         raise HTTPException(503, "Billing not configured — STRIPE_SECRET_KEY missing")
@@ -73,21 +82,35 @@ def create_checkout_session(
             current_user.stripe_customer_id = customer_id
             db.commit()
 
-        session = stripe.checkout.Session.create(
-            customer=customer_id,
-            mode="subscription",
-            line_items=[{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
-            success_url=f"{settings.PORTAL_BASE_URL}/portal/dashboard?payment=success",
-            cancel_url=f"{settings.PORTAL_BASE_URL}/portal/billing",
-            client_reference_id=str(current_user.id),
-            subscription_data={
+        session_params: dict = {
+            "customer": customer_id,
+            "mode": "subscription",
+            "line_items": [{"price": settings.STRIPE_PRICE_ID, "quantity": 1}],
+            "success_url": f"{settings.PORTAL_BASE_URL}/portal/dashboard?payment=success",
+            "cancel_url": f"{settings.PORTAL_BASE_URL}/portal/billing",
+            "client_reference_id": str(current_user.id),
+            "subscription_data": {
                 "metadata": {
                     "user_id": str(current_user.id),
                     "username": current_user.username,
                 }
             },
-        )
+        }
+
+        if body.promo_code:
+            # Resolve the promotion code to its ID
+            codes = stripe.PromotionCode.list(code=body.promo_code, active=True, limit=1)
+            if not codes.data:
+                raise HTTPException(400, "Invalid or expired promo code")
+            session_params["discounts"] = [{"promotion_code": codes.data[0].id}]
+        else:
+            # Let Stripe show its built-in promo code field at checkout
+            session_params["allow_promotion_codes"] = True
+
+        session = stripe.checkout.Session.create(**session_params)
         return {"checkout_url": session.url}
+    except HTTPException:
+        raise
     except stripe.error.StripeError as e:
         raise HTTPException(502, f"Stripe error: {e.user_message or str(e)}")
 

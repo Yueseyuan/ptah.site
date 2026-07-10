@@ -1,5 +1,5 @@
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -108,6 +108,46 @@ def get_order(
     if not order:
         raise HTTPException(404, "Order not found")
     return _order_dict(order)
+
+
+@router.get("/lookup")
+def lookup_order(
+    loan_number: str = Query(...),
+    email: str = Query(...),
+    db: Session = Depends(get_db),
+):
+    """Public endpoint — borrower looks up their signing by loan number + email."""
+    order = (
+        db.query(SigningOrder)
+        .filter(
+            SigningOrder.loan_number == loan_number,
+            SigningOrder.borrower_email == email.lower().strip(),
+        )
+        .order_by(SigningOrder.id.desc())
+        .first()
+    )
+    if not order:
+        raise HTTPException(404, "No appointment found with that information.")
+
+    notary_name = None
+    notary_phone = None
+    if order.notary_id:
+        notary = db.query(NotaryProfile).filter(NotaryProfile.id == order.notary_id).first()
+        if notary:
+            notary_name = f"{notary.first_name} {notary.last_name}"
+            notary_phone = notary.phone
+
+    return {
+        "loan_number": order.loan_number,
+        "borrower_name": order.borrower_name,
+        "property_address": order.property_address,
+        "closing_date": order.closing_date,
+        "signing_type": order.signing_type,
+        "status": order.status,
+        "notes": order.notes,
+        "notary_name": notary_name,
+        "notary_phone": notary_phone,
+    }
 
 
 @router.patch("/{order_id}")

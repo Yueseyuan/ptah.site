@@ -86,10 +86,14 @@ async def generate_video_clip(
         "aspect_ratio": aspect_ratio,
         "duration": min(duration, 10),
     }
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        job_id = await _create_job(client, _EP_VIDEO, payload)
-        record = await _poll_job(client, job_id)
-        return {"ok": True, "url": _extract_url(record), "id": job_id}
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            job_id = await _create_job(client, _EP_VIDEO, payload)
+            record = await _poll_job(client, job_id)
+            return {"ok": True, "url": _extract_url(record), "id": job_id}
+    except Exception as exc:
+        logger.error("Muapi video generation failed: %s", exc)
+        return {"ok": False, "error": str(exc)}
 
 
 async def generate_image(
@@ -98,10 +102,14 @@ async def generate_image(
     **_kwargs: Any,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {"prompt": prompt, "aspect_ratio": aspect_ratio}
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        job_id = await _create_job(client, _EP_IMAGE, payload)
-        record = await _poll_job(client, job_id)
-        return {"ok": True, "url": _extract_url(record), "id": job_id}
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            job_id = await _create_job(client, _EP_IMAGE, payload)
+            record = await _poll_job(client, job_id)
+            return {"ok": True, "url": _extract_url(record), "id": job_id}
+    except Exception as exc:
+        logger.error("Muapi image generation failed: %s", exc)
+        return {"ok": False, "error": str(exc)}
 
 
 async def generate_music(
@@ -109,18 +117,26 @@ async def generate_music(
     duration: int = 12,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {"prompt": prompt, "duration": duration}
-    async with httpx.AsyncClient(timeout=120.0) as client:
-        job_id = await _create_job(client, _EP_MUSIC, payload)
-        record = await _poll_job(client, job_id)
-        return {"ok": True, "url": _extract_url(record), "id": job_id}
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            job_id = await _create_job(client, _EP_MUSIC, payload)
+            record = await _poll_job(client, job_id)
+            return {"ok": True, "url": _extract_url(record), "id": job_id}
+    except Exception as exc:
+        logger.error("Muapi music generation failed: %s", exc)
+        return {"ok": False, "error": str(exc)}
 
 
 async def generate_sfx(prompt: str) -> dict[str, Any]:
     payload: dict[str, Any] = {"prompt": prompt}
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        job_id = await _create_job(client, _EP_SFX, payload)
-        record = await _poll_job(client, job_id)
-        return {"ok": True, "url": _extract_url(record), "id": job_id}
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            job_id = await _create_job(client, _EP_SFX, payload)
+            record = await _poll_job(client, job_id)
+            return {"ok": True, "url": _extract_url(record), "id": job_id}
+    except Exception as exc:
+        logger.error("Muapi SFX generation failed: %s", exc)
+        return {"ok": False, "error": str(exc)}
 
 
 async def generate_voiceover(
@@ -129,10 +145,14 @@ async def generate_voiceover(
     **_kwargs: Any,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {"prompt": text, "voice_id": voice_id}
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        job_id = await _create_job(client, _EP_TTS, payload)
-        record = await _poll_job(client, job_id)
-        return {"ok": True, "url": _extract_url(record), "id": job_id}
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            job_id = await _create_job(client, _EP_TTS, payload)
+            record = await _poll_job(client, job_id)
+            return {"ok": True, "url": _extract_url(record), "id": job_id}
+    except Exception as exc:
+        logger.error("Muapi voiceover generation failed: %s", exc)
+        return {"ok": False, "error": str(exc)}
 
 
 async def check_balance() -> dict[str, Any]:

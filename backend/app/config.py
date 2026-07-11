@@ -66,5 +66,10 @@ class Settings(BaseSettings):
     # Default: ~/.config/higgsfield/credentials.json (auto-detected if present)
     higgsfield_credentials_path: str = ""
 
+    # ── Muapi.ai  (Higgsfield-compatible, static API key, no expiry) ──────────
+    # Preferred alternative — get a key at muapi.ai
+    # When set, all media generation routes use Muapi instead of Higgsfield.
+    muapi_api_key: str = ""
+
 
 settings = Settings()

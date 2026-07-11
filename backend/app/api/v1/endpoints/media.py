@@ -66,15 +66,27 @@ async def media_seed(
     return await seed_media_agents(db, current_user.id)
 
 
-# ── Higgsfield endpoints ──────────────────────────────────────────────────────
+# ── Provider selection ────────────────────────────────────────────────────────
+
+def _media_provider():
+    """Return the configured media generation service module."""
+    from app.config import settings
+    if settings.muapi_api_key:
+        from app.services import muapi_service
+        return muapi_service
+    from app.services import higgsfield_service
+    return higgsfield_service
+
+
+# ── Generation endpoints ──────────────────────────────────────────────────────
 
 @router.get("/balance")
-async def higgsfield_balance(
+async def media_balance(
     _current_user: User = Depends(get_current_user),
 ) -> dict:
-    """Check current Higgsfield credit balance."""
-    from app.services.higgsfield_service import check_balance
-    return await check_balance()
+    """Check credit balance for the configured media provider."""
+    svc = _media_provider()
+    return await svc.check_balance()
 
 
 @router.post("/generate/video")
@@ -83,14 +95,9 @@ async def generate_video(
     background_tasks: BackgroundTasks,
     _current_user: User = Depends(get_current_user),
 ) -> dict:
-    """
-    Generate a video clip with Higgsfield and optionally post it to social platforms.
-
-    Generation runs synchronously (1-3 min). For fire-and-forget, wire this into
-    a background task queue or call from an agent using the generate_video_clip tool.
-    """
-    from app.services.higgsfield_service import generate_video_clip
-    result = await generate_video_clip(
+    """Generate a video clip and optionally post it to social platforms."""
+    svc = _media_provider()
+    result = await svc.generate_video_clip(
         prompt=req.prompt,
         aspect_ratio=req.aspect_ratio,
         duration=req.duration,
@@ -101,7 +108,6 @@ async def generate_video(
     if not result["ok"]:
         raise HTTPException(status_code=502, detail=result["error"])
 
-    # Optionally post to social platforms in the background
     if req.post_to and result.get("url"):
         background_tasks.add_task(
             _post_to_socials,
@@ -109,7 +115,6 @@ async def generate_video(
             caption=req.post_caption,
             video_url=result["url"],
         )
-
     return result
 
 
@@ -118,19 +123,19 @@ async def generate_voiceover(
     req: VoiceoverRequest,
     _current_user: User = Depends(get_current_user),
 ) -> dict:
-    """Generate a voiceover audio file with Higgsfield TTS."""
-    from app.services.higgsfield_service import VOICE_STERLING, VOICE_HARRISON, VOICE_ARTHUR, VOICE_TALLULAH, VOICE_VESPER, VOICE_ROMAN, VOICE_JULIAN, generate_voiceover as _gen
-
+    """Generate a voiceover audio file."""
+    svc = _media_provider()
+    from app.services.higgsfield_service import (
+        VOICE_STERLING, VOICE_HARRISON, VOICE_ARTHUR,
+        VOICE_TALLULAH, VOICE_VESPER, VOICE_ROMAN, VOICE_JULIAN,
+    )
     voice_map = {
-        "Sterling": VOICE_STERLING,
-        "Harrison": VOICE_HARRISON,
-        "Arthur":   VOICE_ARTHUR,
-        "Tallulah": VOICE_TALLULAH,
-        "Vesper":   VOICE_VESPER,
-        "Roman":    VOICE_ROMAN,
-        "Julian":   VOICE_JULIAN,
+        "Sterling": VOICE_STERLING, "Harrison": VOICE_HARRISON,
+        "Arthur": VOICE_ARTHUR,     "Tallulah": VOICE_TALLULAH,
+        "Vesper": VOICE_VESPER,     "Roman": VOICE_ROMAN,
+        "Julian": VOICE_JULIAN,
     }
-    result = await _gen(text=req.text, voice_id=voice_map[req.voice])
+    result = await svc.generate_voiceover(text=req.text, voice_id=voice_map[req.voice])
     if not result["ok"]:
         raise HTTPException(status_code=502, detail=result["error"])
     return result
@@ -141,13 +146,11 @@ async def generate_image(
     req: ImageGenerateRequest,
     _current_user: User = Depends(get_current_user),
 ) -> dict:
-    """Generate an image with Higgsfield."""
-    from app.services.higgsfield_service import generate_image as _gen
-    result = await _gen(
+    """Generate an image."""
+    svc = _media_provider()
+    result = await svc.generate_image(
         prompt=req.prompt,
-        model=req.model,
         aspect_ratio=req.aspect_ratio,
-        resolution=req.resolution,
     )
     if not result["ok"]:
         raise HTTPException(status_code=502, detail=result["error"])
@@ -159,9 +162,9 @@ async def generate_music(
     req: MusicRequest,
     _current_user: User = Depends(get_current_user),
 ) -> dict:
-    """Generate background music with Sonilo."""
-    from app.services.higgsfield_service import generate_music as _gen
-    result = await _gen(prompt=req.prompt, duration=req.duration)
+    """Generate background music."""
+    svc = _media_provider()
+    result = await svc.generate_music(prompt=req.prompt, duration=req.duration)
     if not result["ok"]:
         raise HTTPException(status_code=502, detail=result["error"])
     return result
@@ -172,9 +175,9 @@ async def generate_sfx(
     req: SfxRequest,
     _current_user: User = Depends(get_current_user),
 ) -> dict:
-    """Generate a sound effect with Mirelo."""
-    from app.services.higgsfield_service import generate_sfx as _gen
-    result = await _gen(prompt=req.prompt)
+    """Generate a sound effect."""
+    svc = _media_provider()
+    result = await svc.generate_sfx(prompt=req.prompt)
     if not result["ok"]:
         raise HTTPException(status_code=502, detail=result["error"])
     return result

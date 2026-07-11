@@ -60,11 +60,12 @@ def _load_credentials() -> dict[str, Any]:
 
 
 async def _access_token() -> str:
-    """Return a valid access token, refreshing if within 60s of expiry.
+    """Return a valid access token, refreshing when expired.
 
-    credentials.json may omit expires_at (CLI v0.2.3 doesn't write it).
-    In that case we use the cached token until a 401 forces a refresh,
-    or always refresh on first call to stay safe.
+    The Higgsfield CLI writes credentials.json with expires_in (seconds
+    duration from issue time), NOT expires_at (absolute timestamp).
+    We compute expires_at from the file's mtime + expires_in so expiry
+    is detected correctly and the refresh flow fires automatically.
     """
     global _token_cache
 
@@ -74,22 +75,22 @@ async def _access_token() -> str:
 
     now = time.time()
     cached_expires = _token_cache.get("expires_at", 0)
-    # If we have a cached token with a known expiry, use it while still valid
+    # Use cached token if it still has more than 60s of life
     if _token_cache.get("access_token") and cached_expires and now < cached_expires - 60:
-        return _token_cache["access_token"]
-    # If cached with no expiry info, return as-is (trust until 401)
-    if _token_cache.get("access_token") and not cached_expires:
         return _token_cache["access_token"]
 
     creds = _load_credentials()
+
+    # Compute absolute expiry: prefer expires_at, fall back to mtime + expires_in
     expires_at = creds.get("expires_at", 0)
-    # No expiry in file — use token directly, cache it, skip refresh
-    if creds.get("access_token") and not expires_at:
-        _token_cache = creds
-        return creds["access_token"]
-    # Known expiry and still valid
-    if creds.get("access_token") and now < expires_at - 60:
-        _token_cache = creds
+    if not expires_at and creds.get("expires_in"):
+        path = _creds_path()
+        issued_at = path.stat().st_mtime if path and path.exists() else now
+        expires_at = issued_at + int(creds["expires_in"])
+
+    # Token still valid — cache with computed expiry and return
+    if creds.get("access_token") and expires_at and now < expires_at - 60:
+        _token_cache = {**creds, "expires_at": expires_at}
         return creds["access_token"]
 
     # Refresh — fall back to existing token if refresh endpoint fails
@@ -128,8 +129,15 @@ async def _headers() -> dict[str, str]:
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
+def _invalidate_token_cache() -> None:
+    global _token_cache
+    _token_cache = {}
+
+
 async def _create_job(client: httpx.AsyncClient, payload: dict[str, Any]) -> str:
     resp = await client.post(f"{_BASE}/jobs", json=payload, headers=await _headers(), timeout=30.0)
+    if resp.status_code == 401:
+        _invalidate_token_cache()
     resp.raise_for_status()
     data = resp.json()
     records = data.get("results", [data])
@@ -327,6 +335,8 @@ async def check_balance() -> dict[str, Any]:
         headers = await _headers()
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.get(f"{_BASE}/balance", headers=headers)
+            if resp.status_code == 401:
+                _invalidate_token_cache()
             resp.raise_for_status()
             return {"ok": True, **resp.json()}
     except Exception as exc:

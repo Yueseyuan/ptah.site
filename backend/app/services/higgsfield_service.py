@@ -116,7 +116,9 @@ async def _access_token() -> str:
     except Exception as exc:
         logger.warning("Higgsfield token refresh failed (%s); using existing access_token", exc)
         if creds.get("access_token"):
-            _token_cache = {**creds, "expires_at": 0}  # clear expiry so we re-attempt next startup
+            # Set a short TTL so the cache re-reads credentials.json after 5 minutes,
+            # picking up any token written by `higgsfield auth login` in the meantime.
+            _token_cache = {**creds, "expires_at": time.time() + 300}
             return creds["access_token"]
         raise
 

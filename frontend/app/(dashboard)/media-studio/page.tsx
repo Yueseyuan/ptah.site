@@ -67,23 +67,14 @@ function SetupBanner({ balance }: { balance: HiggsfieldBalance | null }) {
   if (!balance || balance.ok) return null;
   return (
     <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-      <p className="text-sm font-medium text-amber-300 mb-2">Higgsfield credentials not configured</p>
+      <p className="text-sm font-medium text-amber-300 mb-2">Media provider not configured</p>
       <p className="text-xs text-amber-400/80 mb-3">
-        Media Studio uses Higgsfield AI for video, image, voiceover, and music generation.
-        Set it up in 3 steps:
+        Add your Muapi.ai API key to the backend <code className="font-mono bg-amber-500/10 px-1 rounded">.env</code> file, then restart the backend:
       </p>
-      <p className="text-xs font-medium text-amber-300 mb-1.5">Quickest setup — add one line to your backend <code className="font-mono bg-amber-500/10 px-1 rounded">.env</code>:</p>
-      <pre className="text-[11px] font-mono bg-amber-500/8 border border-amber-500/20 rounded-lg px-3 py-2 mb-3 text-amber-200 overflow-x-auto">
-        HIGGSFIELD_ACCESS_TOKEN=your_bearer_token_here
-      </pre>
-      <p className="text-[10px] text-amber-400/60 mb-3">
-        Get your token at <span className="text-amber-300">higgsfield.ai</span> → Account → API Keys. Then restart the backend.
+      <pre className="text-[11px] font-mono bg-black/20 border border-amber-500/20 rounded-lg px-3 py-2 mb-3 text-amber-200 overflow-x-auto whitespace-pre">{"MUAPI_API_KEY=your_key_here"}</pre>
+      <p className="text-[10px] text-amber-400/60">
+        Get a free API key at <span className="text-amber-300">muapi.ai</span>. Supports video, image, voiceover, music, and SFX generation.
       </p>
-      <p className="text-xs text-amber-400/70 mb-1.5">Or use the CLI:</p>
-      <ol className="space-y-1 text-xs text-amber-400/70 list-decimal list-inside">
-        <li>Install: <code className="font-mono bg-amber-500/10 px-1 rounded text-amber-300">hf auth login</code> (Windows: use WSL or Git Bash)</li>
-        <li>Credentials auto-saved to <code className="font-mono bg-amber-500/10 px-1 rounded text-amber-300">~/.config/higgsfield/credentials.json</code></li>
-      </ol>
       {balance.error && (
         <p className="mt-3 text-[10px] font-mono text-amber-500/60 break-all">{balance.error}</p>
       )}

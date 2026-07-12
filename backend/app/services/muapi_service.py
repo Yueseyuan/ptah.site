@@ -21,12 +21,12 @@ _BASE = "https://api.muapi.ai/api/v1"
 _POLL_INTERVAL = 5
 _MAX_POLL_SEC = 360
 
-# Muapi endpoint slugs (hyphen-separated, not underscore)
-_EP_VIDEO = "seedance-2-0"
-_EP_IMAGE = "nano-banana"
-_EP_MUSIC = "sonilo-music"
-_EP_SFX = "mirelo-text-to-audio"
-_EP_TTS = "text2speech-v2"
+# Muapi endpoint slugs — verified from muapi.ai playground and CLI docs
+_EP_VIDEO = "seedance-v2.0-t2v"
+_EP_IMAGE = "flux-dev-image"
+_EP_MUSIC = "suno-create-music"
+_EP_SFX = "mmaudio-v2/text-to-audio"
+_EP_TTS = "mmaudio-v2/text-to-audio"
 
 
 def is_configured() -> bool:
@@ -72,6 +72,9 @@ def _extract_url(data: dict[str, Any]) -> str | None:
     outputs = data.get("outputs")
     if outputs and isinstance(outputs, list):
         return outputs[0]
+    # Suno music responses use audio_url_1 / audio_url_2
+    if data.get("audio_url_1"):
+        return data["audio_url_1"]
     return data.get("url") or (data.get("output") or {}).get("url")
 
 
@@ -116,7 +119,8 @@ async def generate_music(
     prompt: str,
     duration: int = 12,
 ) -> dict[str, Any]:
-    payload: dict[str, Any] = {"prompt": prompt, "duration": duration}
+    # Suno API uses model version, not duration
+    payload: dict[str, Any] = {"prompt": prompt, "model": "V4_5"}
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
             job_id = await _create_job(client, _EP_MUSIC, payload)

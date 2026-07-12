@@ -46,6 +46,17 @@ class ProfileUpdate(BaseModel):
     new_password: Optional[str] = None
 
 
+class BootstrapAdminRequest(BaseModel):
+    full_name: str
+    email: str
+    password: str
+
+
+class EmailLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
 def _out(u: User) -> dict:
     return {
         "id": u.id,
@@ -115,11 +126,15 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """Authenticate with username + password, return a JWT bearer token."""
+    """Authenticate with username or email + password, return a JWT bearer token."""
     if settings.DEV_NO_AUTH:
         token = create_access_token({"sub": "dev_admin", "role": "admin"})
         return {"access_token": token, "token_type": "bearer", "role": "admin", "username": "dev_admin"}
-    user = db.query(User).filter(User.username == form_data.username).first()
+    # Accept username or email in the username field
+    user = (
+        db.query(User).filter(User.username == form_data.username).first()
+        or db.query(User).filter(User.email == form_data.username).first()
+    )
     if not user or not verify_password(form_data.password, user.hashed_password or ""):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -136,6 +151,47 @@ def login(
         "role": user.role,
         "username": user.username,
     }
+
+
+@router.post("/login-email")
+def login_email(data: EmailLoginRequest, db: Session = Depends(get_db)):
+    """Email + password login (used by some frontend versions)."""
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user or not verify_password(data.password, user.hashed_password or ""):
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Account is disabled")
+    token = create_access_token({"sub": user.username, "role": user.role})
+    return {"access_token": token, "token_type": "bearer", "role": user.role, "username": user.username}
+
+
+@router.post("/bootstrap-admin", status_code=201)
+def bootstrap_admin(data: BootstrapAdminRequest, db: Session = Depends(get_db)):
+    """Create the first admin account. Fails if any admin already exists."""
+    if db.query(User).filter(User.role == "admin").count() > 0:
+        raise HTTPException(status_code=400, detail="An admin account already exists. Use /login instead.")
+    if db.query(User).filter(User.email == data.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+    username = data.email.split("@")[0].replace(".", "_").lower()
+    # Make username unique if taken
+    base = username
+    i = 1
+    while db.query(User).filter(User.username == username).first():
+        username = f"{base}{i}"
+        i += 1
+    user = User(
+        username=username,
+        email=data.email,
+        full_name=data.full_name,
+        hashed_password=hash_password(data.password),
+        role="admin",
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_access_token({"sub": user.username, "role": "admin"})
+    return {"access_token": token, "token_type": "bearer", "role": "admin", "username": user.username}
 
 
 @router.get("/me")

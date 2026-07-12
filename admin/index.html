@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ptah Consultants — Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ground:   #F0EBE1;
+      --surface:  #E8E1D5;
+      --copper:   #A0672A;
+      --copper-lt:#C8894C;
+      --ink:      #1A1714;
+      --mid:      #8C7E6E;
+      --border:   rgba(160,103,42,0.18);
+      --danger:   #C0392B;
+    }
+
+    html, body {
+      min-height: 100dvh;
+      background: var(--ground);
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: var(--ink);
+    }
+
+    /* ── LOGIN SCREEN ── */
+    #login-screen {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--ground);
+      border: 1px solid var(--border);
+      padding: 48px 40px 40px;
+      position: relative;
+    }
+
+    /* Corner marks */
+    .login-card::before,
+    .login-card::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-color: var(--copper);
+      border-style: solid;
+      opacity: 0.4;
+    }
+    .login-card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .login-card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-logo .wordmark {
+      font-family: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+      font-size: 40px;
+      letter-spacing: 0.16em;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .login-logo .sub {
+      font-size: 8px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-top: 4px;
+    }
+
+    .copper-rule {
+      width: 100%;
+      height: 1px;
+      background: var(--copper);
+      opacity: 0.2;
+      margin: 0 0 28px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 8px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 7px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .form-group input:focus {
+      border-color: var(--copper);
+    }
+
+    .error-msg {
+      font-size: 11px;
+      color: var(--danger);
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+      min-height: 16px;
+      text-align: center;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: var(--copper);
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-primary:hover { background: var(--copper-lt); }
+    .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── ADMIN HUB ── */
+    #admin-screen {
+      display: none;
+      min-height: 100dvh;
+      flex-direction: column;
+    }
+
+    .admin-bar {
+      background: var(--ink);
+      color: var(--ground);
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .admin-bar .bar-brand {
+      font-family: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+      font-size: 18px;
+      letter-spacing: 0.12em;
+    }
+    .admin-bar .bar-brand span {
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--copper-lt);
+      display: block;
+      line-height: 1;
+    }
+    .admin-bar .bar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .btn-lock {
+      background: none;
+      border: 1px solid rgba(240,235,225,0.25);
+      color: var(--ground);
+      font-family: inherit;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .btn-lock:hover { border-color: var(--copper-lt); color: var(--copper-lt); }
+
+    /* ── DASHBOARD IFRAME ── */
+    #dashboard-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ── FALLBACK (shown when iframe can't load) ── */
+    #frame-fallback {
+      display: none;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      flex-direction: column;
+      gap: 32px;
+      text-align: center;
+    }
+
+    .fallback-title {
+      font-family: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+      font-size: 24px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .fallback-sub {
+      font-size: 12px;
+      color: var(--mid);
+      letter-spacing: 0.06em;
+      max-width: 320px;
+      line-height: 1.7;
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .quick-link {
+      display: block;
+      padding: 18px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--ink);
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
+    }
+    .quick-link:hover {
+      border-color: var(--copper);
+      background: var(--ground);
+    }
+    .quick-link .ql-label {
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 4px;
+    }
+    .quick-link .ql-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .quick-link.primary {
+      grid-column: 1 / -1;
+      border-color: var(--copper);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .quick-link.primary .ql-name {
+      font-family: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+      font-size: 16px;
+      color: var(--copper);
+    }
+    .quick-link.primary::after {
+      content: '→';
+      color: var(--copper);
+      font-size: 18px;
+    }
+
+    .deploy-note {
+      font-size: 10px;
+      color: var(--mid);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      max-width: 480px;
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+      border-left: 2px solid var(--copper-lt);
+    }
+
+    /* Spinner */
+    .loading-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--copper);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="wordmark">Ptah</div>
+      <div class="sub">Admin Access</div>
+    </div>
+    <div class="copper-rule"></div>
+
+    <form id="login-form" autocomplete="off" novalidate>
+      <div class="form-group">
+        <label for="pwd">Access Code</label>
+        <input type="password" id="pwd" autocomplete="current-password"
+               placeholder="Enter access code" required autofocus>
+      </div>
+      <div class="error-msg" id="error-msg" aria-live="polite"></div>
+      <button type="submit" class="btn-primary" id="submit-btn">Unlock</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── ADMIN HUB ── -->
+<div id="admin-screen">
+  <div class="admin-bar">
+    <div class="bar-brand">
+      Ptah
+      <span>Admin Dashboard</span>
+    </div>
+    <div class="bar-right">
+      <button class="btn-lock" id="lock-btn" onclick="lockSession()">Lock</button>
+    </div>
+  </div>
+
+  <!-- Loading spinner shown while iframe attempts to load -->
+  <div class="loading-wrap" id="loading-wrap">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Iframe: loads the dashboard directly if accessible -->
+  <iframe id="dashboard-frame" src="about:blank" title="Aegis Credit Intelligence Dashboard"></iframe>
+
+  <!-- Fallback hub shown if iframe can't load (e.g., app not deployed) -->
+  <div id="frame-fallback">
+    <div>
+      <div class="fallback-title">Aegis Credit Intelligence</div>
+      <p class="fallback-sub">
+        Select a section to open in a new tab, or open the full dashboard below.
+      </p>
+    </div>
+
+    <div class="quick-links">
+      <a class="quick-link primary" id="link-main" href="#" target="_blank" rel="noopener">
+        <div>
+          <div class="ql-label">Open Full App</div>
+          <div class="ql-name">Aegis Credit Dashboard</div>
+        </div>
+      </a>
+      <a class="quick-link" id="link-cases" href="#" target="_blank" rel="noopener">
+        <div class="ql-label">Module</div>
+        <div class="ql-name">Cases</div>
+      </a>
+      <a class="quick-link" id="link-clients" href="#" target="_blank" rel="noopener">
+        <div class="ql-label">Module</div>
+        <div class="ql-name">Clients</div>
+      </a>
+      <a class="quick-link" id="link-analytics" href="#" target="_blank" rel="noopener">
+        <div class="ql-label">Module</div>
+        <div class="ql-name">Analytics</div>
+      </a>
+      <a class="quick-link" id="link-staff" href="#" target="_blank" rel="noopener">
+        <div class="ql-label">Module</div>
+        <div class="ql-name">Staff AI</div>
+      </a>
+    </div>
+
+    <div class="deploy-note" id="deploy-note"></div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ── update DASHBOARD_URL once the app is deployed publicly ──
+  const DASHBOARD_URL = 'https://aegis-credit.vercel.app';
+
+  // SHA-256 hash of the access code — change with: updateHash('your-new-password')
+  const ACCESS_HASH = '8427acdec90aeebc8079c3e1d89d7ee951a71f4b204aa5cdc89498e788be651f';
+
+  const SESSION_KEY = 'ptah_admin_v1';
+  const IFRAME_TIMEOUT_MS = 4000;
+
+  // ── Utilities ──
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function setLinks(base) {
+    document.getElementById('link-main').href      = base;
+    document.getElementById('link-cases').href     = base + '/cases';
+    document.getElementById('link-clients').href   = base + '/clients';
+    document.getElementById('link-analytics').href = base + '/analytics';
+    document.getElementById('link-staff').href     = base + '/staff-ai';
+  }
+
+  // ── Session ──
+  function lockSession() {
+    sessionStorage.removeItem(SESSION_KEY);
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('dashboard-frame').src = 'about:blank';
+    document.getElementById('pwd').value = '';
+    document.getElementById('pwd').focus();
+  }
+
+  function showDashboard() {
+    document.getElementById('login-screen').style.display = 'none';
+
+    const adminScreen = document.getElementById('admin-screen');
+    adminScreen.style.display = 'flex';
+
+    setLinks(DASHBOARD_URL);
+
+    const isLocal = DASHBOARD_URL.includes('localhost') || DASHBOARD_URL.includes('127.0.0.1');
+    const frame = document.getElementById('dashboard-frame');
+    const loading = document.getElementById('loading-wrap');
+    const fallback = document.getElementById('frame-fallback');
+    const note = document.getElementById('deploy-note');
+
+    if (isLocal) {
+      // On a different device, localhost will never load — skip iframe, show fallback immediately
+      const onRemote = !window.location.hostname.includes('localhost') &&
+                       !window.location.hostname.includes('127.0.0.1');
+      if (onRemote) {
+        loading.style.display = 'none';
+        frame.style.display = 'none';
+        fallback.style.display = 'flex';
+        note.textContent = 'The dashboard URL is set to localhost:3000 — it can only be accessed from the computer where the app is running. To access it from this device, deploy the Aegis Credit frontend and update DASHBOARD_URL in admin/index.html.';
+        return;
+      }
+    }
+
+    // Try loading the iframe; if it doesn't respond in time, show fallback
+    let loaded = false;
+
+    frame.style.display = 'none'; // hidden until confirmed loaded
+
+    const timer = setTimeout(() => {
+      if (!loaded) {
+        loading.style.display = 'none';
+        frame.style.display = 'none';
+        fallback.style.display = 'flex';
+        note.textContent = `Could not embed the dashboard from ${DASHBOARD_URL}. The app may block embedding via X-Frame-Options. Use the links above to open it in a new tab.`;
+      }
+    }, IFRAME_TIMEOUT_MS);
+
+    frame.onload = () => {
+      clearTimeout(timer);
+      if (frame.src === 'about:blank') return;
+      try {
+        // Try accessing contentDocument — will throw if blocked by same-origin policy
+        void frame.contentDocument;
+        loaded = true;
+        loading.style.display = 'none';
+        frame.style.display = 'block';
+        fallback.style.display = 'none';
+      } catch {
+        // Cross-origin — frame loaded but we can't verify; assume it worked
+        loaded = true;
+        loading.style.display = 'none';
+        frame.style.display = 'block';
+        fallback.style.display = 'none';
+      }
+    };
+
+    frame.onerror = () => {
+      clearTimeout(timer);
+      loading.style.display = 'none';
+      frame.style.display = 'none';
+      fallback.style.display = 'flex';
+      note.textContent = `Could not load ${DASHBOARD_URL}. Check that the app is running.`;
+    };
+
+    frame.src = DASHBOARD_URL;
+  }
+
+  // ── Boot: check existing session ──
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    showDashboard();
+  }
+
+  // ── Login form ──
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    const errEl = document.getElementById('error-msg');
+    const pwd = document.getElementById('pwd').value;
+
+    if (!pwd) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    errEl.textContent = '';
+
+    const hash = await sha256(pwd);
+
+    if (hash === ACCESS_HASH) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      showDashboard();
+    } else {
+      errEl.textContent = 'Incorrect access code.';
+      btn.disabled = false;
+      btn.textContent = 'Unlock';
+      document.getElementById('pwd').focus();
+    }
+  });
+</script>
+</body>
+</html>

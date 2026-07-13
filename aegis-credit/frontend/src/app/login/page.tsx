@@ -77,7 +77,7 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>⚖</div>
           <h1 style={{ color: 'var(--navy)', fontSize: 22, fontWeight: 700, margin: 0 }}>
-            Aegis Credit Intelligence
+            Aegis
           </h1>
           <p style={{ color: 'var(--muted)', marginTop: 6, fontSize: 13 }}>
             Investigation &amp; compliance platform

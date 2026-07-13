@@ -80,7 +80,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-logo">
         <h2>Aegis</h2>
-        <p>Credit Investigator</p>
+        <p>Consumer Rights &amp; Business Services</p>
       </div>
 
       {/* Search bar */}

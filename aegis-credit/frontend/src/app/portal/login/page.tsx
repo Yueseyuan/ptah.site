@@ -38,7 +38,7 @@ export default function PortalLoginPage() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}>⚖</div>
           <h1 style={{ color: '#0a2540', fontSize: 24, fontWeight: 700, margin: 0 }}>
-            Aegis Credit Intelligence
+            Aegis
           </h1>
           <p style={{ color: '#64748b', marginTop: 6, fontSize: 14 }}>
             Client Portal — Sign In

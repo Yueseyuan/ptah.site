@@ -78,7 +78,7 @@ export default function HomePage() {
         borderBottom: '1px solid rgba(201,168,76,0.12)',
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo.svg" alt="Aegis Credit Intelligence" style={{ height: 44, width: 'auto' }} />
+          <img src="/logo.svg" alt="Aegis" style={{ height: 44, width: 'auto' }} />
           <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 3, textTransform: 'uppercase' }}>
             Consumer Rights &amp; Business Services
           </div>
@@ -332,7 +332,7 @@ export default function HomePage() {
         alignItems: 'center', flexWrap: 'wrap', gap: 16,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src="/logo.svg" alt="Aegis Credit Intelligence" style={{ height: 52, width: 'auto', opacity: 0.9 }} />
+          <img src="/logo.svg" alt="Aegis" style={{ height: 52, width: 'auto', opacity: 0.9 }} />
           <div style={{ fontSize: 11, color: '#4a5060', lineHeight: 1.7 }}>
             Consumer Rights Consulting<br />
             (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site

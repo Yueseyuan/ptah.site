@@ -78,7 +78,7 @@ export default function HomePage() {
         borderBottom: '1px solid rgba(201,168,76,0.12)',
       }}>
         <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/logo.svg" alt="Cruel & Associates" style={{ height: 44, width: 'auto' }} />
+          <img src="/logo.svg" alt="Aegis Credit Intelligence" style={{ height: 44, width: 'auto' }} />
           <div style={{ fontSize: 9, color: '#64748b', letterSpacing: 3, textTransform: 'uppercase' }}>
             Consumer Rights &amp; Business Services
           </div>
@@ -93,15 +93,15 @@ export default function HomePage() {
           <a href="/judgment-portal" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
             Recovery
           </a>
-          <a href="/login" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
-            Staff
+          <a href="/portal/login" style={{ fontSize: 11, color: '#4a5060', textDecoration: 'none', letterSpacing: 0.5 }}>
+            Client Login
           </a>
-          <a href="/portal/login" style={{
+          <a href="/login" style={{
             padding: '8px 18px', border: '1px solid rgba(201,168,76,0.4)',
             color: '#c9a84c', borderRadius: 4, fontSize: 13, fontWeight: 600,
             textDecoration: 'none',
           }}>
-            Client Login
+            Staff Login
           </a>
           <a href="/portal/register" style={{
             padding: '8px 18px', background: '#c9a84c',
@@ -332,7 +332,7 @@ export default function HomePage() {
         alignItems: 'center', flexWrap: 'wrap', gap: 16,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src="/logo.svg" alt="Cruel & Associates" style={{ height: 52, width: 'auto', opacity: 0.9 }} />
+          <img src="/logo.svg" alt="Aegis Credit Intelligence" style={{ height: 52, width: 'auto', opacity: 0.9 }} />
           <div style={{ fontSize: 11, color: '#4a5060', lineHeight: 1.7 }}>
             Consumer Rights Consulting<br />
             (864) 318-9951 · yueseyuan.cruel@cruelandassociates.site
@@ -345,7 +345,7 @@ export default function HomePage() {
           <a href="/portal/consulting" style={{ color: '#64748b', textDecoration: 'none' }}>Consulting</a>
           <a href="/portal/login" style={{ color: '#64748b', textDecoration: 'none' }}>Client Portal</a>
           <a href="/portal/register" style={{ color: '#c9a84c', textDecoration: 'none', fontWeight: 600 }}>Get Started</a>
-          <a href="/login" style={{ color: '#374151', textDecoration: 'none', fontSize: 11, opacity: 0.5 }}>Staff</a>
+          <a href="/login" style={{ color: '#c9a84c', textDecoration: 'none', fontSize: 11 }}>Staff Login</a>
         </div>
       </footer>
     </div>

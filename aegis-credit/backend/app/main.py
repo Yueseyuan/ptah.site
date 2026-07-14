@@ -227,11 +227,19 @@ def _ensure_admin():
         from app.services.auth_service import hash_password
         import os as _os
         db = SessionLocal()
-        import sys as _sys
         override_pw = _os.environ.get("ADMIN_PASSWORD", "").strip()
-        print(f"[STARTUP] ADMIN_PASSWORD env var: {'SET (' + str(len(override_pw)) + ' chars)' if override_pw else 'NOT SET'}", flush=True)
+        reset_all = _os.environ.get("ADMIN_RESET_ALL", "").strip().lower() in ("1", "true", "yes")
+        print(f"[STARTUP] ADMIN_PASSWORD: {'SET' if override_pw else 'NOT SET'}, ADMIN_RESET_ALL: {reset_all}", flush=True)
         try:
             if override_pw:
+                if reset_all:
+                    # Update ALL existing admin accounts so any unknown-credential admin becomes accessible
+                    admins = db.query(User).filter(User.role == "admin").all()
+                    for a in admins:
+                        a.hashed_password = hash_password(override_pw)
+                        a.is_active = True
+                    db.commit()
+                    print(f"[STARTUP] Reset {len(admins)} admin(s). Login: <any-admin-username> / <ADMIN_PASSWORD>", flush=True)
                 # Always ensure username="admin" exists with the specified password
                 admin = db.query(User).filter(User.username == "admin").first()
                 if admin:
@@ -240,10 +248,9 @@ def _ensure_admin():
                     db.commit()
                     print(f"[STARTUP] admin password updated — login: admin / <ADMIN_PASSWORD>", flush=True)
                 else:
-                    # No user named "admin" — create one (other admins may still exist)
                     admin = User(
                         username="admin",
-                        email="admin@cruelandassociates.site",
+                        email="admin@aegis.app",
                         full_name="Administrator",
                         hashed_password=hash_password(override_pw),
                         role="admin",
@@ -255,11 +262,11 @@ def _ensure_admin():
             else:
                 admins = db.query(User).filter(User.role == "admin").order_by(User.id).all()
                 if admins:
-                    print(f"[STARTUP] Admin accounts: {[u.username for u in admins]} (set ADMIN_PASSWORD env var to reset password)", flush=True)
+                    print(f"[STARTUP] Admin accounts: {[u.username for u in admins]} (set ADMIN_PASSWORD to reset)", flush=True)
                 else:
                     admin = User(
                         username="admin",
-                        email="admin@cruelandassociates.site",
+                        email="admin@aegis.app",
                         full_name="Administrator",
                         hashed_password=hash_password("Cruel2026!"),
                         role="admin",

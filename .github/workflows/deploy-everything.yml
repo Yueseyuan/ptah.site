@@ -1,0 +1,33 @@
+name: Deploy Everything (Greenville, SC)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'everything/**'
+      - '.github/workflows/deploy-everything.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        working-directory: everything
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        id: deploy
+        working-directory: everything
+        run: |
+          URL=$(vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $URL"
+
+      - name: Print deployment URL
+        run: echo "Live at ${{ steps.deploy.outputs.url }}"

@@ -45,13 +45,33 @@ docker compose run --rm toolkit bash    # drops you into the CLI toolkit contain
 `nuclei -update-templates` runs automatically on container start (entrypoint)
 so template coverage stays current.
 
+## Starting a new engagement
+
+Each client engagement should live in its own folder under `engagements/`,
+scaffolded from the authorization template rather than copied by hand:
+
+```bash
+make new-engagement CLIENT="Acme Corp"
+# → engagements/acme-corp/authorization.md          (fill in and get signed)
+# → engagements/acme-corp/evilginx-config/          (only used if this engagement needs it)
+```
+
+Nothing in that folder runs anything — it's paperwork and empty config
+directories. Fill in and sign `authorization.md` before touching the client's
+systems. To nest a specific engagement's recon/scan output under its folder,
+export `ENGAGEMENTS_DIR` before running the workflow scripts below:
+
+```bash
+export ENGAGEMENTS_DIR=./engagements/acme-corp
+```
+
 ## Common workflows
 
 Run these from inside the `toolkit` container (or via `docker compose run --rm toolkit <script>`).
-Every script takes a target and writes timestamped output under `/engagements/<target>/`,
-which is bind-mounted to `./engagements` on the host — keep that directory out
-of version control (it's already gitignored) since it will contain live client
-recon data.
+Every script takes a target and writes timestamped output under `$ENGAGEMENTS_DIR`
+(defaults to `/engagements`, bind-mounted to `./engagements` on the host) —
+keep that directory out of version control (it's already gitignored) since it
+will contain live client recon data.
 
 ```bash
 scripts/shodan-search.sh "org:\"Acme Corp\""
@@ -75,16 +95,26 @@ CyberChef is a static app at `http://localhost:8000`.
 ## Evilginx3 policy
 
 Evilginx3 is a real phishing/2FA-relay framework. It is **not** built into the
-default toolkit image and there is no wrapper script for it. It exists in
-this repo only as a documented, opt-in build path for two specific uses:
+default toolkit image, and there is deliberately no `<target>`-style wrapper
+script for it — every phishlet has to be built for the specific client's
+login flow, so a generic "run against anything" script wouldn't be useful
+even under a signed contract. It exists in this repo only as a documented,
+opt-in build path for two specific uses:
 
 1. Authorized phishing-simulation engagements with signed client authorization
-   naming Evilginx3 and the exact domains/phishlets in scope.
+   (see `AUTHORIZATION_TEMPLATE.md` §5) naming Evilginx3 and the exact
+   domains/phishlets in scope.
 2. Internal training/lab use against infrastructure you own, isolated from
    production networks.
 
-To build it, see `docker/Dockerfile.evilginx3` — it is not included in
-`docker-compose.yml` by default and must be built and run explicitly:
+Run `make new-engagement CLIENT="<name>"` first — it creates
+`engagements/<slug>/evilginx-config/` with `phishlets/` and `redirectors/`
+folders and a README for that engagement, plus the authorization doc that
+has to be signed before any of it runs.
+
+To build the image itself, see `docker/Dockerfile.evilginx3` — it is not
+included in `docker-compose.yml` by default and must be built and run
+explicitly, per engagement:
 
 ```bash
 docker build -f docker/Dockerfile.evilginx3 -t blackops/evilginx3 .

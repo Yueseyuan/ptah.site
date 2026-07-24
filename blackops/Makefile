@@ -1,4 +1,4 @@
-.PHONY: build up down shell recon vuln-scan username-search phone-lookup cloud-audit shodan-search
+.PHONY: build up down shell new-engagement recon vuln-scan username-search phone-lookup cloud-audit shodan-search
 
 build:
 	docker compose build
@@ -11,6 +11,9 @@ down:
 
 shell:
 	docker compose run --rm toolkit bash
+
+new-engagement:
+	docker compose run --rm toolkit scripts/new-engagement.sh "$(CLIENT)"
 
 recon:
 	docker compose run --rm toolkit scripts/recon.sh $(TARGET)

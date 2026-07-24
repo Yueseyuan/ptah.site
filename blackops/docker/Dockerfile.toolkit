@@ -1,0 +1,42 @@
+FROM golang:1.22-bookworm AS gobuild
+
+# Go-based CLI tools, built once here and copied into the final image so the
+# runtime image doesn't need a full Go toolchain.
+RUN go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest \
+ && go install github.com/BishopFox/cloudfox@latest \
+ && go install github.com/sundowndev/phoneinfoga/v2/cmd/phoneinfoga@latest
+
+FROM python:3.11-slim-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl ca-certificates jq nmap \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=gobuild /go/bin/nuclei /usr/local/bin/nuclei
+COPY --from=gobuild /go/bin/cloudfox /usr/local/bin/cloudfox
+COPY --from=gobuild /go/bin/phoneinfoga /usr/local/bin/phoneinfoga
+
+# pip-installable recon/OSINT tools
+RUN pip install --no-cache-dir \
+    shodan \
+    sherlock-project \
+    bbot
+
+# recon-ng has no PyPI package — install from source per upstream instructions
+RUN git clone --depth 1 https://github.com/lanmaster53/recon-ng.git /opt/recon-ng \
+ && pip install --no-cache-dir -r /opt/recon-ng/REQUIREMENTS \
+ && chmod +x /opt/recon-ng/recon-ng
+ENV PATH="/opt/recon-ng:${PATH}"
+
+WORKDIR /toolkit
+COPY scripts/ /toolkit/scripts/
+RUN chmod +x /toolkit/scripts/*.sh
+
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENV PATH="/toolkit/scripts:${PATH}"
+ENV ENGAGEMENTS_DIR=/engagements
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]

@@ -1,0 +1,28 @@
+# Opt-in only. Not part of docker-compose.yml, not built by default.
+# Build explicitly: docker build -f docker/Dockerfile.evilginx3 -t blackops/evilginx3 .
+#
+# Use only under a signed authorization naming Evilginx3 and the exact
+# phishlet domains in scope (see AUTHORIZATION_TEMPLATE.md section 5), or in
+# an isolated lab against infrastructure you own. There is no wrapper script
+# for this tool and none should be added — it is operated manually, per
+# engagement, by the engagement lead.
+
+FROM golang:1.22-bookworm AS build
+
+RUN git clone --depth 1 https://github.com/kgretzky/evilginx2.git /src
+WORKDIR /src
+RUN go build -o evilginx .
+
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /src/evilginx /usr/local/bin/evilginx
+COPY --from=build /src/phishlets /etc/evilginx/phishlets
+COPY --from=build /src/redirectors /etc/evilginx/redirectors
+
+WORKDIR /etc/evilginx
+EXPOSE 443 80 53/udp
+
+ENTRYPOINT ["evilginx"]

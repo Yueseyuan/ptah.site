@@ -1,0 +1,59 @@
+services:
+  toolkit:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.toolkit
+    env_file: .env
+    volumes:
+      - ./engagements:/engagements
+      - ./scripts:/toolkit/scripts
+    stdin_open: true
+    tty: true
+
+  spiderfoot:
+    image: ghcr.io/smicallef/spiderfoot:latest
+    ports:
+      - "5001:5001"
+    volumes:
+      - spiderfoot-data:/home/spiderfoot/.spiderfoot
+    restart: unless-stopped
+
+  neo4j:
+    image: bitnami/neo4j:4.4
+    environment:
+      NEO4J_PASSWORD: ${BLOODHOUND_NEO4J_PASSWORD:?set BLOODHOUND_NEO4J_PASSWORD in .env}
+    volumes:
+      - neo4j-data:/bitnami/neo4j/data
+    restart: unless-stopped
+
+  bloodhound:
+    image: specterops/bloodhound:latest
+    depends_on:
+      - neo4j
+    environment:
+      bhe_database_connection: "postgresql://bloodhound:${BLOODHOUND_POSTGRES_PASSWORD:?set BLOODHOUND_POSTGRES_PASSWORD in .env}@bloodhound-db:5432/bloodhound?sslmode=disable"
+      bhe_neo4j_connection: "neo4j://neo4j:${BLOODHOUND_NEO4J_PASSWORD:?set BLOODHOUND_NEO4J_PASSWORD in .env}@neo4j:7687/"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  bloodhound-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bloodhound
+      POSTGRES_PASSWORD: ${BLOODHOUND_POSTGRES_PASSWORD:?set BLOODHOUND_POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: bloodhound
+    volumes:
+      - bloodhound-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  cyberchef:
+    image: remnux/cyberchef:latest
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  spiderfoot-data:
+  neo4j-data:
+  bloodhound-db-data:

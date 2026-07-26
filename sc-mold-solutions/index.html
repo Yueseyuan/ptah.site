@@ -666,7 +666,11 @@
           </div>
         </div>
 
-        <form class="contact-form reveal" id="quoteForm">
+        <form class="contact-form reveal" id="quoteForm" action="https://formsubmit.co/scmoldsolutions@outlook.com" method="POST">
+          <input type="hidden" name="_subject" value="New Quote Request — SC Mold Solutions">
+          <input type="hidden" name="_template" value="table">
+          <input type="hidden" name="_next" value="https://ptahconsultants.com/sc-mold-solutions/?sent=true#contact">
+          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
           <div class="form-row">
             <div class="field">
               <label for="name">Full Name</label>
@@ -701,8 +705,9 @@
             <textarea id="message" name="message" placeholder="Property address, size, and what needs to be done..."></textarea>
           </div>
           <button type="submit" class="btn btn-primary btn-block">Send Quote Request</button>
-          <p class="form-note">This opens your email app with the details pre-filled — nothing is sent automatically. Prefer to talk now? Call (864) 431-0400.</p>
+          <p class="form-note">Your request is emailed to us directly. Prefer to talk now? Call (864) 431-0400.</p>
         </form>
+        <p class="form-sent" id="formSent" style="display:none; margin-top:16px; text-align:center; font-weight:700; color:var(--gold);">Thanks — your request was sent. We'll be in touch shortly.</p>
       </div>
     </div>
   </section>
@@ -768,21 +773,10 @@
   }, { threshold: 0.12 });
   revealEls.forEach(el => io.observe(el));
 
-  const form = document.getElementById('quoteForm');
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('name').value;
-    const phone = document.getElementById('phone').value;
-    const email = document.getElementById('email').value;
-    const service = document.getElementById('service').value;
-    const message = document.getElementById('message').value;
-
-    const subject = encodeURIComponent(`Free Quote Request — ${service}`);
-    const body = encodeURIComponent(
-      `Name: ${name}\nPhone: ${phone}\nEmail: ${email}\nService Needed: ${service}\n\nDetails:\n${message}`
-    );
-    window.location.href = `mailto:scmoldsolutions@outlook.com?subject=${subject}&body=${body}`;
-  });
+  if (new URLSearchParams(window.location.search).get('sent') === 'true') {
+    document.getElementById('quoteForm').style.display = 'none';
+    document.getElementById('formSent').style.display = 'block';
+  }
 </script>
 
 </body>

@@ -1,5 +1,10 @@
 FROM golang:1.22-bookworm AS gobuild
 
+# @latest tools may declare a go.mod requirement newer than this base image;
+# GOTOOLCHAIN=auto lets `go install` fetch whatever toolchain the module needs
+# instead of failing with "requires go >= X (running go 1.22...)".
+ENV GOTOOLCHAIN=auto
+
 # Go-based CLI tools, built once here and copied into the final image so the
 # runtime image doesn't need a full Go toolchain.
 RUN go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest \
